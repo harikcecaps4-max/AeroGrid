@@ -5,6 +5,9 @@
 	"author": "harikcecaps4@gmail.com",
 	"dependencies": {
 		"@zcatalyst/auth": "latest",
-		"@zcatalyst/cache": "latest"
+		"@zcatalyst/cache": "latest",
+		"cors": "^2.8.6",
+		"express": "^5.3.0",
+		"pg": "^8.23.1"
 	}
 }
