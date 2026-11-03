@@ -1,0 +1,30 @@
+{
+  "defaults": {
+    "project": 1,
+    "env": 1
+  },
+  "actives": {
+    "project": 1,
+    "env": 1
+  },
+  "projects": [
+    {
+      "idx": 1,
+      "id": "66967000000024051",
+      "name": "AeroGrid",
+      "domain": {
+        "id": "50046971856",
+        "name": "aerogrid-60086051931.development"
+      },
+      "timezone": "Asia/Kolkata",
+      "env": [
+        {
+          "idx": 1,
+          "id": "60086051931",
+          "name": "Development",
+          "type": 3
+        }
+      ]
+    }
+  ]
+}
