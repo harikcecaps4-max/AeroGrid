@@ -13,7 +13,7 @@ AeroGrid Intelligence is a spatial data analytics and business-development platf
 
 | **Existing tools** | **AeroGrid** |
 | :--- | :---|
-| Built for pilots navigating (route and airport data) | Built for operators and eVTOL companies making deployment decisions    |
+| Built for navigating (route and airport data) | Built for operators and eVTOL companies making deployment decisions    |
 | Static airport data and PDFs   | Queryable spatial database with comparable fields   |
 | Airport-centric     | Catchment-centric: who can the strip serve, and how fast can they reach it |
 | Same view for every aircraft  | Aircraft-aware: eVTOL, STOL and turboprop fleets are judged by their own requirements |
