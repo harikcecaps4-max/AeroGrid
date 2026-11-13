@@ -1,0 +1,17 @@
+{
+  "name": "aerogrid",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AeroGrid — Regional eVTOL & Micro-Airstrip GIS Decision-Support Platform",
+  "scripts": {
+    "dev": "node server/index.js",
+    "start": "node server/index.js",
+    "migrate": "node db/migrate.js",
+    "migrate:dry-run": "node db/migrate.js --dry-run",
+    "migrate:status": "node db/migrate.js --status",
+    "seed": "node db/seed.js",
+    "seed:dry-run": "node db/seed.js --dry-run",
+    "test:db": "node --test db/db.test.js"
+  }
+}
+

@@ -105,7 +105,7 @@ export default function WorldMap() {
         <div>
           <h1 className="page-title" style={{ fontSize: 18 }}>Global Airstrips &amp; Regional Vertiports</h1>
           <p style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 2 }}>
-            Worldwide Regional Aviation Grid • {filteredStrips.length} pinpoints shown
+            Worldwide Regional Aviation Grid | {filteredStrips.length} pinpoints shown
           </p>
         </div>
 
@@ -176,8 +176,8 @@ export default function WorldMap() {
           </svg>
           <span>
             {selectedRegion === 'All Global'
-              ? 'World Grid • All Continents'
-              : `${selectedRegion} • Regional Sector`}
+              ? 'World Grid | All Continents'
+              : `${selectedRegion} | Regional Sector`}
           </span>
           <span style={{ opacity: 0.6, fontSize: 11, marginLeft: 4 }}>
             ({filteredStrips.length} pinpoints)
@@ -231,7 +231,7 @@ export default function WorldMap() {
                     <div className="popup-row">
                       <span>Runway &amp; Pavement</span>
                       <span style={{ color: 'var(--subheading)' }}>
-                        {strip.runway_m}m • {strip.surface}
+                        {strip.runway_m}m {strip.surface}
                       </span>
                     </div>
                     <div className="popup-row">

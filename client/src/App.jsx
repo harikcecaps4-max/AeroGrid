@@ -6,11 +6,13 @@ import WorldMap from './pages/WorldMap'
 import Regions from './pages/Regions'
 import Analytics from './pages/Analytics'
 import Reports from './pages/Reports'
+import Login from './pages/Login'
 
 export default function App() {
   return (
     <HashRouter>
       <Routes>
+        <Route path="/login" element={<Login />} />
         <Route element={<Layout />}>
           <Route index element={<Dashboard />} />
           <Route path="map" element={<AirstripsMap />} />
