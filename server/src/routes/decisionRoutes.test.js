@@ -255,3 +255,69 @@ test('POST /api/rank returns 404 for unknown aircraftId and 400 for invalid filt
   assert.equal(invalidFilter.json.error, 'Validation Error');
   assert.ok(Array.isArray(invalidFilter.json.issues) && invalidFilter.json.issues.length > 0);
 });
+
+test('POST /api/compare compares 2 and 3 airstrips side-by-side and selects recommended strip', async () => {
+  const twoWay = await requestJson('/api/compare', {
+    method: 'POST',
+    body: { aircraftId: 3, airstripIds: [1, 2] },
+  });
+
+  assert.equal(twoWay.status, 200);
+  assert.equal(twoWay.json.caveat, CAVEAT_TEXT);
+  assert.equal(twoWay.json.aircraft.id, 3);
+  assert.equal(twoWay.json.comparisons.length, 2);
+  assert.ok([1, 2].includes(twoWay.json.recommended_airstrip_id));
+  assert.ok(Array.isArray(twoWay.json.matrix));
+  assert.equal(twoWay.json.matrix.length, 2);
+  assert.equal(typeof twoWay.json.matrix[0].airstrip_id, 'number');
+  assert.equal(typeof twoWay.json.matrix[0].surface_pass, 'boolean');
+  assert.equal(typeof twoWay.json.summary, 'string');
+
+  const threeWay = await requestJson('/api/compare', {
+    method: 'POST',
+    body: { aircraftId: 1, airstripIds: [1, 2, 5] },
+  });
+
+  assert.equal(threeWay.status, 200);
+  assert.equal(threeWay.json.caveat, CAVEAT_TEXT);
+  assert.equal(threeWay.json.comparisons.length, 3);
+  assert.ok([1, 2].includes(threeWay.json.recommended_airstrip_id));
+  const gravelEntry = threeWay.json.comparisons.find((c) => c.airstrip.id === 5);
+  assert.equal(gravelEntry?.evaluation.verdict, 'not_viable');
+});
+
+test('POST /api/compare rejects fewer than 2, more than 3, or duplicate airstripIds with 400', async () => {
+  const invalidArrays = [
+    [1],
+    [1, 2, 3, 4],
+    [1, 1],
+  ];
+
+  for (const airstripIds of invalidArrays) {
+    const { status, json } = await requestJson('/api/compare', {
+      method: 'POST',
+      body: { aircraftId: 1, airstripIds },
+    });
+    assert.equal(status, 400);
+    assert.equal(json.error, 'Validation Error');
+    assert.ok(Array.isArray(json.issues) && json.issues.length > 0);
+  }
+});
+
+test('POST /api/compare returns 404 with caveat when aircraftId or any airstripId is missing', async () => {
+  const missingAircraft = await requestJson('/api/compare', {
+    method: 'POST',
+    body: { aircraftId: 999, airstripIds: [1, 2] },
+  });
+  assert.equal(missingAircraft.status, 404);
+  assert.equal(missingAircraft.json.caveat, CAVEAT_TEXT);
+  assert.match(missingAircraft.json.error, /Aircraft profile #999/);
+
+  const missingStrip = await requestJson('/api/compare', {
+    method: 'POST',
+    body: { aircraftId: 1, airstripIds: [1, 999] },
+  });
+  assert.equal(missingStrip.status, 404);
+  assert.equal(missingStrip.json.caveat, CAVEAT_TEXT);
+  assert.deepEqual(missingStrip.json.missingIds, [999]);
+});
