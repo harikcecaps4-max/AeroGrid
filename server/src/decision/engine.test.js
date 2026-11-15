@@ -270,3 +270,61 @@ test('rankAirstrips and compareAirstrips order results deterministically with fi
   assert.equal(allFailedComparison.recommended_airstrip_id, null);
   assert.match(allFailedComparison.summary, /None of the 1 compared airstrips/);
 });
+
+test('landing-governed aircraft, DB column aliases, zero catchment, custom range reserve, and null objects behave safely', () => {
+  // 1. Landing distance > takeoff distance governs required runway
+  const landingLimitedAircraft = {
+    ...VERIFIED_AIRCRAFT,
+    takeoff_distance_m: 300,
+    landing_distance_m: 600,
+  };
+  const seaLevel = { ...IDEAL_AIRSTRIP, elevation_m: 0 };
+  // 600 * 1.3 = 780m required
+  assert.equal(evaluateRunwayLengthGate(landingLimitedAircraft, { ...seaLevel, runway_length_m: 780 }).pass, true);
+  assert.equal(evaluateRunwayLengthGate(landingLimitedAircraft, { ...seaLevel, runway_length_m: 779 }).pass, false);
+
+  // 2. Database / fallback JSON column aliases (state_name, surface_name, ownership_name)
+  const dbAliasedStrip = {
+    id: 99,
+    name: 'SQL Aliased Strip',
+    state_name: 'Gujarat',
+    surface_name: 'concrete',
+    ownership_name: 'psu',
+    elevation_m: 50,
+    runway_length_m: 1400,
+    fuel_available: true,
+    terrain_risk: 'low',
+    catchment_population: 500000,
+    last_mile_access_km: 1.5,
+    nearest_airport_distance_km: 60,
+    data_confidence: 'high',
+    source: 'Verified AAI Fixture',
+  };
+  const aliasRanked = rankAirstrips(VERIFIED_AIRCRAFT, [dbAliasedStrip], {
+    filters: { state: 'Gujarat', surface: 'concrete', ownership: 'psu', minRunwayLengthM: 1200 },
+  });
+  assert.equal(aliasRanked.results.length, 1);
+  assert.equal(aliasRanked.results[0].airstrip.ownership, 'psu');
+  assert.equal(aliasRanked.results[0].evaluation.verdict, 'viable');
+
+  // 3. Zero catchment_population (valid negligible band = 10/100) vs negative (-50 = invalid/missing = 40/100 + warning)
+  const zeroCatchment = evaluateAirstrip(VERIFIED_AIRCRAFT, { ...IDEAL_AIRSTRIP, catchment_population: 0 });
+  const negCatchment = evaluateAirstrip(VERIFIED_AIRCRAFT, { ...IDEAL_AIRSTRIP, catchment_population: -50 });
+  assert.equal(zeroCatchment.factors.find((f) => f.name === 'catchment_population').value, 10);
+  assert.equal(negCatchment.factors.find((f) => f.name === 'catchment_population').value, 40);
+  assert.ok(negCatchment.warnings.some((w) => /catchment_population/i.test(w)));
+
+  // 4. Custom rangeReserveRatio override via mergeDecisionConfig + null objects safety
+  const customRangeCfg = mergeDecisionConfig({ scoring: { airportDistance: { rangeReserveRatio: 0.5 } } });
+  const rangeCheck = evaluateAirstrip(
+    { ...VERIFIED_AIRCRAFT, range_km: 200 },
+    { ...IDEAL_AIRSTRIP, nearest_airport_distance_km: 110 },
+    customRangeCfg
+  );
+  assert.ok(rangeCheck.warnings.some((w) => /50% of aircraft nominal range/i.test(w)));
+
+  const nullEval = evaluateAirstrip(null, null);
+  assert.equal(nullEval.verdict, 'not_viable');
+  assert.equal(nullEval.score, 0);
+  assert.equal(nullEval.caveat, CAVEAT_TEXT);
+});
