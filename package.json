@@ -13,7 +13,8 @@
     "seed:dry-run": "node db/seed.js --dry-run",
     "test:db": "node --test db/db.test.js",
     "test:decision": "node --test server/src/decision/engine.test.js",
-    "test": "node --test db/db.test.js server/src/decision/engine.test.js"
+    "test:api": "node --test server/src/routes/decisionRoutes.test.js",
+    "test": "node --test db/db.test.js server/src/decision/engine.test.js server/src/routes/decisionRoutes.test.js"
   }
 }
 
