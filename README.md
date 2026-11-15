@@ -46,3 +46,47 @@ Prototype
 | API hosting | Zoho Catalyst serverless functions |
 | Database | PostgreSQL + PostGIS on Neon |
 | Tooling | npm, npx, Git/GitHub, pgAdmin 4, Catalyst CLI |
+
+# API Endpoints
+
+All endpoints are served under `/api/*` (and matching root fallback paths for Zoho Catalyst serverless routing). Decision, airstrip, spatial, and validation JSON responses include the mandatory `caveat` disclaimer:
+
+> *DECISION SUPPORT ONLY — NOT FOR OPERATIONAL OR DISPATCH USE. Evaluations use preliminary geometric, surface, and ISA density-altitude approximations and may include unverified or placeholder records. Always verify against official AIP/DGCA aerodrome charts, site surveys, and the manufacturer's Aircraft Flight Manual (AFM/POH) before flight operations.*
+
+| Method & Path | Description | Key Parameters / Request Body | Response Highlights |
+| --- | --- | --- | --- |
+| `GET /api/aircraft` | List normalized aircraft performance profiles used by the decision engine | None | `{ count, aircraft, caveat }` (`PLACEHOLDER` source notice) |
+| `POST /api/evaluate` | Evaluate suitability of one aircraft profile on one airstrip | `{ aircraftId, airstripId }` (positive integer IDs) | `{ aircraft, airstrip, verdict, score, gates, factors, warnings, caveat }` |
+| `POST /api/rank` | Rank airstrips for a selected aircraft with optional filters | `{ aircraftId, filters?: { state, surface, ownership, minRunwayLengthM, includeNotViable, onlyViable } }` | `{ aircraft, total_evaluated, viable_count, conditional_count, not_viable_count, results, filters, caveat }` |
+| `POST /api/compare` | Side-by-side comparison of 2 to 3 airstrips for one aircraft | `{ aircraftId, airstripIds: [id1, id2, ...] }` (2–3 unique IDs) | `{ aircraft, comparisons, recommended_airstrip_id, summary, matrix, caveat }` |
+| `GET /api/airstrips` | List airstrips as GeoJSON `FeatureCollection`; optionally evaluates against an aircraft | Query: `state`, `surface`, `min_score`, `political_severity`, `search`, `aircraft_id` | `{ type: "FeatureCollection", count, features, caveat }` (`properties.decision` added when `aircraft_id` is set) |
+| `GET /api/airstrips/:id` | Retrieve a single airstrip GeoJSON `Feature` | Path: `id`; Query: optional `aircraft_id` | GeoJSON `Feature` (`properties.decision` when `aircraft_id` is set) + `caveat` |
+| `GET /api/airstrips/radius` | Find airstrips within a distance radius from coordinates | Query: `lat`, `lng` (required), `radius_km` (default `150`) | `{ center, radius_km, count, airstrips, caveat }` |
+| `GET /api/health` | Service and database health check (`/health` alias also mounted) | None | Health status payload |
+
+### Sample Payloads
+
+```json
+// POST /api/evaluate
+{
+  "aircraftId": 3,
+  "airstripId": 1
+}
+
+// POST /api/rank
+{
+  "aircraftId": 5,
+  "filters": {
+    "state": "Karnataka",
+    "surface": "asphalt",
+    "minRunwayLengthM": 1200,
+    "includeNotViable": false
+  }
+}
+
+// POST /api/compare
+{
+  "aircraftId": 1,
+  "airstripIds": [1, 2, 5]
+}
+```
