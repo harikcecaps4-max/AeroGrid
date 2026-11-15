@@ -136,6 +136,12 @@ function validateMigrationSet(migrations) {
     { name: 'CHECK: lat/lng SRID 4326 bounds', pattern: /ST_Y\([^)]+\)\s+BETWEEN\s+-90\s+AND\s+90/i },
     { name: 'CHECK: surface type enum', pattern: /chk_surface_type_valid/i },
     { name: 'CHECK: ownership type enum', pattern: /chk_ownership_type_valid/i },
+    { name: 'Column: aircraft_profiles.takeoff_distance_m', pattern: /takeoff_distance_m/i },
+    { name: 'Column: aircraft_profiles.landing_distance_m', pattern: /landing_distance_m/i },
+    { name: 'Column: aircraft_profiles.allowed_surfaces', pattern: /allowed_surfaces/i },
+    { name: 'CHECK: aircraft category enum', pattern: /chk_aircraft_category_valid/i },
+    { name: 'Column: airstrips.terrain_risk', pattern: /terrain_risk/i },
+    { name: 'Column: airstrips.data_confidence', pattern: /data_confidence/i },
   ];
 
   const failures = checks.filter((c) => !c.pattern.test(combinedSql)).map((c) => c.name);

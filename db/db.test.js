@@ -11,10 +11,10 @@ const seedModule = require('./seed');
 
 const MIGRATIONS_DIR = path.join(__dirname, 'migrations');
 
-test('numbered migrations 001 through 007 exist in sequential order without gaps', () => {
+test('numbered migrations 001 through 008 exist in sequential order without gaps', () => {
   const migrations = discoverMigrations(MIGRATIONS_DIR);
   const versions = migrations.map((m) => m.version);
-  assert.deepEqual(versions, ['001', '002', '003', '004', '005', '006', '007']);
+  assert.deepEqual(versions, ['001', '002', '003', '004', '005', '006', '007', '008']);
   for (const m of migrations) {
     assert.ok(m.checksum.length === 64, `Expected SHA-256 checksum for ${m.filename}`);
   }
