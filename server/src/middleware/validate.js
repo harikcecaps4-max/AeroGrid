@@ -18,9 +18,14 @@ function validateRequest({ body: bodySchema, query: querySchema, params: paramsS
       }
       next();
     } catch (err) {
-      if (err.errors) {
-        const issues = err.errors.map((e) => ({
-          path: e.path.join('.'),
+      const zodIssues = Array.isArray(err?.issues)
+        ? err.issues
+        : Array.isArray(err?.errors)
+          ? err.errors
+          : null;
+      if (zodIssues) {
+        const issues = zodIssues.map((e) => ({
+          path: Array.isArray(e.path) ? e.path.join('.') : '',
           message: e.message,
         }));
         return res.status(400).json({
