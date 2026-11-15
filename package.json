@@ -11,7 +11,9 @@
     "migrate:status": "node db/migrate.js --status",
     "seed": "node db/seed.js",
     "seed:dry-run": "node db/seed.js --dry-run",
-    "test:db": "node --test db/db.test.js"
+    "test:db": "node --test db/db.test.js",
+    "test:decision": "node --test server/src/decision/engine.test.js",
+    "test": "node --test db/db.test.js server/src/decision/engine.test.js"
   }
 }
 
