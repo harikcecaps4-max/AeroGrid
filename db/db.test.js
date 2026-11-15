@@ -11,10 +11,10 @@ const seedModule = require('./seed');
 
 const MIGRATIONS_DIR = path.join(__dirname, 'migrations');
 
-test('numbered migrations 001 through 007 exist in sequential order without gaps', () => {
+test('numbered migrations 001 through 008 exist in sequential order without gaps', () => {
   const migrations = discoverMigrations(MIGRATIONS_DIR);
   const versions = migrations.map((m) => m.version);
-  assert.deepEqual(versions, ['001', '002', '003', '004', '005', '006', '007']);
+  assert.deepEqual(versions, ['001', '002', '003', '004', '005', '006', '007', '008']);
   for (const m of migrations) {
     assert.ok(m.checksum.length === 64, `Expected SHA-256 checksum for ${m.filename}`);
   }
@@ -73,5 +73,47 @@ test('CLI migrate.js --dry-run and seed.js --dry-run execute cleanly with exit c
     encoding: 'utf8',
   });
   assert.match(seedOut, /AeroGrid Seed Data Validation \(DRY-RUN\)/i);
+});
+
+test('008_aircraft_and_decision_fields.sql defines aircraft decision columns, allowed_surfaces, and nullable airstrip confidence fields', () => {
+  const m008 = fs.readFileSync(path.join(MIGRATIONS_DIR, '008_aircraft_and_decision_fields.sql'), 'utf8');
+
+  for (const col of ['takeoff_distance_m', 'landing_distance_m', 'mtow_kg', 'seats', 'allowed_surfaces', 'source', 'notes']) {
+    assert.match(m008, new RegExp(`\\b${col}\\b`, 'i'), `Expected aircraft_profiles column ${col} in 008`);
+  }
+  assert.match(m008, /chk_aircraft_category_valid/i);
+  assert.match(m008, /'evtol',\s*'stol',\s*'light_fixed_wing',\s*'turboprop'/i);
+
+  for (const col of ['terrain_risk', 'catchment_population', 'last_mile_access_km', 'data_confidence', 'source', 'verified_at']) {
+    assert.match(m008, new RegExp(`\\b${col}\\b`, 'i'), `Expected airstrips column ${col} in 008`);
+  }
+  assert.match(m008, /chk_airstrip_terrain_risk/i);
+  assert.match(m008, /chk_airstrip_data_confidence/i);
+  assert.match(m008, /PLACEHOLDER - verify against manufacturer data/);
+});
+
+test('seed aircraft profiles are explicitly marked as PLACEHOLDER and missing airstrip fields are NULL with source/confidence', () => {
+  assert.equal(seedModule.AIRCRAFT_PROFILES.length, 5);
+  const validCategories = new Set(['evtol', 'stol', 'light_fixed_wing', 'turboprop']);
+
+  for (const profile of seedModule.AIRCRAFT_PROFILES) {
+    assert.equal(profile.source, 'PLACEHOLDER - verify against manufacturer data');
+    assert.ok(validCategories.has(profile.category), `Invalid aircraft category: ${profile.category}`);
+    assert.ok(profile.takeoff_distance_m > 0, `Expected positive takeoff_distance_m for ${profile.name}`);
+    assert.ok(profile.landing_distance_m > 0, `Expected positive landing_distance_m for ${profile.name}`);
+    assert.ok(profile.mtow_kg > 0, `Expected positive mtow_kg for ${profile.name}`);
+    assert.ok(profile.payload_kg > 0, `Expected positive payload_kg for ${profile.name}`);
+    assert.ok(Number.isInteger(profile.seats) && profile.seats >= 0, `Expected integer seats for ${profile.name}`);
+    assert.ok(profile.range_km > 0, `Expected positive range_km for ${profile.name}`);
+    assert.ok(Array.isArray(profile.allowed_surfaces) && profile.allowed_surfaces.length > 0, `Expected allowed_surfaces for ${profile.name}`);
+  }
+
+  for (const strip of seedModule.AIRSTRIPS) {
+    assert.equal(strip.terrain_risk, null, `Expected NULL terrain_risk for unverified seed strip ${strip.name}`);
+    assert.equal(strip.catchment_population, null, `Expected NULL catchment_population for unverified seed strip ${strip.name}`);
+    assert.equal(strip.last_mile_access_km, null, `Expected NULL last_mile_access_km for unverified seed strip ${strip.name}`);
+    assert.equal(strip.data_confidence, 'low');
+    assert.match(strip.source, /PLACEHOLDER/);
+  }
 });
 

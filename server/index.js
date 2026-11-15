@@ -12,6 +12,7 @@ const geoRoutes = require('../functions/aerogrid_api/src/routes/geo');
 const authRoutes = require('./src/routes/authRoutes');
 const assetRoutes = require('./src/routes/assetRoutes');
 const spatialRoutes = require('./src/routes/spatialRoutes');
+const decisionRoutes = require('./src/routes/decisionRoutes');
 
 const app = express();
 
@@ -85,16 +86,18 @@ app.use((req, res, next) => {
 // 6. Mount REST Routes
 app.use(healthRoutes);
 app.use('/api', authRoutes);
+app.use('/api', decisionRoutes);
+app.use('/api', spatialRoutes);
 app.use('/api', airstripsRoutes);
 app.use('/api', geoRoutes);
 app.use('/api', assetRoutes);
-app.use('/api', spatialRoutes);
 
 // Direct root fallbacks for Catalyst serverless routing
+app.use(decisionRoutes);
+app.use(spatialRoutes);
 app.use(airstripsRoutes);
 app.use(geoRoutes);
 app.use(assetRoutes);
-app.use(spatialRoutes);
 
 // 7. Central 404 Handler
 app.use((req, res) => {

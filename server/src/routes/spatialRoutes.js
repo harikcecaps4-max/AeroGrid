@@ -3,6 +3,7 @@
 const express = require('express');
 const { query } = require('../../../functions/aerogrid_api/src/db');
 const fallbackAirstrips = require('../../../functions/aerogrid_api/src/data/airstripsFallback.json');
+const { CAVEAT_TEXT } = require('../decision/config');
 
 const router = express.Router();
 
@@ -38,6 +39,7 @@ router.get('/airstrips/radius', async (req, res, next) => {
       return res.status(400).json({
         error: 'Bad Request',
         message: 'Valid `lat` and `lng` query parameters are required.',
+        caveat: CAVEAT_TEXT,
       });
     }
 
@@ -93,6 +95,7 @@ router.get('/airstrips/radius', async (req, res, next) => {
       radius_km: radiusKm,
       count: results.length,
       airstrips: results,
+      caveat: CAVEAT_TEXT,
     });
   } catch (err) {
     next(err);
