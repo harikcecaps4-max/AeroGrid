@@ -4,6 +4,7 @@ const express = require('express');
 const { query } = require('../db');
 const { calculateFeasibilityScore } = require('../scoring');
 const fallbackAirstrips = require('../data/airstripsFallback.json');
+const { CAVEAT_TEXT } = require('../../../../server/src/decision/config');
 
 const router = express.Router();
 
@@ -169,6 +170,7 @@ router.get('/airstrips', async (req, res, next) => {
       type: 'FeatureCollection',
       count: features.length,
       features,
+      caveat: CAVEAT_TEXT,
     });
   } catch (err) {
     next(err);
@@ -183,7 +185,10 @@ router.get('/airstrips/:id', async (req, res, next) => {
   try {
     const id = Number(req.params.id);
     if (isNaN(id)) {
-      return res.status(400).json({ error: 'Invalid airstrip ID' });
+      return res.status(400).json({
+        error: 'Invalid airstrip ID',
+        caveat: CAVEAT_TEXT,
+      });
     }
 
     let row = null;
@@ -238,11 +243,17 @@ router.get('/airstrips/:id', async (req, res, next) => {
     }
 
     if (!row) {
-      return res.status(404).json({ error: `Airstrip #${id} not found` });
+      return res.status(404).json({
+        error: `Airstrip #${id} not found`,
+        caveat: CAVEAT_TEXT,
+      });
     }
 
     const feature = rowToFeature(row);
-    return res.status(200).json(feature);
+    return res.status(200).json({
+      ...feature,
+      caveat: CAVEAT_TEXT,
+    });
   } catch (err) {
     next(err);
   }

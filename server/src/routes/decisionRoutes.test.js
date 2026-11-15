@@ -53,6 +53,7 @@ test.before(async () => {
 
 test.after(async () => {
   if (server) {
+    server.closeAllConnections?.();
     await new Promise((resolve) => server.close(resolve));
   }
 });
@@ -320,4 +321,39 @@ test('POST /api/compare returns 404 with caveat when aircraftId or any airstripI
   assert.equal(missingStrip.status, 404);
   assert.equal(missingStrip.json.caveat, CAVEAT_TEXT);
   assert.deepEqual(missingStrip.json.missingIds, [999]);
+});
+
+test('decision-support caveat is present across airstrip, spatial, and validation responses', async () => {
+  const collection = await requestJson('/api/airstrips');
+  assert.equal(collection.status, 200);
+  assert.equal(collection.json.caveat, CAVEAT_TEXT);
+  assert.equal(collection.json.type, 'FeatureCollection');
+
+  const single = await requestJson('/api/airstrips/1');
+  assert.equal(single.status, 200);
+  assert.equal(single.json.caveat, CAVEAT_TEXT);
+  assert.equal(single.json.type, 'Feature');
+
+  const badId = await requestJson('/api/airstrips/not-a-number');
+  assert.equal(badId.status, 400);
+  assert.equal(badId.json.caveat, CAVEAT_TEXT);
+
+  const missingStrip = await requestJson('/api/airstrips/999');
+  assert.equal(missingStrip.status, 404);
+  assert.equal(missingStrip.json.caveat, CAVEAT_TEXT);
+
+  const radius = await requestJson('/api/airstrips/radius?lat=13.07&lng=77.60');
+  assert.equal(radius.status, 200);
+  assert.equal(radius.json.caveat, CAVEAT_TEXT);
+
+  const badRadius = await requestJson('/api/airstrips/radius');
+  assert.equal(badRadius.status, 400);
+  assert.equal(badRadius.json.caveat, CAVEAT_TEXT);
+
+  const badValidation = await requestJson('/api/evaluate', {
+    method: 'POST',
+    body: {},
+  });
+  assert.equal(badValidation.status, 400);
+  assert.equal(badValidation.json.caveat, CAVEAT_TEXT);
 });

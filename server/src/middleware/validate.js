@@ -1,5 +1,7 @@
 'use strict';
 
+const { CAVEAT_TEXT } = require('../decision/config');
+
 /**
  * Validates incoming HTTP requests against a Zod schema.
  * Supports validating body, query, and params.
@@ -32,6 +34,7 @@ function validateRequest({ body: bodySchema, query: querySchema, params: paramsS
           error: 'Validation Error',
           message: 'Invalid request data provided.',
           issues,
+          caveat: CAVEAT_TEXT,
         });
       }
       next(err);
