@@ -64,6 +64,39 @@ const DECISION_CONFIG = Object.freeze({
       unverified: 20,
     }),
     unpavedSurfaces: Object.freeze(['gravel', 'grass', 'laterite', 'unpaved']),
+    // Floor applied when deducting penalties from data_confidence
+    minConfidenceScore: 10,
+    catchmentBands: Object.freeze([
+      Object.freeze({ min: 1000000, score: 100, label: 'major metro catchment (>= 1.0M residents)' }),
+      Object.freeze({ min: 500000, score: 85, label: 'strong regional catchment (>= 500k residents)' }),
+      Object.freeze({ min: 200000, score: 70, label: 'moderate regional catchment (>= 200k residents)' }),
+      Object.freeze({ min: 50000, score: 50, label: 'emerging town catchment (>= 50k residents)' }),
+      Object.freeze({ min: 1, score: 30, label: 'small local catchment (< 50k residents)' }),
+      Object.freeze({ min: 0, score: 10, label: 'negligible catchment (0 reported)' }),
+    ]),
+    accessKmBands: Object.freeze([
+      Object.freeze({ max: 2, score: 100, label: 'immediate arterial access (<= 2 km)' }),
+      Object.freeze({ max: 5, score: 85, label: 'good last-mile access (<= 5 km)' }),
+      Object.freeze({ max: 10, score: 65, label: 'moderate transfer distance (<= 10 km)' }),
+      Object.freeze({ max: 20, score: 45, label: 'extended last-mile transfer (<= 20 km)' }),
+      Object.freeze({ max: Infinity, score: 20, label: 'remote ground access (> 20 km)' }),
+    ]),
+    airportDistance: Object.freeze({
+      idealMinKm: 25,
+      idealMaxKm: 150,
+      mediumMaxKm: 250,
+      longMaxKm: 400,
+      // Flag when nearest hub leg consumes > 85% of aircraft nominal range (thin fuel/battery reserve)
+      rangeReserveRatio: 0.85,
+      rangeConstrainedCapScore: 25,
+      scores: Object.freeze({
+        ideal: 100,
+        closeHub: 75,
+        medium: 80,
+        long: 55,
+        remote: 30,
+      }),
+    }),
   }),
 });
 
@@ -78,6 +111,7 @@ function mergeDecisionConfig(customConfig) {
   if (!customConfig || typeof customConfig !== 'object') {
     return DECISION_CONFIG;
   }
+  const customAirportDist = (customConfig.scoring && customConfig.scoring.airportDistance) || {};
   return {
     caveat: customConfig.caveat || DECISION_CONFIG.caveat,
     runway: { ...DECISION_CONFIG.runway, ...(customConfig.runway || {}) },
@@ -93,6 +127,14 @@ function mergeDecisionConfig(customConfig) {
       confidenceScores: {
         ...DECISION_CONFIG.scoring.confidenceScores,
         ...((customConfig.scoring && customConfig.scoring.confidenceScores) || {}),
+      },
+      airportDistance: {
+        ...DECISION_CONFIG.scoring.airportDistance,
+        ...customAirportDist,
+        scores: {
+          ...DECISION_CONFIG.scoring.airportDistance.scores,
+          ...(customAirportDist.scores || {}),
+        },
       },
     },
   };

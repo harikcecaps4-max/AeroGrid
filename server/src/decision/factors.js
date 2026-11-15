@@ -5,23 +5,6 @@ const { toFiniteNumber } = require('./gates');
 
 const CONFIDENCE_TIERS = ['high', 'medium', 'low', 'unverified'];
 
-const CATCHMENT_BANDS = [
-  { min: 1000000, score: 100, label: 'major metro catchment (>= 1.0M residents)' },
-  { min: 500000, score: 85, label: 'strong regional catchment (>= 500k residents)' },
-  { min: 200000, score: 70, label: 'moderate regional catchment (>= 200k residents)' },
-  { min: 50000, score: 50, label: 'emerging town catchment (>= 50k residents)' },
-  { min: 1, score: 30, label: 'small local catchment (< 50k residents)' },
-  { min: 0, score: 10, label: 'negligible catchment (0 reported)' },
-];
-
-const ACCESS_KM_BANDS = [
-  { max: 2, score: 100, label: 'immediate arterial access (<= 2 km)' },
-  { max: 5, score: 85, label: 'good last-mile access (<= 5 km)' },
-  { max: 10, score: 65, label: 'moderate transfer distance (<= 10 km)' },
-  { max: 20, score: 45, label: 'extended last-mile transfer (<= 20 km)' },
-  { max: Infinity, score: 20, label: 'remote ground access (> 20 km)' },
-];
-
 function scoreFromMinBands(value, bands) {
   return bands.find((b) => value >= b.min);
 }
@@ -56,7 +39,7 @@ function evaluateTerrainFactor(airstrip, config, warnings) {
 
   if (mapped === undefined) {
     warnings.push(
-      'Missing terrain_risk (NULL): scored conservatively at 40/100; topographical obstacle & approach clearance survey required.'
+      `Missing terrain_risk (NULL): scored conservatively at ${missingScore}/100; topographical obstacle & approach clearance survey required.`
     );
     return {
       missing: true,
@@ -95,7 +78,7 @@ function evaluateCatchmentFactor(airstrip, config, warnings) {
 
   if (pop === null || pop < 0) {
     warnings.push(
-      'Missing catchment_population (NULL): scored conservatively at 40/100; passenger/cargo catchment census required.'
+      `Missing catchment_population (NULL): scored conservatively at ${missingScore}/100; passenger/cargo catchment census required.`
     );
     return {
       missing: true,
@@ -108,7 +91,7 @@ function evaluateCatchmentFactor(airstrip, config, warnings) {
     };
   }
 
-  const band = scoreFromMinBands(pop, CATCHMENT_BANDS);
+  const band = scoreFromMinBands(pop, config.scoring.catchmentBands);
   return {
     missing: false,
     factor: {
@@ -126,7 +109,7 @@ function evaluateLastMileFactor(airstrip, config, warnings) {
 
   if (km === null) {
     warnings.push(
-      'Missing last_mile_access_km (NULL): scored conservatively at 40/100; last-mile road distance survey required.'
+      `Missing last_mile_access_km (NULL): scored conservatively at ${missingScore}/100; last-mile road distance survey required.`
     );
     return {
       missing: true,
@@ -139,7 +122,7 @@ function evaluateLastMileFactor(airstrip, config, warnings) {
     };
   }
 
-  const band = scoreFromMaxBands(km, ACCESS_KM_BANDS);
+  const band = scoreFromMaxBands(km, config.scoring.accessKmBands);
   const origin = fromAccessPoints ? 'nearest access_points record' : 'last_mile_access_km';
   return {
     missing: false,
@@ -154,6 +137,7 @@ function evaluateLastMileFactor(airstrip, config, warnings) {
 
 function evaluateNearestAirportFactor(aircraft, airstrip, config, warnings) {
   const missingScore = config.scoring.missingFactorScore;
+  const apCfg = config.scoring.airportDistance;
   const rawDist =
     airstrip &&
     (airstrip.nearest_airport_distance_km ?? (airstrip.nearest_airport && airstrip.nearest_airport.distance_km));
@@ -161,7 +145,7 @@ function evaluateNearestAirportFactor(aircraft, airstrip, config, warnings) {
 
   if (distKm === null || distKm < 0) {
     warnings.push(
-      'Missing nearest_airport_distance_km (NULL): scored conservatively at 40/100; regional hub feeder proximity unverified.'
+      `Missing nearest_airport_distance_km (NULL): scored conservatively at ${missingScore}/100; regional hub feeder proximity unverified.`
     );
     return {
       missing: true,
@@ -177,31 +161,32 @@ function evaluateNearestAirportFactor(aircraft, airstrip, config, warnings) {
 
   let value;
   let bandNote;
-  if (distKm >= 25 && distKm <= 150) {
-    value = 100;
-    bandNote = 'ideal regional hub feeder radius (25–150 km)';
-  } else if (distKm < 25) {
-    value = 75;
-    bandNote = 'close to commercial hub (< 25 km; check Class D/C airspace overlap)';
-  } else if (distKm <= 250) {
-    value = 80;
-    bandNote = 'viable medium regional feeder distance (150–250 km)';
-  } else if (distKm <= 400) {
-    value = 55;
-    bandNote = 'long regional leg (250–400 km)';
+  if (distKm >= apCfg.idealMinKm && distKm <= apCfg.idealMaxKm) {
+    value = apCfg.scores.ideal;
+    bandNote = `ideal regional hub feeder radius (${apCfg.idealMinKm}–${apCfg.idealMaxKm} km)`;
+  } else if (distKm < apCfg.idealMinKm) {
+    value = apCfg.scores.closeHub;
+    bandNote = `close to commercial hub (< ${apCfg.idealMinKm} km; check Class D/C airspace overlap)`;
+  } else if (distKm <= apCfg.mediumMaxKm) {
+    value = apCfg.scores.medium;
+    bandNote = `viable medium regional feeder distance (${apCfg.idealMaxKm}–${apCfg.mediumMaxKm} km)`;
+  } else if (distKm <= apCfg.longMaxKm) {
+    value = apCfg.scores.long;
+    bandNote = `long regional leg (${apCfg.mediumMaxKm}–${apCfg.longMaxKm} km)`;
   } else {
-    value = 30;
-    bandNote = 'remote feeder leg (> 400 km)';
+    value = apCfg.scores.remote;
+    bandNote = `remote feeder leg (> ${apCfg.longMaxKm} km)`;
   }
 
   let rangeConstrained = false;
   const rangeKm = toFiniteNumber(aircraft && aircraft.range_km);
-  if (rangeKm !== null && rangeKm > 0 && distKm > rangeKm * 0.85) {
-    value = Math.min(value, 25);
+  if (rangeKm !== null && rangeKm > 0 && distKm > rangeKm * apCfg.rangeReserveRatio) {
+    value = Math.min(value, apCfg.rangeConstrainedCapScore);
     rangeConstrained = true;
-    bandNote = `nearest hub (${distKm.toFixed(1)} km) exceeds 85% of aircraft nominal range (${rangeKm} km); reserve margin constrained`;
+    const pct = Math.round(apCfg.rangeReserveRatio * 100);
+    bandNote = `nearest hub (${distKm.toFixed(1)} km) exceeds ${pct}% of aircraft nominal range (${rangeKm} km); reserve margin constrained`;
     warnings.push(
-      `Nearest hub airport distance (${distKm.toFixed(1)} km) exceeds 85% of aircraft nominal range (${rangeKm} km); IFR/VFR reserve margin constrained.`
+      `Nearest hub airport distance (${distKm.toFixed(1)} km) exceeds ${pct}% of aircraft nominal range (${rangeKm} km); IFR/VFR reserve margin constrained.`
     );
   }
 
@@ -228,7 +213,7 @@ function evaluateConfidenceFactor(aircraft, airstrip, config, missingFactorCount
     : CONFIDENCE_TIERS.length - 1;
   const baseValue = config.scoring.confidenceScores[CONFIDENCE_TIERS[startIdx]];
   const penalty = missingFactorCount * config.scoring.missingFieldConfidencePenalty;
-  const value = Math.max(10, baseValue - penalty);
+  const value = Math.max(config.scoring.minConfidenceScore, baseValue - penalty);
 
   const degradedIdx = Math.min(CONFIDENCE_TIERS.length - 1, startIdx + missingFactorCount);
   const effectiveConfidence = CONFIDENCE_TIERS[degradedIdx];

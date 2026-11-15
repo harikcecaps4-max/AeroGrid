@@ -25,8 +25,8 @@ function summarizeAirstrip(airstrip) {
     id: airstrip.id ?? null,
     name: airstrip.name ?? 'Unnamed Airstrip',
     state: airstrip.state ?? airstrip.state_name ?? null,
-    surface: (airstrip.surface ?? airstrip.surface_name ?? null),
-    ownership: (airstrip.ownership ?? airstrip.ownership_type ?? null),
+    surface: airstrip.surface ?? airstrip.surface_name ?? null,
+    ownership: airstrip.ownership ?? airstrip.ownership_name ?? airstrip.ownership_type ?? null,
     elevation_m: toFiniteNumber(airstrip.elevation_m),
     runway_length_m: toFiniteNumber(airstrip.runway_length_m),
     data_confidence: airstrip.data_confidence ?? null,
@@ -176,7 +176,7 @@ function applyAirstripFilters(airstrips, filters = {}) {
   return airstrips.filter((strip) => {
     if (!matchesFilterString(strip.state ?? strip.state_name, filters.state)) return false;
     if (!matchesFilterString(strip.surface ?? strip.surface_name, filters.surface)) return false;
-    if (!matchesFilterString(strip.ownership ?? strip.ownership_type, filters.ownership)) return false;
+    if (!matchesFilterString(strip.ownership ?? strip.ownership_name ?? strip.ownership_type, filters.ownership)) return false;
     if (filters.minRunwayLengthM !== undefined && filters.minRunwayLengthM !== null) {
       const len = toFiniteNumber(strip.runway_length_m);
       if (len === null || len < Number(filters.minRunwayLengthM)) return false;
