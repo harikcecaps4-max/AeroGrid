@@ -2,12 +2,13 @@
 
 const express = require('express');
 const { CAVEAT_TEXT } = require('../decision/config');
-const { evaluateAirstrip } = require('../decision/engine');
+const { evaluateAirstrip, rankAirstrips } = require('../decision/engine');
 const { validateRequest } = require('../middleware/validate');
-const { evaluateRequestSchema } = require('../schemas/decisionSchemas');
+const { evaluateRequestSchema, rankRequestSchema } = require('../schemas/decisionSchemas');
 const {
   listAircraftProfiles,
   getAircraftProfileById,
+  listAirstripsForDecision,
   getAirstripForDecisionById,
 } = require('../services/decisionDataService');
 
@@ -64,6 +65,37 @@ router.post(
         aircraft,
         airstrip,
         ...evaluation,
+      });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+/**
+ * POST /api/rank
+ * Evaluates and ranks airstrips for an aircraft profile with optional filters.
+ */
+router.post(
+  '/rank',
+  validateRequest({ body: rankRequestSchema }),
+  async (req, res, next) => {
+    try {
+      const { aircraftId, filters } = req.body;
+      const aircraft = await getAircraftProfileById(aircraftId);
+
+      if (!aircraft) {
+        return res.status(404).json({
+          error: `Aircraft profile #${aircraftId} not found`,
+          caveat: CAVEAT_TEXT,
+        });
+      }
+
+      const airstrips = await listAirstripsForDecision();
+      const ranked = rankAirstrips(aircraft, airstrips, filters);
+      return res.status(200).json({
+        ...ranked,
+        filters,
       });
     } catch (err) {
       next(err);
