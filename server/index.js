@@ -87,17 +87,17 @@ app.use((req, res, next) => {
 app.use(healthRoutes);
 app.use('/api', authRoutes);
 app.use('/api', decisionRoutes);
+app.use('/api', spatialRoutes);
 app.use('/api', airstripsRoutes);
 app.use('/api', geoRoutes);
 app.use('/api', assetRoutes);
-app.use('/api', spatialRoutes);
 
 // Direct root fallbacks for Catalyst serverless routing
 app.use(decisionRoutes);
+app.use(spatialRoutes);
 app.use(airstripsRoutes);
 app.use(geoRoutes);
 app.use(assetRoutes);
-app.use(spatialRoutes);
 
 // 7. Central 404 Handler
 app.use((req, res) => {
