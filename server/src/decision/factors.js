@@ -13,6 +13,13 @@ function scoreFromMaxBands(value, bands) {
   return bands.find((b) => value <= b.max);
 }
 
+/**
+ * Resolves the shortest last-mile ground access distance (km) from direct column
+ * `last_mile_access_km` or falls back to the minimum distance in `access_points`.
+ *
+ * @param {Object} airstrip
+ * @returns {{ km: number|null, fromAccessPoints: boolean }}
+ */
 function resolveLastMileKm(airstrip) {
   const directKm = toFiniteNumber(airstrip && airstrip.last_mile_access_km);
   if (directKm !== null && directKm >= 0) {
@@ -31,6 +38,14 @@ function resolveLastMileKm(airstrip) {
   return { km: null, fromAccessPoints: false };
 }
 
+/**
+ * Scores `terrain_risk` or falls back to conservative missing-factor penalty.
+ *
+ * @param {Object} airstrip
+ * @param {Object} config
+ * @param {string[]} warnings
+ * @returns {{ missing: boolean, highTerrainRisk: boolean, factor: { name: string, weight: number, value: number, note: string } }}
+ */
 function evaluateTerrainFactor(airstrip, config, warnings) {
   const missingScore = config.scoring.missingFactorScore;
   const rawTerrain = airstrip && airstrip.terrain_risk;
@@ -72,6 +87,14 @@ function evaluateTerrainFactor(airstrip, config, warnings) {
   };
 }
 
+/**
+ * Scores `catchment_population` against configured regional catchment brackets.
+ *
+ * @param {Object} airstrip
+ * @param {Object} config
+ * @param {string[]} warnings
+ * @returns {{ missing: boolean, factor: { name: string, weight: number, value: number, note: string } }}
+ */
 function evaluateCatchmentFactor(airstrip, config, warnings) {
   const missingScore = config.scoring.missingFactorScore;
   const pop = toFiniteNumber(airstrip && airstrip.catchment_population);
@@ -103,6 +126,14 @@ function evaluateCatchmentFactor(airstrip, config, warnings) {
   };
 }
 
+/**
+ * Scores last-mile ground connectivity in km using configured distance brackets.
+ *
+ * @param {Object} airstrip
+ * @param {Object} config
+ * @param {string[]} warnings
+ * @returns {{ missing: boolean, factor: { name: string, weight: number, value: number, note: string } }}
+ */
 function evaluateLastMileFactor(airstrip, config, warnings) {
   const missingScore = config.scoring.missingFactorScore;
   const { km, fromAccessPoints } = resolveLastMileKm(airstrip);
@@ -135,6 +166,15 @@ function evaluateLastMileFactor(airstrip, config, warnings) {
   };
 }
 
+/**
+ * Scores distance to nearest commercial hub airport and checks aircraft range reserves.
+ *
+ * @param {Object} aircraft
+ * @param {Object} airstrip
+ * @param {Object} config
+ * @param {string[]} warnings
+ * @returns {{ missing: boolean, rangeConstrained: boolean, factor: { name: string, weight: number, value: number, note: string } }}
+ */
 function evaluateNearestAirportFactor(aircraft, airstrip, config, warnings) {
   const missingScore = config.scoring.missingFactorScore;
   const apCfg = config.scoring.airportDistance;
@@ -202,6 +242,16 @@ function evaluateNearestAirportFactor(aircraft, airstrip, config, warnings) {
   };
 }
 
+/**
+ * Scores airstrip record confidence, degrading by tier per missing factor field.
+ *
+ * @param {Object} aircraft
+ * @param {Object} airstrip
+ * @param {Object} config
+ * @param {number} missingFactorCount
+ * @param {string[]} warnings
+ * @returns {{ effectiveConfidence: string, factor: { name: string, weight: number, value: number, note: string } }}
+ */
 function evaluateConfidenceFactor(aircraft, airstrip, config, missingFactorCount, warnings) {
   const rawConfidence =
     typeof (airstrip && airstrip.data_confidence) === 'string'

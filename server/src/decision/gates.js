@@ -233,14 +233,39 @@ function evaluateSurfaceGateInternal(aircraft, airstrip, config = DECISION_CONFI
   };
 }
 
+/**
+ * Evaluates whether field elevation is present and within the operational screening envelope.
+ *
+ * @param {Object} aircraft - Aircraft performance profile.
+ * @param {Object} airstrip - Airstrip candidate record with `elevation_m`.
+ * @param {Object} [config=DECISION_CONFIG] - Decision configuration parameters.
+ * @returns {{ name: string, pass: boolean, margin: number|null, explanation: string }}
+ */
 function evaluateElevationGate(aircraft, airstrip, config = DECISION_CONFIG) {
   return evaluateElevationGateInternal(aircraft, airstrip, config).gate;
 }
 
+/**
+ * Evaluates runway length against aircraft governing takeoff/landing distance
+ * adjusted by configurable safety margin and density-altitude multiplier.
+ *
+ * @param {Object} aircraft - Aircraft performance profile with `takeoff_distance_m`/`landing_distance_m`.
+ * @param {Object} airstrip - Airstrip candidate record with `runway_length_m` and `elevation_m`.
+ * @param {Object} [config=DECISION_CONFIG] - Decision configuration parameters.
+ * @returns {{ name: string, pass: boolean, margin: number|null, explanation: string }}
+ */
 function evaluateRunwayLengthGate(aircraft, airstrip, config = DECISION_CONFIG) {
   return evaluateRunwayLengthGateInternal(aircraft, airstrip, config).gate;
 }
 
+/**
+ * Evaluates whether the airstrip pavement/surface type is permitted by the aircraft profile.
+ *
+ * @param {Object} aircraft - Aircraft performance profile with `allowed_surfaces`.
+ * @param {Object} airstrip - Airstrip candidate record with `surface` or `surface_name`.
+ * @param {Object} [config=DECISION_CONFIG] - Decision configuration parameters.
+ * @returns {{ name: string, pass: boolean, margin: number|null, explanation: string }}
+ */
 function evaluateSurfaceGate(aircraft, airstrip, config = DECISION_CONFIG) {
   return evaluateSurfaceGateInternal(aircraft, airstrip, config).gate;
 }

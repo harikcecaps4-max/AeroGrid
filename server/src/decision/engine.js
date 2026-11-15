@@ -10,6 +10,12 @@ const VERDICT_RANK = Object.freeze({
   not_viable: 2,
 });
 
+/**
+ * Extracts compact aircraft metadata for inclusion in ranking and comparison outputs.
+ *
+ * @param {Object|null} aircraft
+ * @returns {{ id: number|string|null, name: string, category: string|null, source: string|null }|null}
+ */
 function summarizeAircraft(aircraft) {
   if (!aircraft) return null;
   return {
@@ -20,6 +26,12 @@ function summarizeAircraft(aircraft) {
   };
 }
 
+/**
+ * Extracts normalized airstrip summary attributes across direct and SQL/JSON column aliases.
+ *
+ * @param {Object} airstrip
+ * @returns {Object}
+ */
 function summarizeAirstrip(airstrip) {
   return {
     id: airstrip.id ?? null,
@@ -39,6 +51,14 @@ function getRunwayMargin(evaluation) {
   return runwayGate && typeof runwayGate.margin === 'number' ? runwayGate.margin : -Infinity;
 }
 
+/**
+ * Deterministic comparator sorting viable > viable_with_conditions > not_viable,
+ * then weighted score descending, runway margin descending, and airstrip name ascending.
+ *
+ * @param {Object} a
+ * @param {Object} b
+ * @returns {number}
+ */
 function compareEvaluatedEntries(a, b) {
   const verdictDiff = VERDICT_RANK[a.evaluation.verdict] - VERDICT_RANK[b.evaluation.verdict];
   if (verdictDiff !== 0) return verdictDiff;
@@ -172,6 +192,13 @@ function matchesFilterString(actual, expected) {
   return String(actual).trim().toLowerCase() === String(expected).trim().toLowerCase();
 }
 
+/**
+ * Filters airstrip candidates by state, surface, ownership, and minimum runway length.
+ *
+ * @param {Array<Object>} airstrips
+ * @param {Object} [filters={}]
+ * @returns {Array<Object>}
+ */
 function applyAirstripFilters(airstrips, filters = {}) {
   return airstrips.filter((strip) => {
     if (!matchesFilterString(strip.state ?? strip.state_name, filters.state)) return false;
