@@ -357,3 +357,42 @@ test('decision-support caveat is present across airstrip, spatial, and validatio
   assert.equal(badValidation.status, 400);
   assert.equal(badValidation.json.caveat, CAVEAT_TEXT);
 });
+
+test('functions/aerogrid_api shares engine without duplication and evaluates ?aircraft_id on GET /airstrips', async () => {
+  const catalystEntry = require('../../../functions/aerogrid_api/index');
+  const sharedDecision = require('../../../functions/aerogrid_api/src/decision');
+  const engine = require('../decision/engine');
+
+  assert.equal(catalystEntry, app);
+  assert.equal(sharedDecision.evaluateAirstrip, engine.evaluateAirstrip);
+  assert.equal(sharedDecision.rankAirstrips, engine.rankAirstrips);
+  assert.equal(sharedDecision.compareAirstrips, engine.compareAirstrips);
+
+  const listWithAircraft = await requestJson('/api/airstrips?aircraft_id=1');
+  assert.equal(listWithAircraft.status, 200);
+  assert.equal(listWithAircraft.json.caveat, CAVEAT_TEXT);
+  assert.equal(listWithAircraft.json.count, 25);
+
+  const featureWithDecision = listWithAircraft.json.features.find(
+    (f) => f.properties.id === 1,
+  );
+  assert.ok(featureWithDecision?.properties.decision);
+  assert.equal(featureWithDecision.properties.decision.caveat, CAVEAT_TEXT);
+  assert.equal(featureWithDecision.properties.decision.gates.length, 3);
+  assert.equal(featureWithDecision.properties.decision.factors.length, 5);
+
+  const singleWithAircraft = await requestJson('/api/airstrips/1?aircraft_id=1');
+  assert.equal(singleWithAircraft.status, 200);
+  assert.deepEqual(
+    singleWithAircraft.json.properties.decision,
+    featureWithDecision.properties.decision,
+  );
+
+  const invalidAircraftParam = await requestJson('/api/airstrips?aircraft_id=abc');
+  assert.equal(invalidAircraftParam.status, 400);
+  assert.equal(invalidAircraftParam.json.caveat, CAVEAT_TEXT);
+
+  const missingAircraftParam = await requestJson('/api/airstrips?aircraft_id=999');
+  assert.equal(missingAircraftParam.status, 404);
+  assert.equal(missingAircraftParam.json.caveat, CAVEAT_TEXT);
+});

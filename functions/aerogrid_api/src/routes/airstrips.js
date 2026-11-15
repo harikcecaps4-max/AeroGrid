@@ -4,9 +4,69 @@ const express = require('express');
 const { query } = require('../db');
 const { calculateFeasibilityScore } = require('../scoring');
 const fallbackAirstrips = require('../data/airstripsFallback.json');
-const { CAVEAT_TEXT } = require('../../../../server/src/decision/config');
+const {
+  CAVEAT_TEXT,
+  evaluateAirstrip,
+  getAircraftProfileById,
+  normalizeAirstripRow,
+} = require('../decision');
 
 const router = express.Router();
+
+/**
+ * Validates and loads an optional `?aircraft_id=<id>` query parameter so callers
+ * can request per-airstrip decision verdicts directly on GeoJSON feature endpoints.
+ *
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ * @returns {Promise<{ aircraft: Object|null, handled: boolean }>}
+ */
+async function resolveOptionalAircraftQuery(req, res) {
+  const rawAircraftId = req.query.aircraft_id;
+  if (rawAircraftId === undefined || rawAircraftId === '') {
+    return { aircraft: null, handled: false };
+  }
+
+  const trimmed = String(rawAircraftId).trim();
+  const parsed = Number(trimmed);
+  if (!/^\d+$/.test(trimmed) || !Number.isInteger(parsed) || parsed <= 0) {
+    res.status(400).json({
+      error: 'Invalid aircraft_id query parameter',
+      caveat: CAVEAT_TEXT,
+    });
+    return { aircraft: null, handled: true };
+  }
+
+  const aircraft = await getAircraftProfileById(parsed);
+  if (!aircraft) {
+    res.status(404).json({
+      error: `Aircraft profile #${parsed} not found`,
+      caveat: CAVEAT_TEXT,
+    });
+    return { aircraft: null, handled: true };
+  }
+
+  return { aircraft, handled: false };
+}
+
+/**
+ * Attaches shared decision-engine evaluation to a GeoJSON feature when an aircraft is selected.
+ *
+ * @param {Object} feature
+ * @param {Object} rawRow
+ * @param {Object|null} aircraft
+ * @returns {Object}
+ */
+function attachOptionalDecision(feature, rawRow, aircraft) {
+  if (!aircraft) return feature;
+  return {
+    ...feature,
+    properties: {
+      ...feature.properties,
+      decision: evaluateAirstrip(aircraft, normalizeAirstripRow(rawRow)),
+    },
+  };
+}
 
 /**
  * Maps raw database/fallback row into a GeoJSON Feature with feasibility scoring
@@ -66,6 +126,9 @@ function rowToFeature(row) {
  */
 router.get('/airstrips', async (req, res, next) => {
   try {
+    const { aircraft, handled } = await resolveOptionalAircraftQuery(req, res);
+    if (handled) return;
+
     const { state, surface, min_score, political_severity, search } = req.query;
     let rows = null;
 
@@ -119,7 +182,9 @@ router.get('/airstrips', async (req, res, next) => {
       rows = fallbackAirstrips;
     }
 
-    let features = rows.map(rowToFeature);
+    let features = rows.map((row) =>
+      attachOptionalDecision(rowToFeature(row), row, aircraft),
+    );
 
     // Filter by political severity tier if requested
     if (political_severity && political_severity !== 'all') {
@@ -191,6 +256,9 @@ router.get('/airstrips/:id', async (req, res, next) => {
       });
     }
 
+    const { aircraft, handled } = await resolveOptionalAircraftQuery(req, res);
+    if (handled) return;
+
     let row = null;
     try {
       const sql = `
@@ -249,7 +317,7 @@ router.get('/airstrips/:id', async (req, res, next) => {
       });
     }
 
-    const feature = rowToFeature(row);
+    const feature = attachOptionalDecision(rowToFeature(row), row, aircraft);
     return res.status(200).json({
       ...feature,
       caveat: CAVEAT_TEXT,
