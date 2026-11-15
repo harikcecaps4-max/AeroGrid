@@ -162,3 +162,96 @@ test('POST /api/evaluate rejects malformed payloads with 400 Validation Error', 
     assert.ok(Array.isArray(json.issues) && json.issues.length > 0);
   }
 });
+
+test('POST /api/rank orders viable airstrips by verdict and score and excludes not_viable by default', async () => {
+  for (const aircraftId of [4, 5]) {
+    const { status, json } = await requestJson('/api/rank', {
+      method: 'POST',
+      body: { aircraftId },
+    });
+
+    assert.equal(status, 200);
+    assert.equal(json.caveat, CAVEAT_TEXT);
+    assert.equal(json.aircraft.id, aircraftId);
+    assert.equal(json.total_evaluated, 25);
+    assert.ok(json.not_viable_count > 0);
+    assert.equal(json.results.length, json.viable_count + json.conditional_count);
+
+    for (let i = 0; i < json.results.length; i += 1) {
+      const entry = json.results[i];
+      assert.equal(entry.rank, i + 1);
+      assert.notEqual(entry.evaluation.verdict, 'not_viable');
+      assert.ok(Array.isArray(entry.reasons) && entry.reasons.length > 0);
+      assert.ok(entry.airstrip && typeof entry.airstrip.id === 'number');
+
+      if (i > 0) {
+        const prev = json.results[i - 1];
+        const verdictOrder = { viable: 0, viable_with_conditions: 1, not_viable: 2 };
+        const prevTier = verdictOrder[prev.evaluation.verdict];
+        const currTier = verdictOrder[entry.evaluation.verdict];
+        assert.ok(prevTier <= currTier);
+        if (prevTier === currTier) {
+          assert.ok(prev.evaluation.score >= entry.evaluation.score);
+        }
+      }
+    }
+  }
+});
+
+test('POST /api/rank applies state/surface/minRunwayLengthM filters and includeNotViable option', async () => {
+  const filtered = await requestJson('/api/rank', {
+    method: 'POST',
+    body: {
+      aircraftId: 5,
+      filters: {
+        state: 'Karnataka',
+        surface: 'asphalt',
+        minRunwayLengthM: 1200,
+      },
+    },
+  });
+
+  assert.equal(filtered.status, 200);
+  assert.equal(filtered.json.caveat, CAVEAT_TEXT);
+  assert.ok(filtered.json.total_evaluated >= 1);
+  for (const entry of filtered.json.results) {
+    assert.equal(entry.airstrip.state, 'Karnataka');
+    assert.equal(entry.airstrip.surface, 'asphalt');
+    assert.ok(entry.airstrip.runway_length_m >= 1200);
+  }
+
+  const withNotViable = await requestJson('/api/rank', {
+    method: 'POST',
+    body: {
+      aircraftId: 5,
+      filters: { includeNotViable: true },
+    },
+  });
+
+  assert.equal(withNotViable.status, 200);
+  assert.equal(withNotViable.json.results.length, withNotViable.json.total_evaluated);
+  const notViableEntries = withNotViable.json.results.filter(
+    (entry) => entry.evaluation.verdict === 'not_viable',
+  );
+  assert.equal(notViableEntries.length, withNotViable.json.not_viable_count);
+  assert.ok(notViableEntries.length > 0);
+  assert.ok(notViableEntries.every((entry) => entry.evaluation.score === 0 && entry.reasons.length > 0));
+});
+
+test('POST /api/rank returns 404 for unknown aircraftId and 400 for invalid filter enums', async () => {
+  const missing = await requestJson('/api/rank', {
+    method: 'POST',
+    body: { aircraftId: 999 },
+  });
+  assert.equal(missing.status, 404);
+  assert.equal(missing.json.caveat, CAVEAT_TEXT);
+  assert.match(missing.json.error, /Aircraft profile #999/);
+
+  const invalidFilter = await requestJson('/api/rank', {
+    method: 'POST',
+    body: { aircraftId: 1, filters: { surface: 'cobblestone' } },
+  });
+  assert.equal(invalidFilter.status, 400);
+  assert.equal(invalidFilter.json.error, 'Validation Error');
+  assert.ok(Array.isArray(invalidFilter.json.issues) && invalidFilter.json.issues.length > 0);
+});
