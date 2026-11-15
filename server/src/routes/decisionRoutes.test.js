@@ -89,3 +89,76 @@ test('GET /api/aircraft returns all 5 placeholder aircraft profiles with caveat'
     assert.match(profile.source, /PLACEHOLDER/);
   }
 });
+
+test('POST /api/evaluate evaluates compatible paved airstrip with missing-data conditions and caveat', async () => {
+  const { status, json } = await requestJson('/api/evaluate', {
+    method: 'POST',
+    body: { aircraftId: 3, airstripId: 1 },
+  });
+
+  assert.equal(status, 200);
+  assert.equal(json.caveat, CAVEAT_TEXT);
+  assert.equal(json.aircraft.id, 3);
+  assert.equal(json.airstrip.id, 1);
+  assert.equal(json.verdict, 'viable_with_conditions');
+  assert.equal(typeof json.score, 'number');
+  assert.ok(json.score > 0 && json.score <= 100);
+  assert.equal(json.gates.length, 3);
+  assert.ok(json.gates.every((g) => g.pass === true));
+  assert.equal(json.factors.length, 5);
+  assert.ok(json.warnings.length > 0);
+  assert.ok(
+    json.warnings.some((w) => /confidence|terrain_risk|catchment|last_mile/i.test(w)),
+    'Expected missing-data warning when fallback airstrip decision fields are null',
+  );
+});
+
+test('POST /api/evaluate returns not_viable with score 0 on incompatible surface', async () => {
+  const { status, json } = await requestJson('/api/evaluate', {
+    method: 'POST',
+    body: { aircraftId: 1, airstripId: 5 },
+  });
+
+  assert.equal(status, 200);
+  assert.equal(json.caveat, CAVEAT_TEXT);
+  assert.equal(json.verdict, 'not_viable');
+  assert.equal(json.score, 0);
+  const surfaceGate = json.gates.find((g) => g.name === 'surface_compatibility');
+  assert.equal(surfaceGate?.pass, false);
+});
+
+test('POST /api/evaluate returns 404 with caveat when aircraft or airstrip id does not exist', async () => {
+  const missingAircraft = await requestJson('/api/evaluate', {
+    method: 'POST',
+    body: { aircraftId: 999, airstripId: 1 },
+  });
+  assert.equal(missingAircraft.status, 404);
+  assert.equal(missingAircraft.json.caveat, CAVEAT_TEXT);
+  assert.match(missingAircraft.json.error, /Aircraft profile #999/);
+
+  const missingAirstrip = await requestJson('/api/evaluate', {
+    method: 'POST',
+    body: { aircraftId: 1, airstripId: 999 },
+  });
+  assert.equal(missingAirstrip.status, 404);
+  assert.equal(missingAirstrip.json.caveat, CAVEAT_TEXT);
+  assert.match(missingAirstrip.json.error, /Airstrip #999/);
+});
+
+test('POST /api/evaluate rejects malformed payloads with 400 Validation Error', async () => {
+  const invalidPayloads = [
+    {},
+    { aircraftId: -1, airstripId: 'abc' },
+    { aircraftId: true, airstripId: 1 },
+  ];
+
+  for (const body of invalidPayloads) {
+    const { status, json } = await requestJson('/api/evaluate', {
+      method: 'POST',
+      body,
+    });
+    assert.equal(status, 400);
+    assert.equal(json.error, 'Validation Error');
+    assert.ok(Array.isArray(json.issues) && json.issues.length > 0);
+  }
+});
