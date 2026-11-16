@@ -2004,37 +2004,34 @@ select::placeholder {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #FFFFFF;
+  color: var(--on-solid);
   font-size: 11px;
   font-weight: 700;
-  border: 2px solid #EAF0F8;
+  border: 2px solid var(--marker-ring);
   font-variant-numeric: tabular-nums;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
 }
 
-.pinpoint-high { background: #0D6E52; }
-.pinpoint-moderate { background: #9A5B0A; }
-.pinpoint-low { background: #991B1B; }
+.pinpoint-high { background: var(--viable-solid); }
+.pinpoint-moderate { background: var(--conditional-solid); }
+.pinpoint-low { background: var(--not-viable-solid); }
 
 .map-floating-pill {
   position: absolute;
   top: 12px;
   left: 52px;
   z-index: 999;
-  background: rgba(13, 22, 38, 0.94);
-  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
   padding: 5px 12px;
   font-size: var(--text-sm);
   font-weight: 500;
-  color: var(--text-primary);
+  color: var(--text);
+  box-shadow: var(--shadow-1);
   display: flex;
   align-items: center;
   gap: 8px;
-}
-
-.map-floating-pill-light {
-  background: rgba(255, 255, 255, 0.94);
-  color: #0B121E;
-  border-color: #CBD5E1;
 }
 
 /* ── Leaflet Overrides ── */

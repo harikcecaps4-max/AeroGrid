@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import { WORLD_AIRSTRIPS, WORLD_REGIONS } from '../data/worldAirstrips'
+import { useTheme } from '../theme/ThemeContext'
 
 // Helper to construct custom HTML circular marker icon matching the reference design
 function createPinpointIcon(score, isSelected, labelText) {
@@ -10,7 +11,7 @@ function createPinpointIcon(score, isSelected, labelText) {
   else if (score < 40) colorClass = 'pinpoint-low'
 
   const display = labelText || score
-  const selectedStyle = isSelected ? 'transform: scale(1.2); box-shadow: 0 0 0 3px #2563eb, 0 4px 16px rgba(0,0,0,0.6);' : ''
+  const selectedStyle = isSelected ? 'transform: scale(1.2); box-shadow: 0 0 0 3px var(--accent), 0 4px 16px rgba(0,0,0,0.6);' : ''
 
   return L.divIcon({
     className: 'custom-pinpoint-marker',
@@ -44,9 +45,11 @@ const REGION_COORDINATES = {
 }
 
 export default function WorldMap() {
+  const { theme } = useTheme()
   const [selectedRegion, setSelectedRegion] = useState('India')
   const [selectedStrip, setSelectedStrip] = useState(WORLD_AIRSTRIPS[0])
-  const [mapTheme, setMapTheme] = useState('topo') // 'topo', 'dark', 'light'
+  const [userMapTheme, setUserMapTheme] = useState(null)
+  const mapTheme = userMapTheme || (theme === 'dark' ? 'dark' : 'light')
   const [filterRating, setFilterRating] = useState('all')
 
   // Filter airstrips by region & score tier
@@ -140,7 +143,7 @@ export default function WorldMap() {
             <button
               className={`btn ${mapTheme === 'topo' ? 'btn-primary' : 'btn-outlined'}`}
               style={{ padding: '5px 10px', fontSize: 12 }}
-              onClick={() => setMapTheme('topo')}
+              onClick={() => setUserMapTheme('topo')}
               title="Reference Topo/Street Map"
             >
               Topo
@@ -148,7 +151,7 @@ export default function WorldMap() {
             <button
               className={`btn ${mapTheme === 'dark' ? 'btn-primary' : 'btn-outlined'}`}
               style={{ padding: '5px 10px', fontSize: 12 }}
-              onClick={() => setMapTheme('dark')}
+              onClick={() => setUserMapTheme('dark')}
               title="Dark Radar Mode"
             >
               Dark
@@ -156,7 +159,7 @@ export default function WorldMap() {
             <button
               className={`btn ${mapTheme === 'light' ? 'btn-primary' : 'btn-outlined'}`}
               style={{ padding: '5px 10px', fontSize: 12 }}
-              onClick={() => setMapTheme('light')}
+              onClick={() => setUserMapTheme('light')}
               title="Clean Light Basemap"
             >
               Light
@@ -168,7 +171,7 @@ export default function WorldMap() {
       {/* Map Body */}
       <div className="map-body" style={{ position: 'relative' }}>
         {/* Floating Region Breadcrumb Pill (as seen in user reference) */}
-        <div className={`map-floating-pill ${mapTheme === 'light' ? 'map-floating-pill-light' : ''}`}>
+        <div className="map-floating-pill">
           <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8">
             <polygon points="1,3 6,1 10,3 15,1 15,13 10,15 6,13 1,15" />
             <line x1="6" y1="1" x2="6" y2="13" />
@@ -239,7 +242,7 @@ export default function WorldMap() {
                       <strong
                         style={{
                           fontFamily: 'var(--mono)',
-                          color: strip.score >= 70 ? '#0f766e' : strip.score >= 40 ? '#92400e' : '#991b1b',
+                          color: strip.score >= 70 ? 'var(--viable)' : strip.score >= 40 ? 'var(--conditional)' : 'var(--not-viable)',
                         }}
                       >
                         {strip.score}/100 ({strip.rating})
@@ -261,7 +264,7 @@ export default function WorldMap() {
                   <h3 style={{ fontSize: 16, color: 'var(--heading)', margin: 0, fontWeight: 600 }}>
                     {selectedStrip.name}
                   </h3>
-                  <div style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 4 }}>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
                     {selectedStrip.region}, {selectedStrip.country}
                   </div>
                 </div>
@@ -270,10 +273,10 @@ export default function WorldMap() {
                   style={{
                     backgroundColor:
                       selectedStrip.score >= 70
-                        ? '#0f766e'
+                        ? 'var(--viable-solid)'
                         : selectedStrip.score >= 40
-                        ? '#92400e'
-                        : '#991b1b',
+                        ? 'var(--conditional-solid)'
+                        : 'var(--not-viable-solid)',
                     width: 38,
                     height: 38,
                     fontSize: 13,
@@ -294,17 +297,23 @@ export default function WorldMap() {
                     fontWeight: 600,
                     backgroundColor:
                       selectedStrip.score >= 70
-                        ? 'rgba(15, 118, 110, 0.2)'
+                        ? 'var(--viable-bg)'
                         : selectedStrip.score >= 40
-                        ? 'rgba(146, 64, 14, 0.2)'
-                        : 'rgba(153, 27, 27, 0.2)',
+                        ? 'var(--conditional-bg)'
+                        : 'var(--not-viable-bg)',
                     color:
                       selectedStrip.score >= 70
-                        ? '#2dd4bf'
+                        ? 'var(--viable)'
                         : selectedStrip.score >= 40
-                        ? '#fbbf24'
-                        : '#f87171',
-                    border: '1px solid currentColor',
+                        ? 'var(--conditional)'
+                        : 'var(--not-viable)',
+                    border: '1px solid ' + (
+                      selectedStrip.score >= 70
+                        ? 'var(--viable-border)'
+                        : selectedStrip.score >= 40
+                        ? 'var(--conditional-border)'
+                        : 'var(--not-viable-border)'
+                    ),
                   }}
                 >
                   {selectedStrip.rating}
@@ -314,25 +323,25 @@ export default function WorldMap() {
               {/* Specs Grid */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
                 <div className="card" style={{ padding: 12 }}>
-                  <div style={{ fontSize: 11, color: 'var(--text-2)' }}>FACILITY TYPE</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>FACILITY TYPE</div>
                   <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--heading)', marginTop: 2 }}>
                     {selectedStrip.type}
                   </div>
                 </div>
                 <div className="card" style={{ padding: 12 }}>
-                  <div style={{ fontSize: 11, color: 'var(--text-2)' }}>SURFACE</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>SURFACE</div>
                   <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--heading)', marginTop: 2 }}>
                     {selectedStrip.surface}
                   </div>
                 </div>
                 <div className="card" style={{ padding: 12 }}>
-                  <div style={{ fontSize: 11, color: 'var(--text-2)' }}>RUNWAY LENGTH</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>RUNWAY LENGTH</div>
                   <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--heading)', marginTop: 2, fontFamily: 'var(--mono)' }}>
                     {selectedStrip.runway_m} meters
                   </div>
                 </div>
                 <div className="card" style={{ padding: 12 }}>
-                  <div style={{ fontSize: 11, color: 'var(--text-2)' }}>COORDINATES</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>COORDINATES</div>
                   <div style={{ fontSize: 11, color: 'var(--heading)', marginTop: 4, fontFamily: 'var(--mono)' }}>
                     {selectedStrip.location[1].toFixed(2)}°N, {selectedStrip.location[0].toFixed(2)}°E
                   </div>
@@ -342,7 +351,7 @@ export default function WorldMap() {
               {/* Score Visual Bar */}
               <div style={{ marginBottom: 20 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 6 }}>
-                  <span style={{ color: 'var(--text-2)' }}>Feasibility Index</span>
+                  <span style={{ color: 'var(--text-muted)' }}>Feasibility Index</span>
                   <span style={{ fontFamily: 'var(--mono)', color: 'var(--heading)' }}>
                     {selectedStrip.score}/100
                   </span>
@@ -354,10 +363,10 @@ export default function WorldMap() {
                       width: `${selectedStrip.score}%`,
                       backgroundColor:
                         selectedStrip.score >= 70
-                          ? '#0f766e'
+                          ? 'var(--viable)'
                           : selectedStrip.score >= 40
-                          ? '#92400e'
-                          : '#991b1b',
+                          ? 'var(--conditional)'
+                          : 'var(--not-viable)',
                     }}
                   />
                 </div>
@@ -365,7 +374,7 @@ export default function WorldMap() {
 
               {/* Pinpoint Legend Guide */}
               <div style={{ borderTop: '1px solid var(--border)', paddingTop: 14 }}>
-                <div style={{ fontSize: 11, color: 'var(--text-2)', textTransform: 'uppercase', marginBottom: 10, letterSpacing: 0.5 }}>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 10, letterSpacing: 0.5 }}>
                   Marker Pinpoint Color Coding
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 12 }}>
@@ -396,8 +405,8 @@ export default function WorldMap() {
                 <circle cx="12" cy="10" r="3" />
                 <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
               </svg>
-              <div style={{ color: 'var(--text-2)', fontSize: 13 }}>Select a pinpoint</div>
-              <div style={{ color: 'var(--text-2)', fontSize: 12, opacity: 0.7 }}>
+              <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>Select a pinpoint</div>
+              <div style={{ color: 'var(--text-muted)', fontSize: 12, opacity: 0.7 }}>
                 Click any numbered pin to inspect full specs
               </div>
             </div>
