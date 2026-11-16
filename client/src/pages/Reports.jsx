@@ -107,21 +107,21 @@ export default function Reports() {
         <div className="stat-card">
           <div className="stat-header">
             <span className="stat-label">Tier-1 High Viability</span>
-            <div className="stat-icon-wrap" style={{ color: '#34d399' }}>
+            <div className="stat-icon-wrap" style={{ color: 'var(--viable)' }}>
               <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <circle cx="8" cy="8" r="6" />
                 <path d="M5 8l2 2 4-4" />
               </svg>
             </div>
           </div>
-          <div className="stat-value" style={{ color: '#34d399' }}>{highViability}</div>
+          <div className="stat-value" style={{ color: 'var(--viable)' }}>{highViability}</div>
           <div className="stat-meta">Ready for immediate operation</div>
         </div>
 
         <div className="stat-card">
           <div className="stat-header">
             <span className="stat-label">Moderate Viability</span>
-            <div className="stat-icon-wrap" style={{ color: '#fbbf24' }}>
+            <div className="stat-icon-wrap" style={{ color: 'var(--conditional)' }}>
               <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <circle cx="8" cy="8" r="6" />
                 <line x1="8" y1="5" x2="8" y2="9" />
@@ -129,21 +129,21 @@ export default function Reports() {
               </svg>
             </div>
           </div>
-          <div className="stat-value" style={{ color: '#fbbf24' }}>{moderateViability}</div>
+          <div className="stat-value" style={{ color: 'var(--conditional)' }}>{moderateViability}</div>
           <div className="stat-meta">Minor upgrades needed</div>
         </div>
 
         <div className="stat-card">
           <div className="stat-header">
             <span className="stat-label">Infrastructure Gaps</span>
-            <div className="stat-icon-wrap" style={{ color: '#f87171' }}>
+            <div className="stat-icon-wrap" style={{ color: 'var(--not-viable)' }}>
               <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <circle cx="8" cy="8" r="6" />
                 <line x1="5" y1="5" x2="11" y2="11" />
               </svg>
             </div>
           </div>
-          <div className="stat-value" style={{ color: '#f87171' }}>{lowViability}</div>
+          <div className="stat-value" style={{ color: 'var(--not-viable)' }}>{lowViability}</div>
           <div className="stat-meta">Runway/utility remediation required</div>
         </div>
       </div>
@@ -169,7 +169,7 @@ export default function Reports() {
                 <div style={{ fontWeight: 600, color: 'var(--heading)', fontSize: 13.5 }}>
                   National Regional Airstrip Audit Report (CSV)
                 </div>
-                <div style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 2 }}>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
                   Full tabular dump containing dimensional metrics, feasibility scores, and hub distances.
                 </div>
               </div>
@@ -191,7 +191,7 @@ export default function Reports() {
                 <div style={{ fontWeight: 600, color: 'var(--heading)', fontSize: 13.5 }}>
                   GeoJSON Spatial Layer (All Features)
                 </div>
-                <div style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 2 }}>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
                   RFC 7946 compliant GeoJSON point dataset compatible with QGIS, ArcGIS, and Leaflet.
                 </div>
               </div>
@@ -224,7 +224,7 @@ export default function Reports() {
                 <div style={{ fontWeight: 600, color: 'var(--heading)', fontSize: 13.5 }}>
                   PostgreSQL Seed Migration (.SQL)
                 </div>
-                <div style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 2 }}>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
                   Database script with PostGIS geometries for self-hosted Neon/RDS instances.
                 </div>
               </div>
@@ -243,19 +243,19 @@ export default function Reports() {
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
-              <span style={{ color: 'var(--text-2)' }}>Runway Length (&ge;1000m)</span>
+              <span style={{ color: 'var(--text-muted)' }}>Runway Length (&ge;1000m)</span>
               <span style={{ fontFamily: 'var(--mono)', color: 'var(--heading)' }}>25 pts</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
-              <span style={{ color: 'var(--text-2)' }}>Pavement (Asphalt/Concrete)</span>
+              <span style={{ color: 'var(--text-muted)' }}>Pavement (Asphalt/Concrete)</span>
               <span style={{ fontFamily: 'var(--mono)', color: 'var(--heading)' }}>20 pts</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
-              <span style={{ color: 'var(--text-2)' }}>Utilities (Lighting, Fuel, Charging)</span>
+              <span style={{ color: 'var(--text-muted)' }}>Utilities (Lighting, Fuel, Charging)</span>
               <span style={{ fontFamily: 'var(--mono)', color: 'var(--heading)' }}>30 pts</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
-              <span style={{ color: 'var(--text-2)' }}>Commercial Hub Proximity</span>
+              <span style={{ color: 'var(--text-muted)' }}>Commercial Hub Proximity</span>
               <span style={{ fontFamily: 'var(--mono)', color: 'var(--heading)' }}>25 pts</span>
             </div>
           </div>
