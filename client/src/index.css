@@ -550,7 +550,7 @@ button {
 .login-error {
   background: var(--status-danger-bg);
   border-left: 3px solid var(--status-danger);
-  color: #FCA5A5;
+  color: var(--status-danger);
   padding: 8px 10px;
   font-size: var(--text-sm);
 }
