@@ -1,101 +1,39 @@
 /**
- * AeroGrid Design Tokens — Stitch Light Mode ("Tactile Precision / Modern Cartographic")
- * Source spec: design/stitch/stitch_aerogrid_regional_fleet_planner/aerogrid/DESIGN.md
+ * AeroGrid Design Tokens — single source of truth for colour, type, spacing.
+ *
+ * Light values: design/stitch/.../aerogrid/DESIGN.md        ("Tactile Precision" paper chart)
+ * Dark  values: design/stitch/.../aerogrid_titanium/DESIGN.md ("Titanium" obsidian HUD)
+ *
+ * Rule: component CSS/JSX must only use the variables below — never a raw hex/rgb value.
+ * Theme is selected by <html data-theme="light|dark"> (see src/theme/theme.js).
  */
 
+/* ── Theme-independent tokens ── */
 :root {
-  /* ── Surface & Paper Layers (Elevation 0–3) ── */
-  --surface: #fcf9f0;
-  --surface-bright: #fcf9f0;
-  --surface-dim: #dddad1;
-  --surface-canvas: #f6f3ea;
-  --surface-container-lowest: #ffffff;
-  --surface-container-low: #f6f3ea;
-  --surface-container: #f1eee5;
-  --surface-container-high: #ebe8df;
-  --surface-container-highest: #e5e2da;
-  --surface-variant: #e5e2da;
-  --surface-card: #ffffff;
-  --surface-radar: #fbf9f2;
-  --surface-radar-card: #fdfcf7;
-
-  /* ── Ink & Typography Colors (WCAG AA on #FFFFFF and #F6F3EA) ── */
-  --text-ink: #14213d;
-  --on-surface: #1c1c17;
-  --on-surface-variant: #424751;
-  --text-slate: #5b6475;
-  --text-muted-aa: #525b6c;
-  --inverse-surface: #31312b;
-  --inverse-on-surface: #f4f1e8;
-
-  /* ── Borders & Cartographic Rules ── */
-  --border-paper: #ddd6c8;
-  --border-paper-strong: #c8bfb0;
-  --border-outline: #727782;
-  --border-outline-variant: #c2c6d3;
-  --border-row: #f0ece1;
-
-  /* ── Primary & Aviation Accent Tokens ── */
-  --chart-blue: #2f6fba;
-  --chart-blue-strong: #0056a0;
-  --chart-blue-hover: #245896;
-  --chart-blue-active: #1c4475;
-  --chart-blue-tint: #ecf1ff;
-  --chart-blue-tint-hover: #dbe6fd;
-  --chart-blue-border: #cdd9fe;
-
-  --aviation-orange: #c04600;
-  --aviation-orange-hover: #983500;
-  --aviation-orange-bright: #e8590c;
-  --aviation-orange-tint: #ffeee9;
-
-  /* ── Operational Verdict & Telemetry Tokens ── */
-  --verdict-viable: #1f9d6b;
-  --verdict-viable-text: #15803d;
-  --verdict-viable-bg: #e8f6f0;
-  --verdict-viable-pill: #dcfce7;
-  --verdict-viable-border: #86efac;
-  --verdict-viable-soft-border: #bbf7d0;
-  --verdict-pip-green: #10b981;
-
-  --verdict-conditional: #d98e04;
-  --verdict-conditional-text: #9a3412;
-  --verdict-conditional-bg: #fdf6e7;
-  --verdict-conditional-pill: #fff7ed;
-  --verdict-conditional-border: #fdba74;
-  --verdict-conditional-soft-border: #fed7aa;
-  --verdict-pip-amber: #f97316;
-
-  --verdict-nonviable: #c8372d;
-  --verdict-nonviable-text: #b91c1c;
-  --verdict-nonviable-bg: #faeceb;
-  --verdict-nonviable-pill: #fef2f2;
-  --verdict-nonviable-border: #fca5a5;
-  --verdict-nonviable-soft-border: #fecaca;
-
-  /* ── Typography Stacks ── */
   --font-display: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-ui: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
-  /* ── Type Scale ── */
+  /* Type scale */
   --type-display-lg: 40px;
   --type-display-lg-lh: 48px;
   --type-display-lg-mobile: 32px;
-  --type-display-lg-mobile-lh: 38px;
   --type-headline-lg: 28px;
-  --type-headline-lg-lh: 36px;
-  --type-headline-lg-mobile: 22px;
   --type-headline-md: 20px;
-  --type-headline-md-lh: 26px;
   --type-body-lg: 16px;
   --type-body-md: 14px;
   --type-body-sm: 12px;
   --type-mono-lg: 14px;
   --type-mono-md: 12px;
   --type-mono-sm: 10px;
+  --text-xs: 11px;
+  --text-sm: 12.5px;
+  --text-base: 14px;
+  --text-lg: 16px;
+  --text-xl: 20px;
+  --text-readout: 34px;
 
-  /* ── Spacing Scale (4px structural rhythm) ── */
+  /* Spacing (4px rhythm) */
   --space-xxs: 2px;
   --space-xs: 4px;
   --space-sm: 8px;
@@ -109,18 +47,240 @@
   --margin-md: 24px;
   --margin-lg: 40px;
 
-  /* ── Radii ── */
+  /* Radii */
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 12px;
   --radius-xl: 16px;
   --radius-full: 9999px;
+}
 
-  /* ── Elevation & Depth ── */
-  --shadow-elev-1: 0 1px 3px rgba(20, 33, 61, 0.04), 0 4px 12px rgba(20, 33, 61, 0.02);
-  --shadow-elev-2: 0 4px 16px rgba(20, 33, 61, 0.08), 0 1px 2px rgba(20, 33, 61, 0.04);
-  --shadow-sidebar: 2px 0 12px rgba(20, 33, 61, 0.04);
-  --shadow-topbar: 0 2px 8px rgba(20, 33, 61, 0.04);
-  --shadow-cta-orange: 0 4px 14px rgba(192, 70, 0, 0.28);
-  --focus-ring-blue: 0 0 0 3px rgba(47, 111, 186, 0.18);
+/* ── LIGHT theme (default) ── */
+:root,
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  /* Semantic core */
+  --bg: #f6f3ea;
+  --surface: #ffffff;
+  --surface-raised: #fcf9f0;
+  --surface-hover: #f1eee5;
+  --surface-active: #ecf1ff;
+  --border: #ddd6c8;
+  --border-strong: #c8bfb0;
+  --text: #14213d;
+  --text-muted: #565f70;
+  --accent: #2f6fba;
+  --accent-text: #0056a0;
+  --on-accent: #ffffff;
+  --accent-tint: #ecf1ff;
+  --accent-tint-hover: #dbe6fd;
+  --accent-border: #b9cbf5;
+
+  /* Verdicts: base = pips/fills/borders, -text = AA text on -bg and surfaces */
+  --viable: #1f9d6b;
+  --viable-text: #146c3b;
+  --viable-bg: #e8f6f0;
+  --viable-border: #9bd3b9;
+  --conditional: #d98e04;
+  --conditional-text: #7c4a00;
+  --conditional-bg: #fdf3dc;
+  --conditional-border: #e6c27a;
+  --not-viable: #c8372d;
+  --not-viable-text: #a61b1b;
+  --not-viable-bg: #faeceb;
+  --not-viable-border: #e6a8a3;
+
+  /* Solid verdict fills (map markers etc.; white text ≥ 4.5:1) */
+  --viable-solid: #0d6e52;
+  --conditional-solid: #8a5200;
+  --not-viable-solid: #991b1b;
+
+  /* Call-to-action (Aviation Orange) */
+  --cta: #c04600;
+  --cta-hover: #983500;
+  --on-cta: #ffffff;
+  --cta-glow: rgba(192, 70, 0, 0.28);
+
+  /* Inverse chips (avatar, flight puck) */
+  --inverse-bg: #14213d;
+  --inverse-text: #ffffff;
+
+  /* Glass / overlays / depth */
+  --glass: rgba(255, 255, 255, 0.94);
+  --scrim: rgba(20, 33, 61, 0.35);
+  --shadow-color: 20, 33, 61;
+  --shadow-1: 0 1px 3px rgba(20, 33, 61, 0.05), 0 4px 12px rgba(20, 33, 61, 0.03);
+  --shadow-2: 0 4px 16px rgba(20, 33, 61, 0.1), 0 1px 2px rgba(20, 33, 61, 0.05);
+
+  /* Radar / chart canvas */
+  --canvas-chart: #fbf9f2;
+  --canvas-chart-card: #fdfcf7;
+  --canvas-grid: #e5dfd3;
+  --accent-ring-1: rgba(47, 111, 186, 0.35);
+  --accent-ring-2: rgba(47, 111, 186, 0.25);
+  --accent-ring-3: rgba(47, 111, 186, 0.18);
+  --accent-wash: rgba(47, 111, 186, 0.04);
+  --accent-sweep: rgba(47, 111, 186, 0.36);
+  --accent-glow: rgba(47, 111, 186, 0.4);
+  --pip-viable-glow: rgba(16, 185, 129, 0.55);
+  --pip-conditional-glow: rgba(249, 115, 22, 0.55);
+  --pip-not-viable-glow: rgba(200, 55, 45, 0.55);
+
+  /* Leaflet map surfaces */
+  --map-bg: #e2e8f0;
+  --map-popup-bg: #ffffff;
+  --map-popup-text: #14213d;
+  --map-ctrl-bg: rgba(255, 255, 255, 0.94);
+}
+
+/* ── DARK theme (Titanium) ── */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --bg: #0b0f14;
+  --surface: #101620;
+  --surface-raised: #17202d;
+  --surface-hover: #1c2736;
+  --surface-active: #14283a;
+  --border: #333e4d;
+  --border-strong: #4f5d73;
+  --text: #f1f5f9;
+  --text-muted: #9aa8bb;
+  --accent: #38bdf8;
+  --accent-text: #7dd3fc;
+  --on-accent: #0b0f14;
+  --accent-tint: #12293a;
+  --accent-tint-hover: #173449;
+  --accent-border: #1f4a66;
+
+  --viable: #10b981;
+  --viable-text: #34d399;
+  --viable-bg: #0f2a24;
+  --viable-border: #14513f;
+  --conditional: #f59e0b;
+  --conditional-text: #fbbf24;
+  --conditional-bg: #2d2410;
+  --conditional-border: #5c4510;
+  --not-viable: #ef4444;
+  --not-viable-text: #f87171;
+  --not-viable-bg: #301518;
+  --not-viable-border: #6b2327;
+
+  --viable-solid: #0d6e52;
+  --conditional-solid: #8a5200;
+  --not-viable-solid: #991b1b;
+
+  --cta: #ff6b2b;
+  --cta-hover: #ff8a55;
+  --on-cta: #0b0f14;
+  --cta-glow: rgba(255, 107, 43, 0.35);
+
+  --inverse-bg: #e2e8f0;
+  --inverse-text: #0b0f14;
+
+  --glass: rgba(23, 32, 45, 0.88);
+  --scrim: rgba(0, 0, 0, 0.6);
+  --shadow-color: 0, 0, 0;
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.5), 0 4px 12px rgba(0, 0, 0, 0.3);
+  --shadow-2: 0 16px 32px -8px rgba(0, 0, 0, 0.7), 0 1px 2px rgba(0, 0, 0, 0.5);
+
+  --canvas-chart: #0e141c;
+  --canvas-chart-card: #101620;
+  --canvas-grid: #1b2531;
+  --accent-ring-1: rgba(56, 189, 248, 0.4);
+  --accent-ring-2: rgba(56, 189, 248, 0.28);
+  --accent-ring-3: rgba(56, 189, 248, 0.18);
+  --accent-wash: rgba(56, 189, 248, 0.05);
+  --accent-sweep: rgba(56, 189, 248, 0.34);
+  --accent-glow: rgba(56, 189, 248, 0.45);
+  --pip-viable-glow: rgba(16, 185, 129, 0.6);
+  --pip-conditional-glow: rgba(245, 158, 11, 0.6);
+  --pip-not-viable-glow: rgba(239, 68, 68, 0.6);
+
+  --map-bg: #1b2430;
+  --map-popup-bg: #17202d;
+  --map-popup-text: #f1f5f9;
+  --map-ctrl-bg: rgba(23, 32, 45, 0.92);
+}
+
+/* ==========================================================================
+   Compatibility aliases — keep older class names theme-aware.
+   (No raw colours below: every value resolves to a semantic token above.)
+   ========================================================================== */
+:root {
+  /* Legacy dark-console names */
+  --bg-canvas: var(--bg);
+  --bg-panel: var(--surface);
+  --bg-elevated: var(--surface-raised);
+  --border-grid: var(--border);
+  --text-primary: var(--text);
+  --text-secondary: var(--text-muted);
+  --accent-vector: var(--accent-text);
+  --accent-vector-dim: var(--accent-tint);
+  --status-ok: var(--viable-text);
+  --status-ok-bg: var(--viable-bg);
+  --status-warn: var(--conditional-text);
+  --status-warn-bg: var(--conditional-bg);
+  --status-danger: var(--not-viable-text);
+  --status-danger-bg: var(--not-viable-bg);
+
+  /* Legacy sub-page aliases */
+  --surface-2: var(--surface-raised);
+  --surface-3: var(--surface-hover);
+  --sidebar: var(--surface);
+  --border-2: var(--border-strong);
+  --accent-hover: var(--accent-text);
+  --accent-active: var(--accent-text);
+  --accent-muted: var(--accent-tint);
+  --text-2: var(--text-muted);
+  --text-3: var(--text-muted);
+  --heading: var(--text);
+  --subheading: var(--text);
+  --sans: var(--font-ui);
+  --mono: var(--font-mono);
+
+  /* Stitch component names */
+  --surface-canvas: var(--bg);
+  --surface-card: var(--surface);
+  --surface-bright: var(--surface-raised);
+  --surface-container: var(--surface-hover);
+  --surface-container-high: var(--surface-hover);
+  --surface-radar: var(--canvas-chart);
+  --surface-radar-card: var(--canvas-chart-card);
+  --text-ink: var(--text);
+  --text-slate: var(--text-muted);
+  --text-muted-aa: var(--text-muted);
+  --chart-blue: var(--accent);
+  --chart-blue-strong: var(--accent-text);
+  --chart-blue-tint: var(--accent-tint);
+  --chart-blue-tint-hover: var(--accent-tint-hover);
+  --chart-blue-border: var(--accent-border);
+  --border-paper: var(--border);
+  --border-paper-strong: var(--border-strong);
+  --aviation-orange: var(--cta);
+  --aviation-orange-hover: var(--cta-hover);
+  --verdict-viable: var(--viable);
+  --verdict-viable-text: var(--viable-text);
+  --verdict-viable-pill: var(--viable-bg);
+  --verdict-viable-border: var(--viable-border);
+  --verdict-viable-soft-border: var(--viable-border);
+  --verdict-pip-green: var(--viable);
+  --verdict-conditional: var(--conditional);
+  --verdict-conditional-text: var(--conditional-text);
+  --verdict-conditional-pill: var(--conditional-bg);
+  --verdict-conditional-border: var(--conditional-border);
+  --verdict-conditional-soft-border: var(--conditional-border);
+  --verdict-pip-amber: var(--conditional);
+  --verdict-nonviable: var(--not-viable);
+  --verdict-nonviable-text: var(--not-viable-text);
+  --verdict-nonviable-pill: var(--not-viable-bg);
+  --verdict-nonviable-border: var(--not-viable-border);
+  --verdict-nonviable-soft-border: var(--not-viable-border);
+  --shadow-elev-1: var(--shadow-1);
+  --shadow-elev-2: var(--shadow-2);
+  --shadow-sidebar: var(--shadow-1);
+  --shadow-topbar: var(--shadow-1);
+  --shadow-cta-orange: 0 4px 14px var(--cta-glow);
+  --focus-ring-blue: 0 0 0 3px var(--accent-ring-2);
 }
