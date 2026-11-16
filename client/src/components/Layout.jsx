@@ -2,11 +2,13 @@ import { useState } from 'react'
 import { Outlet, Link } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import { useAuth } from '../context/AuthContext'
+import { useTheme } from '../theme/ThemeContext'
 
 export default function Layout() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [globalSearch, setGlobalSearch] = useState('')
   const { currentUser } = useAuth()
+  const { theme, setTheme } = useTheme()
 
   const operatorName = currentUser?.name ? currentUser.name.toUpperCase() : 'SQN-LDR V. SHARMA'
   const operatorRoleLabel =
@@ -88,14 +90,32 @@ export default function Layout() {
               </svg>
             </Link>
 
-            <div className="stitch-theme-pill" role="group" aria-label="Chart Display Mode">
-              <span className="stitch-theme-opt active" title="Light Chart Mode active">
+            <div className="stitch-theme-pill" role="group" aria-label="Display theme">
+              <button
+                type="button"
+                className={`stitch-theme-opt${theme === 'light' ? ' active' : ''}`}
+                aria-pressed={theme === 'light'}
+                onClick={() => setTheme('light')}
+                title="Light chart theme"
+              >
                 <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.9" aria-hidden="true">
                   <circle cx="10" cy="10" r="3.5" />
                   <path d="M10 2.5v2M10 15.5v2M2.5 10h2M15.5 10h2M4.7 4.7l1.4 1.4M13.9 13.9l1.4 1.4M15.3 4.7l-1.4 1.4M6.1 13.9l-1.4 1.4" strokeLinecap="round" />
                 </svg>
                 LIGHT
-              </span>
+              </button>
+              <button
+                type="button"
+                className={`stitch-theme-opt${theme === 'dark' ? ' active' : ''}`}
+                aria-pressed={theme === 'dark'}
+                onClick={() => setTheme('dark')}
+                title="Dark titanium theme"
+              >
+                <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.9" aria-hidden="true">
+                  <path d="M16.5 11.5A7 7 0 0 1 8.5 3.5a7 7 0 1 0 8 8z" strokeLinejoin="round" />
+                </svg>
+                DARK
+              </button>
             </div>
 
             <div className="stitch-icon-actions">

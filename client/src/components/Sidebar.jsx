@@ -148,12 +148,14 @@ export default function Sidebar({ open = false, onClose }) {
             <span className="stitch-ops-name">{currentUser?.name || 'Unauthenticated'}</span>
             <span className={`stitch-role-pill stitch-role-${activeRole}`}>{activeRole.toUpperCase()}</span>
           </div>
-          <div className="stitch-role-switcher" role="group" aria-label="Switch Operator Clearance">
+          <div className="stitch-demo-label">Demo mode</div>
+          <div className="stitch-role-switcher" role="group" aria-label="Demo mode: switch operator role">
             {['admin', 'analyst', 'viewer'].map((role) => (
               <button
                 key={role}
                 type="button"
                 className={`stitch-role-btn${activeRole === role ? ' active' : ''}`}
+                aria-pressed={activeRole === role}
                 onClick={() => switchRole(role)}
               >
                 {role}
