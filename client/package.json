@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "test": "node --test src/theme/theme.test.js",
     "check:contrast": "node scripts/check-contrast.mjs",
+    "audit:theme": "node scripts/audit-pages.mjs --no-shots",
     "preview": "vite preview"
   },
   "dependencies": {
