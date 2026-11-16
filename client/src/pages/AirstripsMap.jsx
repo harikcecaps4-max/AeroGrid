@@ -2,6 +2,9 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { MapContainer, TileLayer, Marker, CircleMarker, Popup, useMap } from 'react-leaflet'
 import L from 'leaflet'
+import 'leaflet.markercluster'
+import 'leaflet.markercluster/dist/MarkerCluster.css'
+import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 import {
   MOCK_AIRSTRIPS,
   getAirstripAccessPoints,
@@ -10,6 +13,7 @@ import {
 } from '../data/mockData'
 import { ALL_CAPITALS } from '../data/indiaGeo'
 import { useAuth } from '../context/AuthContext'
+import { useTheme } from '../theme/ThemeContext'
 
 const TILE_LAYERS = {
   dark: {
@@ -112,8 +116,72 @@ function getAircraftClearance(prop) {
   ]
 }
 
+function ClusteredAirstrips({ airstrips, selectedAirstrip, onSelectAirstrip }) {
+  const map = useMap()
+  const clusterGroupRef = useRef(null)
+
+  useEffect(() => {
+    if (!map) return
+    const cluster = L.markerClusterGroup({
+      showCoverageOnHover: false,
+      maxClusterRadius: 40,
+      spiderfyOnMaxZoom: true,
+      zoomToBoundsOnClick: true,
+      iconCreateFunction: (c) => {
+        const count = c.getChildCount()
+        return L.divIcon({
+          html: `<div class="ag-cluster-pin"><span>${count}</span></div>`,
+          className: 'ag-cluster-icon',
+          iconSize: [36, 36],
+          iconAnchor: [18, 18],
+        })
+      },
+    })
+    clusterGroupRef.current = cluster
+    map.addLayer(cluster)
+
+    return () => {
+      map.removeLayer(cluster)
+    }
+  }, [map])
+
+  useEffect(() => {
+    const cluster = clusterGroupRef.current
+    if (!cluster) return
+    cluster.clearLayers()
+
+    airstrips.forEach((f) => {
+      const prop = f.properties
+      const [lng, lat] = f.geometry.coordinates
+      const score = prop.feasibility?.score ?? 0
+      const isSelected = selectedAirstrip?.properties?.id === prop.id
+      const icon = createAviationMarkerIcon(f, isSelected)
+
+      const marker = L.marker([lat, lng], { icon })
+
+      const popupContent = document.createElement('div')
+      popupContent.innerHTML = `
+        <div class="popup-name">${prop.name}</div>
+        <div class="popup-row"><span>Jurisdiction</span><span>${prop.state}</span></div>
+        <div class="popup-row"><span>Runway</span><span class="tabular-num">${prop.runway_length_m}m ${prop.surface}</span></div>
+        <div class="popup-row"><span>Feasibility</span><strong class="tabular-num tier-text-${getTierKey(score)}">${score}/100 (${getTierLabel(score)})</strong></div>
+        <div class="popup-click-hint">Open Flight-Data Readout in right bay</div>
+      `
+      marker.bindPopup(popupContent)
+      marker.on('click', () => {
+        onSelectAirstrip(f)
+      })
+
+      cluster.addLayer(marker)
+    })
+  }, [airstrips, selectedAirstrip, onSelectAirstrip])
+
+  return null
+}
+
 export default function AirstripsMap() {
   const { currentUser, token } = useAuth()
+  const { theme } = useTheme()
   const [searchParams, setSearchParams] = useSearchParams()
   const searchInputRef = useRef(null)
 
@@ -121,7 +189,8 @@ export default function AirstripsMap() {
   const [loading, setLoading] = useState(true)
   const [dataSource, setDataSource] = useState('checking') // 'live' | 'cache' | 'checking'
   const [selectedAirstrip, setSelectedAirstrip] = useState(null)
-  const [basemap, setBasemap] = useState('dark')
+  const [manualBasemap, setManualBasemap] = useState(null)
+  const basemap = manualBasemap || (theme === 'dark' ? 'dark' : 'light')
   const [showCapitals, setShowCapitals] = useState(false)
 
   const [filters, setFilters] = useState({
@@ -382,7 +451,7 @@ export default function AirstripsMap() {
                   key={key}
                   type="button"
                   className={`seg-btn${basemap === key ? ' active' : ''}`}
-                  onClick={() => setBasemap(key)}
+                  onClick={() => setManualBasemap(key)}
                 >
                   {cfg.label}
                 </button>
@@ -529,43 +598,11 @@ export default function AirstripsMap() {
             />
             <MapFlyController selectedFeature={selectedAirstrip} />
 
-            {filtered.map((f) => {
-              const prop = f.properties
-              const [lng, lat] = f.geometry.coordinates
-              const score = prop.feasibility?.score ?? 0
-              const isSelected = selectedAirstrip?.properties?.id === prop.id
-              const icon = createAviationMarkerIcon(f, isSelected)
-
-              return (
-                <Marker
-                  key={prop.id}
-                  position={[lat, lng]}
-                  icon={icon}
-                  eventHandlers={{
-                    click: () => handleSelectAirstrip(f),
-                  }}
-                >
-                  <Popup>
-                    <div className="popup-name">{prop.name}</div>
-                    <div className="popup-row">
-                      <span>Jurisdiction</span>
-                      <span>{prop.state}</span>
-                    </div>
-                    <div className="popup-row">
-                      <span>Runway</span>
-                      <span className="tabular-num">{prop.runway_length_m}m {prop.surface}</span>
-                    </div>
-                    <div className="popup-row">
-                      <span>Feasibility</span>
-                      <strong className={`tabular-num tier-text-${getTierKey(score)}`}>
-                        {score}/100 ({getTierLabel(score)})
-                      </strong>
-                    </div>
-                    <div className="popup-click-hint">Open Flight-Data Readout in right bay</div>
-                  </Popup>
-                </Marker>
-              )
-            })}
+            <ClusteredAirstrips
+              airstrips={filtered}
+              selectedAirstrip={selectedAirstrip}
+              onSelectAirstrip={handleSelectAirstrip}
+            />
 
             {showCapitals &&
               ALL_CAPITALS.map((cap) => {
@@ -576,8 +613,8 @@ export default function AirstripsMap() {
                     center={[lat, lng]}
                     radius={4.5}
                     pathOptions={{
-                      color: '#0EA5E9',
-                      fillColor: '#0EA5E9',
+                      color: 'var(--accent)',
+                      fillColor: 'var(--accent)',
                       fillOpacity: 0.75,
                       weight: 1.5,
                     }}
@@ -733,17 +770,17 @@ export default function AirstripsMap() {
                 <h3 className="readout-section-title">Runway Geometry &amp; Ground Utilities</h3>
                 <div className="runway-schematic-box" aria-label={`Runway ${p.runway_length_m} meters by ${p.runway_width_m} meters`}>
                   <svg viewBox="0 0 360 48" width="100%" height="48">
-                    <rect x="4" y="6" width="352" height="36" fill="#0B121E" stroke="#2B4162" strokeWidth="1" />
-                    <line x1="12" y1="12" x2="12" y2="36" stroke="#8A9BB5" strokeWidth="2" />
-                    <line x1="348" y1="12" x2="348" y2="36" stroke="#8A9BB5" strokeWidth="2" />
-                    <text x="20" y="28" fill="#8A9BB5" fontSize="10" fontWeight="600">09</text>
-                    <line x1="42" y1="24" x2="112" y2="24" stroke="#0EA5E9" strokeWidth="1.5" strokeDasharray="6 5" />
-                    <rect x="118" y="13" width="124" height="22" fill="#162236" stroke="#1E2E46" strokeWidth="1" />
-                    <text x="180" y="28" textAnchor="middle" fill="#EAF0F8" fontSize="11" fontWeight="600">
+                    <rect x="4" y="6" width="352" height="36" fill="var(--surface-raised)" stroke="var(--border)" strokeWidth="1" />
+                    <line x1="12" y1="12" x2="12" y2="36" stroke="var(--text-muted)" strokeWidth="2" />
+                    <line x1="348" y1="12" x2="348" y2="36" stroke="var(--text-muted)" strokeWidth="2" />
+                    <text x="20" y="28" fill="var(--text-muted)" fontSize="10" fontWeight="600">09</text>
+                    <line x1="42" y1="24" x2="112" y2="24" stroke="var(--accent)" strokeWidth="1.5" strokeDasharray="6 5" />
+                    <rect x="118" y="13" width="124" height="22" fill="var(--surface)" stroke="var(--border)" strokeWidth="1" />
+                    <text x="180" y="28" textAnchor="middle" fill="var(--text)" fontSize="11" fontWeight="600">
                       {p.runway_length_m?.toLocaleString()}m x {p.runway_width_m || 25}m
                     </text>
-                    <line x1="248" y1="24" x2="318" y2="24" stroke="#0EA5E9" strokeWidth="1.5" strokeDasharray="6 5" />
-                    <text x="340" y="28" textAnchor="end" fill="#8A9BB5" fontSize="10" fontWeight="600">27</text>
+                    <line x1="248" y1="24" x2="318" y2="24" stroke="var(--accent)" strokeWidth="1.5" strokeDasharray="6 5" />
+                    <text x="340" y="28" textAnchor="end" fill="var(--text-muted)" fontSize="10" fontWeight="600">27</text>
                   </svg>
                 </div>
 

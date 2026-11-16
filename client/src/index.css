@@ -1126,6 +1126,57 @@ button {
   background: var(--bg-canvas);
 }
 
+/* ── Base Input Placeholders (WCAG AA ≥ 4.5:1) ── */
+input::placeholder,
+textarea::placeholder,
+select::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
+}
+
+/* ── Leaflet Control Attribution Theming ── */
+.leaflet-container .leaflet-control-attribution {
+  background: var(--surface) !important;
+  color: var(--text-muted) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-sm);
+  padding: 2px 6px;
+  font-size: 10px;
+}
+
+.leaflet-container .leaflet-control-attribution a {
+  color: var(--accent) !important;
+}
+
+/* ── Cluster Marker Pins ── */
+.ag-cluster-icon {
+  background: transparent !important;
+  border: none !important;
+}
+
+.ag-cluster-pin {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  background: var(--surface-raised);
+  border: 2px solid var(--accent);
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 13px;
+  box-shadow: var(--shadow-2);
+  cursor: pointer;
+  transition: transform 0.15s ease-out;
+}
+
+.ag-cluster-pin:hover {
+  transform: scale(1.1);
+  border-color: var(--cta);
+}
+
 .seg-btn {
   background: transparent;
   border: none;
@@ -1147,8 +1198,8 @@ button {
 }
 
 .seg-btn.active {
-  background: var(--accent-vector);
-  color: #06101C;
+  background: var(--accent);
+  color: var(--on-accent);
   font-weight: 700;
 }
 
@@ -1243,7 +1294,7 @@ button {
   font-family: var(--font-ui);
   font-variant-numeric: tabular-nums;
   font-weight: 700;
-  color: #FFFFFF;
+  color: var(--on-solid);
   cursor: pointer;
   user-select: none;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.65);
@@ -1254,7 +1305,7 @@ button {
   width: 44px;
   height: 24px;
   border-radius: 2px;
-  border: 1.5px solid #EAF0F8;
+  border: 1.5px solid var(--marker-ring);
   font-size: 11.5px;
   gap: 3px;
   padding: 0 3px;
@@ -1263,8 +1314,8 @@ button {
 .strip-tick {
   width: 3px;
   height: 10px;
-  border-top: 1.5px solid rgba(255, 255, 255, 0.8);
-  border-bottom: 1.5px solid rgba(255, 255, 255, 0.8);
+  border-top: 1.5px solid var(--marker-ring);
+  border-bottom: 1.5px solid var(--marker-ring);
 }
 
 /* Unpaved Gravel/Grass Survey Diamond Icon */
@@ -1272,7 +1323,7 @@ button {
   width: 28px;
   height: 28px;
   border-radius: 2px;
-  border: 1.5px dashed #EAF0F8;
+  border: 1.5px dashed var(--marker-ring);
   transform: rotate(45deg);
   font-size: 11px;
 }
@@ -1282,12 +1333,12 @@ button {
   display: inline-block;
 }
 
-.tier-high { background: #0D6E52; }
-.tier-moderate { background: #9A5B0A; }
-.tier-low { background: #991B1B; }
+.tier-high { background: var(--viable-solid); }
+.tier-moderate { background: var(--conditional-solid); }
+.tier-low { background: var(--not-viable-solid); }
 
 .marker-selected {
-  outline: 2.5px solid var(--accent-vector);
+  outline: 2.5px solid var(--accent);
   outline-offset: 2px;
   z-index: 1000 !important;
 }
@@ -1832,25 +1883,33 @@ button {
 
 /* Bottom Telemetry Bar */
 .map-telemetry-bar {
-  height: 30px;
+  min-height: 34px;
+  height: auto;
   flex-shrink: 0;
   background: var(--sidebar);
   border-top: 1px solid var(--border-grid);
-  padding: 0 14px;
+  padding: 6px 14px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   font-size: 11.5px;
   color: var(--text-secondary);
   gap: 12px;
+  flex-wrap: wrap;
 }
 
-.telemetry-left, .telemetry-legend {
+.telemetry-left {
   display: flex;
   align-items: center;
   gap: 10px;
-  white-space: nowrap;
-  overflow: hidden;
+  flex-wrap: wrap;
+}
+
+.telemetry-legend {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .datum-chip {
@@ -2139,7 +2198,9 @@ button {
     width: 100%;
   }
   .map-telemetry-bar .telemetry-legend {
-    display: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
   }
   .stat-cards-row, .stats-grid, .analytics-grid, .viability-cards {
     grid-template-columns: 1fr;
