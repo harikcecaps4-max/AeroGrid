@@ -253,10 +253,16 @@ export function deriveAuditCardModel(feature) {
     override?.confidenceKind ||
     (verdict === 'viable' ? 'field' : verdict === 'conditional' ? 'desk' : 'synthetic')
 
+  const hasPoliticalAlert =
+    p.political_influence?.severity && p.political_influence.severity !== 'none'
+  const reasonSummary = Array.isArray(p.feasibility?.reasons) && p.feasibility.reasons.length > 0
+    ? p.feasibility.reasons.slice(0, 2).join(' ')
+    : null
+
   const assessment =
     override?.assessment ||
-    p.political_influence?.details ||
-    p.feasibility?.reasons?.[0] ||
+    (hasPoliticalAlert ? p.political_influence?.details : null) ||
+    reasonSummary ||
     'Decision-support telemetry synthesized from runway & connectivity vectors.'
 
   return {

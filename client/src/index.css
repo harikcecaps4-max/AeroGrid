@@ -2959,6 +2959,7 @@ button {
   padding-top: var(--space-xs);
   border-top: 1px solid var(--surface-container);
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-sm);
@@ -3035,9 +3036,11 @@ button {
 @media (max-width: 640px) {
   .stitch-topbar {
     padding: 0 var(--space-sm);
+    gap: 6px;
   }
 
-  .stitch-sector-chip {
+  .stitch-sector-chip,
+  .stitch-icon-actions {
     display: none;
   }
 }
@@ -3048,7 +3051,9 @@ button {
    ========================================================================== */
 
 .stitch-overview {
+  width: 100%;
   max-width: 1720px;
+  min-width: 0;
   margin: 0 auto;
   padding: var(--space-lg) var(--margin) var(--space-xl);
   display: flex;
@@ -3084,8 +3089,10 @@ button {
 
 .stitch-focus-pill {
   display: inline-flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 6px;
+  max-width: 100%;
   padding: 5px 10px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--chart-blue-border);
@@ -3115,8 +3122,10 @@ button {
 
 .stitch-datum-pill {
   display: inline-flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 6px;
+  max-width: 100%;
   padding: 5px 10px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-paper);
@@ -4162,6 +4171,7 @@ button {
   padding-top: 6px;
   border-top: 1px solid var(--surface-container);
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-sm);
@@ -4400,7 +4410,7 @@ button {
 /* ── Responsive Breakpoints ── */
 @media (max-width: 1280px) {
   .stitch-workspace-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -4421,7 +4431,7 @@ button {
   }
 
   .stitch-kpi-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .stitch-coord-strip {
