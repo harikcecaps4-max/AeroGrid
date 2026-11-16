@@ -2548,8 +2548,10 @@ button {
 
 .stitch-main-content {
   flex: 1;
+  min-width: 0;
   min-height: 0;
   overflow-y: auto;
+  overflow-x: hidden;
   background: var(--surface-canvas);
 }
 
@@ -4428,6 +4430,28 @@ button {
 @media (max-width: 640px) {
   .stitch-overview {
     padding: var(--space-md) var(--space-sm) var(--space-xl);
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .stitch-ribbon,
+  .stitch-ribbon-left,
+  .stitch-ribbon-right,
+  .stitch-filter-bar,
+  .stitch-mfd-card,
+  .stitch-elevation-card,
+  .stitch-console-banner,
+  .stitch-corridor-block,
+  .stitch-airframe-block,
+  .stitch-audit-card {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .stitch-ribbon-right {
+    width: 100%;
+    justify-content: flex-start;
   }
 
   .stitch-kpi-grid {
