@@ -53,7 +53,7 @@ button {
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg-canvas); }
 ::-webkit-scrollbar-thumb { background: var(--border-strong); }
-::-webkit-scrollbar-thumb:hover { background: #3E5B85; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
 
 /* ── Skeleton Loader ── */
 @keyframes pulse {
@@ -169,7 +169,7 @@ button {
 }
 
 .nav-item:hover {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--surface-hover);
   color: var(--text-primary);
 }
 
@@ -241,8 +241,8 @@ button {
   letter-spacing: 0.03em;
 }
 
-.role-admin { color: var(--status-ok); border-color: rgba(16, 185, 129, 0.4); background: var(--status-ok-bg); }
-.role-analyst { color: var(--accent-vector); border-color: rgba(14, 165, 233, 0.4); background: var(--accent-vector-dim); }
+.role-admin { color: var(--status-ok); border-color: var(--viable-border); background: var(--status-ok-bg); }
+.role-analyst { color: var(--accent-vector); border-color: var(--accent-border); background: var(--accent-vector-dim); }
 .role-viewer { color: var(--text-secondary); border-color: var(--border-strong); background: var(--bg-elevated); }
 
 .role-switcher {
@@ -328,14 +328,14 @@ button {
 }
 
 .btn-primary {
-  background: var(--accent-vector);
-  border-color: var(--accent-vector);
-  color: #06101C;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
 }
 
 .btn-primary:hover {
-  background: #38BDF8;
-  border-color: #38BDF8;
+  background: var(--accent-text);
+  border-color: var(--accent-text);
 }
 
 .btn:disabled {
@@ -2203,11 +2203,11 @@ button {
   height: 32px;
   border-radius: var(--radius-md);
   background: var(--chart-blue);
-  color: #ffffff;
+  color: var(--on-accent);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 1px 2px rgba(20, 33, 61, 0.14);
+  box-shadow: var(--shadow-1);
   flex-shrink: 0;
 }
 
@@ -2468,17 +2468,17 @@ button {
 .stitch-pip-green,
 .stitch-pip-viable {
   background: var(--verdict-pip-green);
-  box-shadow: 0 0 6px rgba(16, 185, 129, 0.55);
+  box-shadow: 0 0 6px var(--pip-viable-glow);
 }
 
 .stitch-pip-conditional {
   background: var(--verdict-pip-amber);
-  box-shadow: 0 0 6px rgba(249, 115, 22, 0.55);
+  box-shadow: 0 0 6px var(--pip-conditional-glow);
 }
 
 .stitch-pip-nonviable {
   background: var(--verdict-nonviable);
-  box-shadow: 0 0 6px rgba(200, 55, 45, 0.55);
+  box-shadow: 0 0 6px var(--pip-not-viable-glow);
 }
 
 .stitch-main-column {
@@ -2508,7 +2508,7 @@ button {
 .stitch-topbar {
   height: 64px;
   flex-shrink: 0;
-  background: rgba(255, 255, 255, 0.94);
+  background: var(--glass);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--border-paper);
   box-shadow: var(--shadow-topbar);
@@ -2704,7 +2704,7 @@ button {
   height: 6px;
   border-radius: var(--radius-full);
   background: var(--verdict-nonviable);
-  box-shadow: 0 0 0 2px #ffffff;
+  box-shadow: 0 0 0 2px var(--surface);
 }
 
 .stitch-operator-chip {
@@ -2742,8 +2742,8 @@ button {
   width: 32px;
   height: 32px;
   border-radius: var(--radius-full);
-  background: var(--text-ink);
-  color: #ffffff;
+  background: var(--inverse-bg);
+  color: var(--inverse-text);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2758,7 +2758,7 @@ button {
   height: 9px;
   border-radius: var(--radius-full);
   background: var(--verdict-pip-green);
-  border: 2px solid #ffffff;
+  border: 2px solid var(--surface);
 }
 
 /* ── StatCard (Stitch Light Mode) ── */
@@ -2907,7 +2907,7 @@ button {
   gap: 3px;
   padding: 2px 7px;
   border-radius: var(--radius-sm);
-  background: #f0fdf4;
+  background: var(--viable-bg);
   border: 1px solid var(--verdict-viable-soft-border);
   color: var(--verdict-viable-text);
   font-size: 11px;
@@ -2986,7 +2986,7 @@ button {
     display: block;
     position: fixed;
     inset: 0;
-    background: rgba(20, 33, 61, 0.35);
+    background: var(--scrim);
     backdrop-filter: blur(2px);
     z-index: 1250;
   }
@@ -3144,7 +3144,7 @@ button {
   padding: 5px 10px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--verdict-viable-soft-border);
-  background: #f0fdf4;
+  background: var(--viable-bg);
   color: var(--verdict-viable-text);
   font-family: var(--font-mono);
   font-size: 11px;
@@ -3300,7 +3300,7 @@ button {
 .stitch-sector-pill.active {
   background: var(--chart-blue);
   border-color: var(--chart-blue);
-  color: #ffffff;
+  color: var(--on-accent);
   font-weight: 700;
 }
 
@@ -3407,8 +3407,8 @@ button {
   pointer-events: none;
   opacity: 0.48;
   background-image:
-    linear-gradient(to right, #e5dfd3 1px, transparent 1px),
-    linear-gradient(to bottom, #e5dfd3 1px, transparent 1px);
+    linear-gradient(to right, var(--canvas-grid) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--canvas-grid) 1px, transparent 1px);
   background-size: 36px 36px;
 }
 
@@ -3467,20 +3467,20 @@ button {
 .stitch-ring-10 {
   width: 220px;
   height: 220px;
-  border: 1px solid rgba(47, 111, 186, 0.35);
-  background: rgba(47, 111, 186, 0.025);
+  border: 1px solid var(--accent-ring-1);
+  background: var(--accent-wash);
 }
 
 .stitch-ring-20 {
   width: 360px;
   height: 360px;
-  border: 1px solid rgba(47, 111, 186, 0.25);
+  border: 1px solid var(--accent-ring-2);
 }
 
 .stitch-ring-30 {
   width: 490px;
   height: 490px;
-  border: 1px solid rgba(47, 111, 186, 0.18);
+  border: 1px solid var(--accent-ring-3);
 }
 
 .stitch-radar-sweep {
@@ -3490,7 +3490,7 @@ button {
   border-radius: var(--radius-full);
   pointer-events: none;
   opacity: 0.2;
-  background: conic-gradient(from 0deg, rgba(47, 111, 186, 0.36) 0deg, rgba(47, 111, 186, 0) 60deg);
+  background: conic-gradient(from 0deg, var(--accent-sweep) 0deg, transparent 60deg);
   animation: stitchRotate 11s linear infinite;
 }
 
@@ -3531,8 +3531,8 @@ button {
 
 .stitch-node-blue {
   background: var(--chart-blue);
-  color: #ffffff;
-  box-shadow: 0 2px 10px rgba(47, 111, 186, 0.4);
+  color: var(--on-accent);
+  box-shadow: 0 2px 10px var(--accent-glow);
 }
 
 .stitch-node-outline {
@@ -3563,7 +3563,7 @@ button {
   margin-top: 5px;
   padding: 2px 7px;
   border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.96);
+  background: var(--glass);
   border: 1px solid var(--border-paper);
   box-shadow: var(--shadow-elev-1);
   display: flex;
@@ -3597,13 +3597,13 @@ button {
   width: 28px;
   height: 28px;
   border-radius: var(--radius-full);
-  background: var(--text-ink);
-  color: #ffffff;
+  background: var(--inverse-bg);
+  color: var(--inverse-text);
   display: flex;
   align-items: center;
   justify-content: center;
   transform: rotate(132deg);
-  box-shadow: 0 2px 10px rgba(20, 33, 61, 0.35);
+  box-shadow: var(--shadow-2);
 }
 
 .stitch-flight-tag {
@@ -3637,7 +3637,7 @@ button {
   left: 16px;
   padding: 10px var(--space-md);
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.96);
+  background: var(--glass);
   border: 1px solid var(--border-paper);
   box-shadow: var(--shadow-elev-2);
   display: flex;
@@ -3705,7 +3705,7 @@ button {
   max-width: calc(100% - 136px);
   padding: 6px var(--space-sm);
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.96);
+  background: var(--glass);
   border: 1px solid var(--border-paper);
   box-shadow: var(--shadow-elev-1);
   display: flex;
@@ -4358,7 +4358,7 @@ button {
   border-radius: var(--radius-lg);
   border: 1px solid var(--aviation-orange);
   background: var(--aviation-orange);
-  color: #ffffff;
+  color: var(--on-cta);
   font-family: var(--font-mono);
   font-size: 12px;
   font-weight: 700;
@@ -4451,3 +4451,10 @@ button {
     justify-content: center;
   }
 }
+
+/* ── Theme-aware SVG strokes (SVG attributes cannot reliably take var()) ── */
+.svg-route-primary { stroke: var(--accent); }
+.svg-route-alert { stroke: var(--cta); }
+.svg-line-muted { stroke: var(--text-muted); }
+.svg-stop-terrain-top { stop-color: var(--border); }
+.svg-stop-terrain-bottom { stop-color: var(--surface-hover); }

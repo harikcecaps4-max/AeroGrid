@@ -92,6 +92,8 @@
   --not-viable-border: #e6a8a3;
 
   /* Solid verdict fills (map markers etc.; white text ≥ 4.5:1) */
+  --on-solid: #ffffff;
+  --marker-ring: #ffffff;
   --viable-solid: #0d6e52;
   --conditional-solid: #8a5200;
   --not-viable-solid: #991b1b;
@@ -167,6 +169,8 @@
   --not-viable-bg: #301518;
   --not-viable-border: #6b2327;
 
+  --on-solid: #ffffff;
+  --marker-ring: #f1f5f9;
   --viable-solid: #0d6e52;
   --conditional-solid: #8a5200;
   --not-viable-solid: #991b1b;

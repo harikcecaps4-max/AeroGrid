@@ -447,9 +447,9 @@ export default function Dashboard() {
                 <div className="stitch-radar-sweep" aria-hidden="true" />
 
                 <svg className="stitch-radar-vectors" viewBox="0 0 700 520" preserveAspectRatio="none" aria-hidden="true">
-                  <path d="M 330 220 L 495 370" stroke="#2f6fba" strokeDasharray="6 4" strokeWidth="2.5" fill="none" />
-                  <path d="M 330 220 L 215 415" stroke="#c04600" strokeDasharray="4 4" strokeWidth="1.6" fill="none" />
-                  <path d="M 110 295 Q 350 225 585 325" fill="none" stroke="#727782" strokeDasharray="2 4" strokeWidth="1.2" />
+                  <path className="svg-route-primary" d="M 330 220 L 495 370" strokeDasharray="6 4" strokeWidth="2.5" fill="none" />
+                  <path className="svg-route-alert" d="M 330 220 L 215 415" strokeDasharray="4 4" strokeWidth="1.6" fill="none" />
+                  <path className="svg-line-muted" d="M 110 295 Q 350 225 585 325" fill="none" strokeDasharray="2 4" strokeWidth="1.2" />
                 </svg>
 
                 {/* Node 1: VOJK Jakkur Hub */}
@@ -620,8 +620,8 @@ export default function Dashboard() {
               <svg className="stitch-elevation-svg" viewBox="0 0 700 92" preserveAspectRatio="none" aria-hidden="true">
                 <defs>
                   <linearGradient id="terrainGradLight" x1="0" x2="0" y1="0" y2="1">
-                    <stop offset="0%" stopColor="#DDD6C8" stopOpacity="0.82" />
-                    <stop offset="100%" stopColor="#EBE8DF" stopOpacity="0.38" />
+                    <stop offset="0%" className="svg-stop-terrain-top" stopOpacity="0.82" />
+                    <stop offset="100%" className="svg-stop-terrain-bottom" stopOpacity="0.38" />
                   </linearGradient>
                 </defs>
                 <polygon
@@ -629,23 +629,23 @@ export default function Dashboard() {
                   points="0,92 0,66 140,58 260,68 380,50 490,62 600,54 700,60 700,92"
                 />
                 <polyline
+                  className="svg-line-muted"
                   fill="none"
                   points="0,66 140,58 260,68 380,50 490,62 600,54 700,60"
-                  stroke="#727782"
                   strokeWidth="1.5"
                 />
                 <polyline
+                  className="svg-route-primary"
                   fill="none"
                   points="12,66 74,22 618,22 688,60"
-                  stroke="#2f6fba"
                   strokeDasharray="5 3"
                   strokeWidth="2.5"
                 />
                 <polyline
+                  className="svg-route-alert"
                   fill="none"
                   opacity="0.7"
                   points="0,48 140,40 260,50 380,32 490,44 600,36 700,42"
-                  stroke="#c04600"
                   strokeDasharray="2 3"
                   strokeWidth="1.2"
                 />
@@ -904,7 +904,7 @@ export default function Dashboard() {
                     className={`stitch-airframe-tab${isSelected ? ' active' : ''}`}
                     onClick={() => setActiveAirframeId(airframe.id)}
                   >
-                    {isSelected && <span className="stitch-pill-dot" style={{ backgroundColor: '#2F6FBA' }} aria-hidden="true" />}
+                    {isSelected && <span className="stitch-pill-dot" style={{ backgroundColor: 'var(--accent)' }} aria-hidden="true" />}
                     <span>{airframe.label}</span>
                   </button>
                 )

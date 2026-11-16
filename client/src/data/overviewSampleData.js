@@ -18,7 +18,7 @@ export const SECTOR_FILTERS = [
   {
     id: 'blr',
     label: 'Bengaluru Hub (KA)',
-    dotColor: '#2F6FBA',
+    dotColor: 'var(--accent)',
     sectorCode: 'SEC-BLR-01',
     sectorName: 'Bengaluru – Hosur eVTOL Corridor',
     lat: '13.0760°N',
