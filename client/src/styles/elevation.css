@@ -1,0 +1,6 @@
+:root {
+  --shadow-elev-0: none;
+  --shadow-elev-1: var(--shadow-1);
+  --shadow-elev-2: var(--shadow-2);
+  --shadow-elev-3: var(--shadow-3);
+}

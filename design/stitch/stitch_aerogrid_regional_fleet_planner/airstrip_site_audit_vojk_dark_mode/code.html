@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&amp;family=JetBrains+Mono:wght@400;500;600;700&amp;family=Space+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100%;margin:0;padding:0;background-color:#101419;color:#e0e2ea;font-family:'Geist',sans-serif;-webkit-tap-highlight-color:transparent;}body{overscroll-behavior:none;min-height:100vh;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "on-tertiary-fixed": "#380d00", "tertiary-fixed-dim": "#ffb59a", "on-primary-fixed-variant": "#41474e", "on-error": "#690005", "on-secondary-fixed": "#001e2c", "on-secondary": "#00354a", "primary": "#ffffff", "surface-container-highest": "#31353b", "tertiary": "#ffffff", "on-background": "#e0e2ea", "on-primary-container": "#5f656c", "surface-bright": "#36393f", "on-tertiary-container": "#b23d00", "tertiary-fixed": "#ffdbce", "primary-fixed-dim": "#c1c7cf", "on-secondary-fixed-variant": "#004c69", "background": "#101419", "secondary-fixed": "#c4e7ff", "on-tertiary-fixed-variant": "#802a00", "inverse-surface": "#e0e2ea", "secondary-container": "#00a6e0", "on-surface": "#e0e2ea", "on-surface-variant": "#c5c6cb", "surface-variant": "#31353b", "inverse-on-surface": "#2d3136", "on-error-container": "#ffdad6", "primary-fixed": "#dde3eb", "on-primary-fixed": "#161c22", "secondary": "#7bd0ff", "primary-container": "#dde3eb", "outline-variant": "#44474a", "secondary-fixed-dim": "#7bd0ff", "on-primary": "#2b3137", "on-tertiary": "#5b1b00", "surface": "#101419", "surface-container-low": "#181c21", "surface-container-high": "#262a30", "error": "#ffb4ab", "surface-dim": "#101419", "on-secondary-container": "#00374d", "outline": "#8e9195", "tertiary-container": "#ffdbce", "inverse-primary": "#595f66", "surface-container-lowest": "#0a0e13", "surface-container": "#1c2025", "surface-tint": "#c1c7cf", "error-container": "#93000a" }, "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, "spacing": { "space-md": "1rem", "space-xs": "0.25rem", "gutter": "1.5rem", "space-lg": "1.5rem", "space-xl": "2.5rem", "gutter-mobile": "0.75rem", "margin-mobile": "1rem", "space-sm": "0.5rem", "margin": "2rem" }, "fontFamily": { "display-mobile": [ "Space Grotesk" ], "body-lg": [ "Geist" ], "headline-lg": [ "Space Grotesk" ], "body-sm": [ "Geist" ], "headline-lg-mobile": [ "Space Grotesk" ], "display": [ "Space Grotesk" ], "label-sm": [ "JetBrains Mono" ], "label-md": [ "JetBrains Mono" ], "headline-md": [ "Space Grotesk" ], "body-md": [ "Geist" ], "headline-sm": [ "Space Grotesk" ] }, "fontSize": { "display-mobile": [ "32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "600" } ], "body-lg": [ "16px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "400" } ], "headline-lg": [ "32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "500" } ], "body-sm": [ "12px", { "lineHeight": "18px", "letterSpacing": "0.01em", "fontWeight": "400" } ], "headline-lg-mobile": [ "24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "500" } ], "display": [ "48px", { "lineHeight": "56px", "letterSpacing": "-0.03em", "fontWeight": "600" } ], "label-sm": [ "10px", { "lineHeight": "14px", "letterSpacing": "0.08em", "fontWeight": "600" } ], "label-md": [ "12px", { "lineHeight": "16px", "letterSpacing": "0.06em", "fontWeight": "500" } ], "headline-md": [ "24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "500" } ], "body-md": [ "14px", { "lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "400" } ], "headline-sm": [ "18px", { "lineHeight": "26px", "letterSpacing": "0em", "fontWeight": "500" } ] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface text-on-surface antialiased select-none"><header class="fixed top-0 w-full z-50 pt-safe bg-surface-container-lowest/85 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.6)]"><div class="w-full h-16 px-margin-mobile flex items-center justify-between relative before:absolute before:inset-x-0 before:top-0 before:h-[1px] before:bg-gradient-to-r before:from-transparent before:via-white/50 before:to-transparent after:absolute after:inset-x-0 after:bottom-0 after:h-[1px] after:bg-gradient-to-r after:from-transparent after:via-outline-variant/30 after:to-transparent"><div class="flex items-center gap-space-sm min-w-0"><button aria-label="Return to previous bay" class="w-10 h-10 -ml-1 rounded bg-surface-container-high/60 active:bg-surface-container-highest flex items-center justify-center text-primary transition-all duration-200 hover:text-secondary" onclick="history.back()"><span class="material-symbols-outlined text-[20px]">arrow_back_ios_new</span></button><div class="flex flex-col min-w-0"><div class="flex items-center gap-space-xs"><span class="w-1.5 h-1.5 rounded-full bg-secondary shrink-0 shadow-[0_0_6px_rgba(123,208,255,0.7)]"></span><span class="font-headline-sm text-headline-sm text-primary tracking-tight font-semibold uppercase truncate">Airstrip Detail</span></div><span class="font-label-sm text-label-sm text-outline-variant font-mono uppercase tracking-widest">SEC-DEL-BLR // DOSSIER</span></div></div><div class="flex items-center gap-space-xs shrink-0"><div class="hidden sm:flex flex-col items-end pr-1"><span class="font-label-sm text-label-sm text-primary uppercase font-bold tracking-wider">SQN-LDR V. Sharma</span><span class="font-label-sm text-label-sm text-outline uppercase">CMD DISPATCH</span></div><div class="w-9 h-9 rounded bg-gradient-to-b from-white/70 via-outline/40 to-transparent p-[1px] shadow-[0_2px_8px_rgba(0,0,0,0.5)]"><div class="w-full h-full rounded bg-surface-container-high flex items-center justify-center"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-[inset_0_1px_1px_rgba(255,255,255,0.8)]"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></div></div></header><main class="flex flex-col relative w-full pt-16 bg-surface min-h-screen"><div class="flex flex-col w-full pb-safe">
+<!-- Subtle Avionics Ambient Vector Glow Backdrop -->
+<div class="relative w-full px-margin-mobile pt-space-md space-y-space-md">
+<!-- Section 1: Aerodrome Identity & Verification Badges -->
+<div class="relative w-full rounded-xl bg-surface-container-low p-space-md shadow-xl overflow-hidden">
+<!-- Specular Top Rim Gradient -->
+<div class="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/80 to-transparent"></div>
+<!-- Top Status Diode Strip -->
+<div class="flex items-center justify-between gap-space-xs mb-space-sm">
+<div class="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-surface-container-high shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)]">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary shadow-[0_0_8px_rgba(123,208,255,0.9)] animate-pulse"></span>
+<span class="font-label-sm text-label-sm text-secondary uppercase font-semibold tracking-wider">VIABLE FOR eVTOL DEPLOYMENT</span>
+</div>
+<div class="flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container-highest">
+<span class="material-symbols-outlined text-[12px] text-primary">verified</span>
+<span class="font-label-sm text-label-sm text-primary uppercase font-mono tracking-widest">FIELD VERIFIED</span>
+</div>
+</div>
+<!-- Main Aerodrome Identification -->
+<div class="flex flex-col">
+<div class="flex items-baseline gap-2">
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-primary font-bold tracking-tight">VOJK</h1>
+<span class="text-outline text-headline-sm font-light">•</span>
+<span class="font-headline-md text-headline-sm text-primary font-medium tracking-tight truncate">Jakkur Aerodrome</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-1 mt-0.5">
+<span class="material-symbols-outlined text-[14px] text-secondary">location_on</span>
+          Bengaluru Urban, Karnataka • Aerodrome Reference Point (ARP)
+        </p>
+</div>
+<!-- High-Density Telemetry Bar (4-Column Data Pod) -->
+<div class="grid grid-cols-2 gap-2 mt-space-md pt-space-sm bg-surface-container-lowest/80 rounded-lg p-2.5 shadow-inner">
+<div class="flex flex-col min-w-0">
+<span class="font-label-sm text-label-sm text-outline uppercase font-mono">ICAO IDENT</span>
+<span class="font-label-md text-label-md text-primary font-semibold tracking-wider mt-0.5 font-mono">VOJK // IN-0049</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-sm text-label-sm text-outline uppercase font-mono">ELEV (MSL)</span>
+<span class="font-label-md text-label-md text-primary font-semibold tracking-wider mt-0.5 font-mono">914m <span class="text-on-surface-variant font-normal">/ 3,000ft</span></span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-sm text-label-sm text-outline uppercase font-mono">AUDIT TIMESTAMP</span>
+<span class="font-label-md text-label-md text-primary font-semibold tracking-wider mt-0.5 font-mono">14 JAN 2025</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-sm text-label-sm text-outline uppercase font-mono">SURVEY RECORD</span>
+<span class="font-label-md text-label-md text-secondary font-semibold tracking-wider mt-0.5 font-mono">TE-99B // DGCA</span>
+</div>
+<div class="col-span-2 pt-1 mt-1 flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-outline uppercase font-mono">SURVEY COORDS</span>
+<span class="font-label-sm text-label-sm text-primary font-mono tracking-tight">13.0483° N, 77.5982° E</span>
+</div>
+</div>
+</div>
+<!-- Section 2: Runway 08/26 & FATO Geometry Tactical Display -->
+<div class="relative w-full rounded-xl bg-surface-container-low p-space-md shadow-xl overflow-hidden">
+<!-- Specular Top Rim Gradient -->
+<div class="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/80 to-transparent"></div>
+<div class="flex items-center justify-between mb-space-sm">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-secondary">flight_takeoff</span>
+<span class="font-headline-sm text-headline-sm text-primary font-semibold uppercase tracking-tight">Runway &amp; FATO Matrix</span>
+</div>
+<div class="px-2 py-0.5 rounded bg-surface-container-highest">
+<span class="font-label-sm text-label-sm text-secondary font-mono font-bold">900m × 30m</span>
+</div>
+</div>
+<!-- Tactical Vector Radar / Runway Schematics Graphic -->
+<div class="relative w-full h-44 rounded-lg bg-surface-container-lowest overflow-hidden flex flex-col justify-center items-center px-4 shadow-[inset_0_2px_12px_rgba(0,0,0,0.8)]">
+<!-- Grid coordinate crosshairs -->
+<div class="absolute inset-0 bg-[radial-gradient(rgba(123,208,255,0.08)_1px,transparent_1px)] [background-size:16px_16px]"></div>
+<!-- Runway Graphic Container (Tilted at runway magnetic bearing 082°) -->
+<div class="relative w-full max-w-[280px] h-12 bg-surface-container-high rounded flex items-center justify-between px-3 shadow-[0_0_15px_rgba(0,0,0,0.6)]">
+<!-- Threshold 08 Marking -->
+<div class="flex flex-col items-center">
+<span class="font-label-sm text-label-sm text-primary font-mono font-bold tracking-tight">08</span>
+<div class="w-2.5 h-0.5 bg-primary/70 my-0.5"></div>
+<span class="font-label-sm text-[8px] text-outline font-mono">082°</span>
+</div>
+<!-- Runway Centerline Dashes -->
+<div class="flex-1 flex items-center justify-evenly px-2">
+<div class="w-3 h-0.5 bg-outline/40"></div>
+<div class="w-3 h-0.5 bg-outline/40"></div>
+<!-- Central FATO-ALPHA Stand with Illuminated Halo -->
+<div class="relative flex items-center justify-center p-1 rounded-md bg-secondary/15 shadow-[0_0_12px_rgba(123,208,255,0.5)]">
+<div class="w-7 h-7 rounded flex flex-col items-center justify-center bg-surface-container-lowest">
+<span class="font-display text-[11px] font-bold text-secondary leading-none">H</span>
+</div>
+</div>
+<div class="w-3 h-0.5 bg-outline/40"></div>
+<div class="w-3 h-0.5 bg-outline/40"></div>
+</div>
+<!-- Threshold 26 Marking -->
+<div class="flex flex-col items-center">
+<span class="font-label-sm text-label-sm text-primary font-mono font-bold tracking-tight">26</span>
+<div class="w-2.5 h-0.5 bg-primary/70 my-0.5"></div>
+<span class="font-label-sm text-[8px] text-outline font-mono">262°</span>
+</div>
+</div>
+<!-- Tactical Stand Info Overlay -->
+<div class="mt-3 flex items-center gap-3">
+<span class="flex items-center gap-1 font-label-sm text-label-sm text-secondary font-mono">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+            FATO-ALPHA: 22m × 22m TLOF
+          </span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-mono">
+            ELEV 3,000 FT
+          </span>
+</div>
+</div>
+<!-- Pavement Classification & Operational Distances -->
+<div class="mt-space-sm p-space-sm rounded-lg bg-surface-container/60 space-y-1.5">
+<div class="flex items-center justify-between text-body-sm">
+<span class="font-label-sm text-label-sm text-outline uppercase font-mono">Surface Rating</span>
+<span class="font-label-sm text-label-sm text-primary font-mono font-medium">Asphalt (PCN 18/F/C/W/T)</span>
+</div>
+<div class="flex items-center justify-between text-body-sm">
+<span class="font-label-sm text-label-sm text-outline uppercase font-mono">TORA / TODA</span>
+<span class="font-label-sm text-label-sm text-primary font-mono font-medium">900M • 960M CLEARWAY</span>
+</div>
+</div>
+<!-- Real-Time Atmospheric Vector & Crosswind Gauge -->
+<div class="mt-space-sm p-space-sm rounded-lg bg-surface-container-lowest/80 flex flex-col gap-2">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-secondary">air</span>
+<span class="font-label-sm text-label-sm text-primary uppercase font-mono">WIND: 070° @ 08 KT</span>
+</div>
+<span class="font-label-sm text-label-sm text-secondary font-mono font-semibold">CALM TO MODERATE</span>
+</div>
+<!-- Crosswind Component Indicator Bar -->
+<div class="space-y-1">
+<div class="flex justify-between items-center font-label-sm text-label-sm font-mono text-outline">
+<span>RESOLVED X-WIND: <strong class="text-primary">02.4 KT</strong></span>
+<span>MAX THRESHOLD: 17 KT</span>
+</div>
+<div class="w-full h-1.5 rounded-full bg-surface-container-highest overflow-hidden">
+<div class="h-full bg-secondary rounded-full" style="width: 14.1%"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Section 3: Feasibility Scorecard (4 Pillars) -->
+<div class="relative w-full rounded-xl bg-surface-container-low p-space-md shadow-xl overflow-hidden">
+<!-- Specular Top Rim Gradient -->
+<div class="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/80 to-transparent"></div>
+<!-- Scorecard Header with Radial Index Dial -->
+<div class="flex items-center justify-between mb-space-md">
+<div>
+<span class="font-label-sm text-label-sm text-outline uppercase font-mono tracking-wider">INFRASTRUCTURE AUDIT</span>
+<h2 class="font-headline-sm text-headline-sm text-primary font-semibold uppercase">Feasibility Scorecard</h2>
+</div>
+<div class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container-highest shadow-[inset_0_1px_1px_rgba(255,255,255,0.25)]">
+<span class="font-headline-sm text-headline-sm font-bold text-secondary font-mono">87.2</span>
+<span class="font-label-sm text-[9px] text-outline font-mono">/100</span>
+</div>
+</div>
+<!-- Pillar Breakdown Stack -->
+<div class="space-y-space-sm">
+<!-- Pillar 1: Electrical Grid & Substation -->
+<div class="p-3 rounded-lg bg-surface-container/70 space-y-1.5">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-secondary">bolt</span>
+<span class="font-body-md text-body-md text-primary font-medium">Electrical Grid &amp; Substation</span>
+</div>
+<span class="font-label-md text-label-md text-secondary font-mono font-bold">94%</span>
+</div>
+<div class="w-full h-1.5 rounded-full bg-surface-container-highest overflow-hidden">
+<div class="h-full bg-secondary rounded-full" style="width: 94%"></div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant pt-0.5">
+            BESCOM 11kV Feeder direct connection; dedicated 500kVA transformer; 350kW MCS fast-charge ready.
+          </p>
+</div>
+<!-- Pillar 2: Obstacle Limitation Surface -->
+<div class="p-3 rounded-lg bg-surface-container/70 space-y-1.5">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-secondary">filter_hdr</span>
+<span class="font-body-md text-body-md text-primary font-medium">Obstacle Limitation Surface (OLS)</span>
+</div>
+<span class="font-label-md text-label-md text-secondary font-mono font-bold">88%</span>
+</div>
+<div class="w-full h-1.5 rounded-full bg-surface-container-highest overflow-hidden">
+<div class="h-full bg-secondary rounded-full" style="width: 88%"></div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant pt-0.5">
+            DGCA Annex 14 compliant; clear northern approach funnel, glide path calibrated to 3.5°.
+          </p>
+</div>
+<!-- Pillar 3: Airspace & ATC Integration -->
+<div class="p-3 rounded-lg bg-surface-container/70 space-y-1.5">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-secondary">radar</span>
+<span class="font-body-md text-body-md text-primary font-medium">Airspace &amp; ATC Integration</span>
+</div>
+<span class="font-label-md text-label-md text-secondary font-mono font-bold">91%</span>
+</div>
+<div class="w-full h-1.5 rounded-full bg-surface-container-highest overflow-hidden">
+<div class="h-full bg-secondary rounded-full" style="width: 91%"></div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant pt-0.5">
+            Uncontrolled Class G below 2,000 ft AGL; established corridor buffer off HAL military aerodrome zone.
+          </p>
+</div>
+<!-- Pillar 4: Multimodal Ground Connectivity -->
+<div class="p-3 rounded-lg bg-surface-container/70 space-y-1.5">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-on-tertiary-container">commute</span>
+<span class="font-body-md text-body-md text-primary font-medium">Ground Multimodal Connectivity</span>
+</div>
+<span class="font-label-md text-label-md text-on-tertiary-container font-mono font-bold">76%</span>
+</div>
+<div class="w-full h-1.5 rounded-full bg-surface-container-highest overflow-hidden">
+<div class="h-full bg-on-tertiary-container rounded-full" style="width: 76%"></div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant pt-0.5">
+            NH44 Bellary Road arterial link; 14 min to Hebbal hub; Namma Metro Blue Line ring within 1.2km.
+          </p>
+</div>
+</div>
+</div>
+<!-- Section 4: eVTOL Fleet Matrix (Airframe Compatibility) -->
+<div class="relative w-full rounded-xl bg-surface-container-low p-space-md shadow-xl overflow-hidden">
+<!-- Specular Top Rim Gradient -->
+<div class="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/80 to-transparent"></div>
+<div class="flex items-center justify-between mb-space-sm">
+<div>
+<span class="font-label-sm text-label-sm text-outline uppercase font-mono">OEM COMPLIANCE MATRIX</span>
+<h2 class="font-headline-sm text-headline-sm text-primary font-semibold uppercase">eVTOL Fleet Suitability</h2>
+</div>
+<span class="material-symbols-outlined text-outline">image_arrow_up</span>
+</div>
+<div class="space-y-2.5">
+<!-- Airframe 1: Joby S4 -->
+<div class="p-3 rounded-lg bg-surface-container-lowest/90 flex flex-col gap-1.5">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="font-body-lg text-body-lg font-semibold text-primary">Joby S4</span>
+<span class="font-label-sm text-label-sm text-outline font-mono">T-WING</span>
+</div>
+<span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-secondary/15 text-secondary shadow-[0_0_8px_rgba(123,208,255,0.3)]">
+              FULLY COMPATIBLE
+            </span>
+</div>
+<div class="flex items-center justify-between font-label-sm text-label-sm font-mono text-on-surface-variant">
+<span>MCS Turnaround: <strong class="text-primary font-mono">150 kW Req.</strong></span>
+<span>Reserve: <strong class="text-secondary font-mono">45 MIN PRESERVED</strong></span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+            Max takeoff mass aligned with PCN rating. Payload margin +38% under high-ambient OAT conditions.
+          </p>
+</div>
+<!-- Airframe 2: Archer Midnight -->
+<div class="p-3 rounded-lg bg-surface-container-lowest/90 flex flex-col gap-1.5">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="font-body-lg text-body-lg font-semibold text-primary">Archer Midnight</span>
+<span class="font-label-sm text-label-sm text-outline font-mono">V-TAIL</span>
+</div>
+<span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-secondary/15 text-secondary shadow-[0_0_8px_rgba(123,208,255,0.3)]">
+              COMPATIBLE
+            </span>
+</div>
+<div class="flex items-center justify-between font-label-sm text-label-sm font-mono text-on-surface-variant">
+<span>MCS Turnaround: <strong class="text-primary font-mono">160 kW Req.</strong></span>
+<span>Ground Ops: <strong class="text-primary font-mono">RAPID ROLL-OFF</strong></span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+            FATO-ALPHA dimensions cleared with 4.5m wingtip clearance margin. Direct rapid taxi to apron bay 2.
+          </p>
+</div>
+<!-- Airframe 3: Eve Air Mobility -->
+<div class="p-3 rounded-lg bg-surface-container-lowest/90 flex flex-col gap-1.5">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="font-body-lg text-body-lg font-semibold text-primary">Eve Air Mobility</span>
+<span class="font-label-sm text-label-sm text-outline font-mono">LIFT+CRUISE</span>
+</div>
+<span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-on-tertiary-container/15 text-on-tertiary-container shadow-[0_0_8px_rgba(178,61,0,0.3)]">
+              CONDITIONAL
+            </span>
+</div>
+<div class="flex items-center justify-between font-label-sm text-label-sm font-mono text-on-surface-variant">
+<span>MCS Turnaround: <strong class="text-primary font-mono">200 kW Req.</strong></span>
+<span>Constraint: <strong class="text-on-tertiary-container font-mono">PEAK POWER CAP</strong></span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+            Demands staggered charging protocol during morning peak (08:00 - 10:30 IST) to prevent feeder trip.
+          </p>
+</div>
+</div>
+</div>
+<!-- Section 5: Dispatch Actions & Protocols -->
+<div class="space-y-space-sm pt-space-xs mb-space-lg">
+<!-- Secondary Button: Brushed Liquid Chrome Sectional PDF Export -->
+<button class="w-full h-12 rounded-lg bg-gradient-to-b from-primary via-primary-fixed-dim to-outline text-on-primary font-headline-sm text-headline-sm font-semibold flex items-center justify-center gap-2 shadow-[inset_0_1px_1px_rgba(255,255,255,0.9),0_4px_16px_rgba(0,0,0,0.4)] active:scale-[0.99] transition-transform" type="button">
+<span class="material-symbols-outlined text-[20px] text-on-primary">file_download</span>
+        Export Technical Sectional Dossier (PDF)
+      </button>
+<!-- Primary Action Button: Aviation Radiant Orange -->
+<button class="w-full h-12 rounded-lg bg-on-tertiary-container text-white font-headline-sm text-headline-sm font-semibold flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(178,61,0,0.5)] active:scale-[0.99] transition-transform" type="button">
+<span class="material-symbols-outlined text-[20px]">rocket_launch</span>
+        Initiate Deployment Protocol
+      </button>
+<!-- Regulatory Disclaimer Footnote -->
+<div class="flex items-start gap-2 p-2.5 rounded bg-surface-container-low/70">
+<span class="material-symbols-outlined text-outline text-[16px] shrink-0 mt-0.5">info</span>
+<p class="font-body-sm text-body-sm text-outline leading-tight">
+          Audit certified in accordance with Directorate General of Civil Aviation (DGCA) CAR Section 4, Series B, Part I. Data telemetry logged into secure aerospace ledger ID <span class="font-mono text-primary">#BLR-VOJK-99B</span>.
+        </p>
+</div>
+</div>
+</div>
+</div></main></body></html>

@@ -94,11 +94,11 @@ export default function Login() {
 
           <div className="login-runway-diagram" aria-hidden="true">
             <svg viewBox="0 0 420 56" width="100%" height="56">
-              <line x1="12" y1="28" x2="408" y2="28" stroke="#1E2E46" strokeWidth="1" />
-              <rect x="44" y="12" width="332" height="32" fill="#0B121E" stroke="#2B4162" strokeWidth="1" />
-              <text x="54" y="32" fill="#8A9BB5" fontSize="11" fontFamily="IBM Plex Sans, sans-serif" fontWeight="600">09</text>
-              <line x1="82" y1="28" x2="338" y2="28" stroke="#0EA5E9" strokeWidth="1.5" strokeDasharray="8 6" />
-              <text x="350" y="32" fill="#8A9BB5" fontSize="11" fontFamily="IBM Plex Sans, sans-serif" fontWeight="600">27</text>
+              <line x1="12" y1="28" x2="408" y2="28" stroke="var(--border)" strokeWidth="1" />
+              <rect x="44" y="12" width="332" height="32" fill="var(--surface-raised)" stroke="var(--border)" strokeWidth="1" />
+              <text x="54" y="32" fill="var(--text-muted)" fontSize="11" fontFamily="var(--font-mono)" fontWeight="600">09</text>
+              <line x1="82" y1="28" x2="338" y2="28" stroke="var(--accent)" strokeWidth="1.5" strokeDasharray="8 6" />
+              <text x="350" y="32" fill="var(--text-muted)" fontSize="11" fontFamily="var(--font-mono)" fontWeight="600">27</text>
             </svg>
           </div>
         </section>

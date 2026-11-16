@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600;700&amp;family=Space+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "on-tertiary-fixed-variant": "#802a00", "primary-fixed": "#dde3eb", "on-tertiary": "#5b1b00", "tertiary": "#ffffff", "tertiary-container": "#ffdbce", "surface-container-low": "#181c21", "secondary": "#7bd0ff", "error": "#ffb4ab", "background": "#101419", "on-secondary-container": "#00374d", "on-secondary": "#00354a", "on-background": "#e0e2ea", "surface-bright": "#36393f", "outline": "#8e9195", "on-secondary-fixed": "#001e2c", "secondary-fixed-dim": "#7bd0ff", "error-container": "#93000a", "surface": "#101419", "primary": "#ffffff", "on-tertiary-fixed": "#380d00", "surface-container-highest": "#31353b", "on-primary-fixed-variant": "#41474e", "inverse-on-surface": "#2d3136", "secondary-container": "#00a6e0", "on-primary-fixed": "#161c22", "on-secondary-fixed-variant": "#004c69", "inverse-primary": "#595f66", "on-surface": "#e0e2ea", "on-primary": "#2b3137", "tertiary-fixed-dim": "#ffb59a", "primary-container": "#dde3eb", "surface-tint": "#c1c7cf", "secondary-fixed": "#c4e7ff", "tertiary-fixed": "#ffdbce", "on-surface-variant": "#c5c6cb", "surface-dim": "#101419", "primary-fixed-dim": "#c1c7cf", "on-error-container": "#ffdad6", "surface-container-high": "#262a30", "surface-variant": "#31353b", "surface-container": "#1c2025", "on-primary-container": "#5f656c", "surface-container-lowest": "#0a0e13", "outline-variant": "#44474a", "inverse-surface": "#e0e2ea", "on-tertiary-container": "#b23d00", "on-error": "#690005" }, "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, "spacing": { "space-md": "1rem", "space-sm": "0.5rem", "margin-mobile": "1rem", "space-xs": "0.25rem", "gutter": "1.5rem", "space-lg": "1.5rem", "space-xl": "2.5rem", "gutter-mobile": "0.75rem", "margin": "2rem" }, "fontFamily": { "headline-lg-mobile": [ "Space Grotesk" ], "display-mobile": [ "Space Grotesk" ], "headline-lg": [ "Space Grotesk" ], "label-md": [ "JetBrains Mono" ], "body-lg": [ "Geist" ], "headline-md": [ "Space Grotesk" ], "display": [ "Space Grotesk" ], "body-sm": [ "Geist" ], "label-sm": [ "JetBrains Mono" ], "body-md": [ "Geist" ], "headline-sm": [ "Space Grotesk" ] }, "fontSize": { "headline-lg-mobile": [ "24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "500" } ], "display-mobile": [ "32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "600" } ], "headline-lg": [ "32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "500" } ], "label-md": [ "12px", { "lineHeight": "16px", "letterSpacing": "0.06em", "fontWeight": "500" } ], "body-lg": [ "16px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "400" } ], "headline-md": [ "24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "500" } ], "display": [ "48px", { "lineHeight": "56px", "letterSpacing": "-0.03em", "fontWeight": "600" } ], "body-sm": [ "12px", { "lineHeight": "18px", "letterSpacing": "0.01em", "fontWeight": "400" } ], "label-sm": [ "10px", { "lineHeight": "14px", "letterSpacing": "0.08em", "fontWeight": "600" } ], "body-md": [ "14px", { "lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "400" } ], "headline-sm": [ "18px", { "lineHeight": "26px", "letterSpacing": "0em", "fontWeight": "500" } ] } } } };</script></head><body class="bg-background font-body-md text-body-md text-on-surface select-none antialiased min-h-screen"><aside class="fixed left-0 top-0 h-full w-72 bg-surface-container-low/95 backdrop-blur-2xl z-50 flex flex-col justify-between shadow-[0_1px_12px_rgba(0,0,0,0.5)]"><div class="flex flex-col"><div class="h-16 px-space-lg flex items-center justify-between bg-surface-container-lowest/40"><div class="flex items-center gap-space-sm"><div class="w-7 h-7 rounded-lg bg-surface-container-high flex items-center justify-center shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]"><span class="material-symbols-outlined text-secondary text-[18px]">radar</span></div><div class="flex flex-col"><span class="font-headline-sm text-headline-sm text-primary tracking-tight font-semibold">AeroGrid</span><span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest">Tactical MFD</span></div></div><div class="px-space-xs py-0.5 rounded bg-surface-container-high"><span class="font-label-sm text-label-sm text-secondary font-semibold">v4.2</span></div></div><div class="px-space-lg pt-space-md pb-space-xs"><span class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Avionics Command</span></div><nav class="flex flex-col gap-1 px-space-sm mt-space-xs" data-active-classes="bg-surface-container-high text-primary font-medium shadow-[inset_0_1px_0_rgba(255,255,255,0.35)]"><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all duration-150" data-path="overview" href="#"><span class="material-symbols-outlined text-[20px]">grid_view</span><span class="font-body-md text-body-md">Overview</span></a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all duration-150" data-path="aeronautical-map" href="#"><span class="material-symbols-outlined text-[20px]">explore</span><span class="font-body-md text-body-md">Aeronautical Map</span></a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all duration-150" data-path="fleet-deployments" href="#"><span class="material-symbols-outlined text-[20px]">flight_takeoff</span><span class="font-body-md text-body-md">Fleet Deployments</span></a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all duration-150" data-path="airstrip-directory" href="#"><span class="material-symbols-outlined text-[20px]">connecting_airports</span><span class="font-body-md text-body-md">Airstrip Directory</span></a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all duration-150" data-path="simulation-dossier" href="#"><span class="material-symbols-outlined text-[20px]">analytics</span><span class="font-body-md text-body-md">Simulation Dossier</span></a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all duration-150" data-path="settings" href="#"><span class="material-symbols-outlined text-[20px]">tune</span><span class="font-body-md text-body-md">Settings</span></a></nav></div><div class="p-space-md m-space-sm bg-surface-container rounded-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]"><div class="flex items-center justify-between mb-space-xs"><span class="font-label-sm text-label-sm text-outline uppercase">Nav Telemetry</span><div class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-secondary shadow-[0_0_10px_rgba(123,208,255,0.8)] animate-pulse"></span><span class="font-label-sm text-label-sm text-secondary font-medium">LOCKED</span></div></div><div class="flex justify-between items-center text-on-surface-variant"><span class="font-body-sm text-body-sm">Constellation</span><span class="font-label-md text-label-md text-on-surface font-semibold">NavIC / GPS</span></div><div class="flex justify-between items-center text-on-surface-variant mt-0.5"><span class="font-body-sm text-body-sm">Precision Alt</span><span class="font-label-md text-label-md text-on-surface font-semibold">±0.28m MSL</span></div></div></aside><div class="pl-72 flex flex-col min-h-screen"><header class="fixed top-0 left-72 right-0 h-16 bg-surface/85 backdrop-blur-xl shadow-[0_1px_10px_rgba(0,0,0,0.4)] z-40 px-space-lg flex items-center justify-between gap-space-md"><div class="flex items-center gap-space-md flex-1 max-w-xl"><div class="relative w-full"><span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[18px]">search</span><input class="w-full pl-9 pr-space-md py-1.5 rounded-lg bg-surface-container-lowest/70 text-on-surface placeholder:text-outline text-body-sm font-body-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] focus:outline-none focus:ring-1 focus:ring-secondary/50 transition-all" placeholder="Search Indian Aerodromes, ICAO/IATA (e.g. VIDP, VOBL), Vertipads..." type="text"/></div></div><div class="flex items-center gap-space-md"><div class="hidden xl:flex items-center gap-space-xs px-space-sm py-1 rounded bg-surface-container-low shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]"><span class="material-symbols-outlined text-secondary text-[16px]">satellite_alt</span><span class="font-label-sm text-label-sm text-on-surface">GNSS/NAVIC</span><span class="font-label-sm text-label-sm text-secondary font-semibold">99.98% SYNC</span></div><div class="flex items-center gap-space-xs px-space-md py-1.5 rounded-lg bg-surface-container-high shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] cursor-pointer hover:bg-surface-bright transition-all"><span class="inline-block w-2 h-2 rounded-full bg-secondary shadow-[0_0_8px_rgba(123,208,255,0.9)]"></span><span class="font-label-md text-label-md text-primary font-medium">SEC-DEL-BLR LIVE</span><span class="material-symbols-outlined text-[16px] text-outline">expand_more</span></div><div class="flex items-center gap-space-xs"><button class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all relative" type="button"><span class="material-symbols-outlined text-[18px]">notifications</span><span class="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-error shadow-[0_0_6px_rgba(255,180,171,0.9)]"></span></button><button class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all" type="button"><span class="material-symbols-outlined text-[18px]">crisis_alert</span></button></div><div class="flex items-center gap-space-sm pl-space-sm"><div class="flex flex-col text-right hidden sm:flex"><span class="font-label-sm text-label-sm text-primary font-semibold">SQN-LDR V. SHARMA</span><span class="font-label-sm text-label-sm text-secondary">CHIEF DISPATCHER</span></div><div class="relative"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-[0_0_12px_rgba(255,255,255,0.35)]"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div><span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-secondary ring-2 ring-background"></span></div></div></div></header><main class="relative pt-16 w-full bg-background flex-1 flex flex-col"><div class="flex flex-col w-full">
+<div class="grid grid-cols-12 gap-space-lg p-space-lg relative min-h-[calc(100vh-4rem)]">
+<!-- Top Strategic Metric Deck (Span 12) -->
+<div class="col-span-12 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-space-md">
+<div class="bg-surface-container-low rounded-xl p-space-md shadow-md relative overflow-hidden group hover:bg-surface-container transition-all">
+<div class="flex items-center justify-between text-outline mb-1">
+<span class="font-label-sm text-label-sm uppercase tracking-wider">Sector Air Density</span>
+<span class="material-symbols-outlined text-[16px] text-secondary">compress</span>
+</div>
+<div class="flex items-baseline gap-space-xs">
+<span class="font-headline-md text-headline-md text-primary font-semibold">1.184</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">kg/m³</span>
+</div>
+<div class="mt-2 flex items-center gap-1.5 text-secondary">
+<span class="font-label-sm text-label-sm font-semibold tracking-wide">QNH 1013.2 HPA</span>
+<span class="w-1 h-1 rounded-full bg-secondary"></span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">STD MSL</span>
+</div>
+</div>
+<div class="bg-surface-container-low rounded-xl p-space-md shadow-md relative overflow-hidden group hover:bg-surface-container transition-all">
+<div class="flex items-center justify-between text-outline mb-1">
+<span class="font-label-sm text-label-sm uppercase tracking-wider">Active Sky-Tunnels</span>
+<span class="material-symbols-outlined text-[16px] text-secondary">alt_route</span>
+</div>
+<div class="flex items-baseline gap-space-xs">
+<span class="font-headline-md text-headline-md text-primary font-semibold">14</span>
+<span class="font-label-sm text-label-sm text-secondary font-semibold">/ 16 OPEN</span>
+</div>
+<div class="mt-2 flex items-center gap-1.5 text-on-surface-variant">
+<span class="font-label-sm text-label-sm text-secondary">CORR-SOUTH-04</span>
+<span class="font-label-sm text-label-sm text-outline">RESTRICTED</span>
+</div>
+</div>
+<div class="bg-surface-container-low rounded-xl p-space-md shadow-md relative overflow-hidden group hover:bg-surface-container transition-all">
+<div class="flex items-center justify-between text-outline mb-1">
+<span class="font-label-sm text-label-sm uppercase tracking-wider">eVTOL Airborne</span>
+<span class="material-symbols-outlined text-[16px] text-secondary">flight</span>
+</div>
+<div class="flex items-baseline gap-space-xs">
+<span class="font-headline-md text-headline-md text-primary font-semibold">08</span>
+<span class="font-label-sm text-label-sm text-outline">CRAFT</span>
+</div>
+<div class="mt-2 flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary shadow-sm"></span>
+<span class="font-label-sm text-label-sm text-secondary">ALL ADS-B SYNCHED</span>
+</div>
+</div>
+<div class="bg-surface-container-low rounded-xl p-space-md shadow-md relative overflow-hidden group hover:bg-surface-container transition-all">
+<div class="flex items-center justify-between text-outline mb-1">
+<span class="font-label-sm text-label-sm uppercase tracking-wider">MCS 350kW+ Grid</span>
+<span class="material-symbols-outlined text-[16px] text-tertiary-fixed-dim">bolt</span>
+</div>
+<div class="flex items-baseline gap-space-xs">
+<span class="font-headline-md text-headline-md text-primary font-semibold">94.2</span>
+<span class="font-label-sm text-label-sm text-tertiary-fixed-dim">% AVAIL</span>
+</div>
+<div class="mt-2 flex items-center justify-between text-on-surface-variant">
+<span class="font-label-sm text-label-sm text-on-surface">VOBL Verti-4:</span>
+<span class="font-label-sm text-label-sm text-secondary font-semibold">READY</span>
+</div>
+</div>
+<div class="bg-surface-container-low rounded-xl p-space-md shadow-md relative overflow-hidden group hover:bg-surface-container transition-all">
+<div class="flex items-center justify-between text-outline mb-1">
+<span class="font-label-sm text-label-sm uppercase tracking-wider">Radar Sweep Band</span>
+<span class="material-symbols-outlined text-[16px] text-secondary animate-spin">cyclone</span>
+</div>
+<div class="flex items-baseline gap-space-xs">
+<span class="font-headline-md text-headline-md text-primary font-semibold">S-Band</span>
+<span class="font-label-sm text-label-sm text-outline">PRIMARY</span>
+</div>
+<div class="mt-2 flex items-center gap-1.5 text-secondary">
+<span class="font-label-sm text-label-sm">BLR-TERMINAL 30NM</span>
+</div>
+</div>
+<div class="bg-surface-container-low rounded-xl p-space-md shadow-md relative overflow-hidden group hover:bg-surface-container transition-all">
+<div class="flex items-center justify-between text-outline mb-1">
+<span class="font-label-sm text-label-sm uppercase tracking-wider">Separation Margin</span>
+<span class="material-symbols-outlined text-[16px] text-secondary">security</span>
+</div>
+<div class="flex items-baseline gap-space-xs">
+<span class="font-headline-md text-headline-md text-primary font-semibold">1,200</span>
+<span class="font-label-sm text-label-sm text-outline">FT VERT</span>
+</div>
+<div class="mt-2 flex items-center gap-1.5 text-secondary">
+<span class="font-label-sm text-label-sm">TCAS RESOLUTION 0%</span>
+</div>
+</div>
+</div>
+<!-- Main Map Viewport (Span 9 Desktop, Column-first responsive) -->
+<div class="col-span-12 xl:col-span-9 flex flex-col gap-space-md">
+<!-- Interactive Aeronautical Screen Enclosure -->
+<div class="relative w-full h-[680px] bg-surface-container-lowest rounded-xl overflow-hidden shadow-2xl flex flex-col select-none">
+<!-- Specular Glass Accent Line -->
+<div class="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-primary/40 to-transparent z-30 pointer-events-none"></div>
+<!-- Ambient Tactical Map Canvas (SVG Vector Graphics Engine) -->
+<div class="absolute inset-0 z-0 bg-surface-container-lowest">
+<svg class="w-full h-full" fill="none" viewbox="0 0 1200 750" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<!-- Metallic Radar Grid -->
+<pattern height="60" id="radarGrid" patternunits="userSpaceOnUse" width="60">
+<path d="M 60 0 L 0 0 0 60" fill="none" stroke="#262A30" stroke-dasharray="2 4" stroke-width="0.75"></path>
+</pattern>
+<!-- Corridor Gradient Glow -->
+<lineargradient id="corridorGlow" x1="0%" x2="100%" y1="0%" y2="100%">
+<stop offset="0%" stop-color="#38BDF8" stop-opacity="0.8"></stop>
+<stop offset="50%" stop-color="#7BD0FF" stop-opacity="0.4"></stop>
+<stop offset="100%" stop-color="#00A6E0" stop-opacity="0.9"></stop>
+</lineargradient>
+<!-- Radial Sweep Beam Gradient -->
+<radialgradient cx="50%" cy="50%" id="sweepBeam" r="50%">
+<stop offset="0%" stop-color="#38BDF8" stop-opacity="0.15"></stop>
+<stop offset="70%" stop-color="#38BDF8" stop-opacity="0.03"></stop>
+<stop offset="100%" stop-color="transparent" stop-opacity="0"></stop>
+</radialgradient>
+<!-- Danger Zone Pattern -->
+<pattern height="20" id="htLineGrid" patterntransform="rotate(45)" patternunits="userSpaceOnUse" width="20">
+<line stroke="#FFB59A" stroke-opacity="0.2" stroke-width="1" x1="0" x2="0" y1="0" y2="20"></line>
+</pattern>
+</defs>
+<!-- Coordinate Background Grid -->
+<rect fill="url(#radarGrid)" height="100%" width="100%"></rect>
+<!-- Peninsular India Terrain Silhouette Trace (Abstract Geodesic Topology) -->
+<path d="M 180,40 Q 320,120 480,180 T 700,320 Q 820,440 920,620 L 780,720 Q 640,680 480,590 T 260,450 Q 150,300 120,180 Z" fill="#14181E" fill-opacity="0.75" stroke="#31353B" stroke-width="1.5"></path>
+<!-- Radar Concentric Range Rings centered on VOBL (Bengaluru FIR) -->
+<!-- VOBL Center coordinates ~ (620, 340) -->
+<g id="radarRings" opacity="0.6" stroke="#44474A" stroke-dasharray="4 6" stroke-width="1">
+<!-- 10 NM Ring -->
+<circle cx="620" cy="340" r="90"></circle>
+<!-- 20 NM Ring -->
+<circle cx="620" cy="340" r="180"></circle>
+<!-- 30 NM Ring -->
+<circle cx="620" cy="340" r="270"></circle>
+<!-- Outer Coverage Scope -->
+<circle cx="620" cy="340" r="360" stroke="#31353B" stroke-dasharray="2 8"></circle>
+</g>
+<!-- Tactical Radar Range Distance Annotations -->
+<text fill="#8E9195" font-family="JetBrains Mono" font-size="10" font-weight="600" x="715" y="336">10 NM</text>
+<text fill="#8E9195" font-family="JetBrains Mono" font-size="10" font-weight="600" x="805" y="336">20 NM</text>
+<text fill="#8E9195" font-family="JetBrains Mono" font-size="10" font-weight="600" x="895" y="336">30 NM</text>
+<!-- Dynamic Radar Sweep Fan Overlay -->
+<path d="M 620,340 L 890,160 A 360,360 0 0,1 980,340 Z" fill="url(#sweepBeam)" opacity="0.8">
+<animatetransform attributename="transform" dur="14s" from="0 620 340" repeatcount="indefinite" to="360 620 340" type="rotate"></animatetransform>
+</path>
+<!-- High Voltage Transmission Infrastructure (HT Corridors Warning Vector) -->
+<g id="htTransmissionLines" opacity="0.65">
+<path d="M 380,240 L 460,310 L 520,390 L 580,480" stroke="#FFB59A" stroke-dasharray="3 3" stroke-width="2"></path>
+<!-- HT Pylon Nodes -->
+<rect fill="#5B1B00" height="8" stroke="#FFB59A" stroke-width="1" width="8" x="376" y="236"></rect>
+<rect fill="#5B1B00" height="8" stroke="#FFB59A" stroke-width="1" width="8" x="456" y="306"></rect>
+<rect fill="#5B1B00" height="8" stroke="#FFB59A" stroke-width="1" width="8" x="516" y="386"></rect>
+<rect fill="#5B1B00" height="8" stroke="#FFB59A" stroke-width="1" width="8" x="576" y="476"></rect>
+<text fill="#FFB59A" font-family="JetBrains Mono" font-size="9" font-weight="500" x="470" y="325">400kV CAUVERY GRID (65m AGL)</text>
+</g>
+<!-- Class C/D Airspace Geofence Zones -->
+<g id="controlledAirspace">
+<!-- VOBL Class C Airspace Poly -->
+<polygon fill="#00354A" fill-opacity="0.25" points="560,260 690,260 740,360 680,430 550,410 520,320" stroke="#00A6E0" stroke-width="1.5"></polygon>
+<text fill="#7BD0FF" font-family="Space Grotesk" font-size="11" font-weight="600" letter-spacing="1" x="575" y="280">VOBL CTR - CLASS C (SFC-FL145)</text>
+<!-- VOMM Sector Boundary (East) -->
+<polygon fill="#262A30" fill-opacity="0.35" points="920,290 1080,240 1140,420 1010,480 890,380" stroke="#8E9195" stroke-dasharray="4 4" stroke-width="1"></polygon>
+<text fill="#C5C6CB" font-family="Space Grotesk" font-size="11" font-weight="600" x="960" y="320">VOMM TMA (CHENNAI)</text>
+</g>
+<!-- VFR Low Altitude Corridors (< 4000 FT MSL Sky Tunnels) -->
+<g id="vfrSkyways">
+<!-- Skyway: VOJK (Jakkur) -> VOVK (Hosur) Active Corridor -->
+<path d="M 605,320 L 635,395 L 685,475" opacity="0.3" stroke="url(#corridorGlow)" stroke-linecap="round" stroke-width="8"></path>
+<path d="M 605,320 L 635,395 L 685,475" stroke="#7BD0FF" stroke-dasharray="6 4" stroke-width="2"></path>
+<!-- Alternate VFR Branch: VOJK -> Begumpet Link Corridor -->
+<path d="M 605,320 L 460,180 L 390,110" stroke="#44474A" stroke-dasharray="3 3" stroke-width="2"></path>
+</g>
+<!-- Megawatt Charging Infrastructure (MCS 350kW+) Hubs -->
+<g id="mcsHubs">
+<!-- VOJK Charging Vertiport -->
+<circle cx="605" cy="320" fill="#181C21" r="16" stroke="#00A6E0" stroke-width="1.5"></circle>
+<circle cx="605" cy="320" fill="#7BD0FF" r="4"></circle>
+<text fill="#FFFFFF" font-family="Space Grotesk" font-size="12" font-weight="600" x="625" y="315">VOJK</text>
+<text fill="#7BD0FF" font-family="JetBrains Mono" font-size="9" x="625" y="327">JAKKUR VERTI-HUB [350kW]</text>
+<!-- VOBL Terminal Aerodrome -->
+<circle cx="620" cy="275" fill="#DDE3EB" r="7"></circle>
+<text fill="#FFFFFF" font-family="Space Grotesk" font-size="12" font-weight="600" x="635" y="278">VOBR / VOBL</text>
+<text fill="#8E9195" font-family="JetBrains Mono" font-size="9" x="635" y="290">KEMPEGOWDA INTL</text>
+<!-- VOVK Hosur Vertiport Station -->
+<circle cx="685" cy="475" fill="#181C21" r="16" stroke="#00A6E0" stroke-width="1.5"></circle>
+<circle cx="685" cy="475" fill="#7BD0FF" r="4"></circle>
+<text fill="#FFFFFF" font-family="Space Grotesk" font-size="12" font-weight="600" x="705" y="475">VOVK</text>
+<text fill="#7BD0FF" font-family="JetBrains Mono" font-size="9" x="705" y="487">HOSUR AERODROME [400kW MCS]</text>
+<!-- VOBH Begumpet Station (North-West) -->
+<circle cx="390" cy="110" fill="#C1C7CF" r="6"></circle>
+<text fill="#E0E2EA" font-family="Space Grotesk" font-size="11" font-weight="500" x="405" y="112">VOBH</text>
+<text fill="#8E9195" font-family="JetBrains Mono" font-size="9" x="405" y="123">HYDERABAD/BEGUMPET</text>
+<!-- VOMM Chennai Coastal Station -->
+<circle cx="980" cy="380" fill="#C1C7CF" r="7"></circle>
+<text fill="#E0E2EA" font-family="Space Grotesk" font-size="11" font-weight="500" x="995" y="380">VOMM</text>
+<text fill="#8E9195" font-family="JetBrains Mono" font-size="9" x="995" y="392">CHENNAI MEENAMBAKKAM</text>
+</g>
+<!-- Waypoints on Active Corridor -->
+<g id="flightWaypoints">
+<!-- Waypoint ALPHA (Passed) -->
+<polygon fill="#7BD0FF" points="620,352 626,362 614,362"></polygon>
+<text fill="#C5C6CB" font-family="JetBrains Mono" font-size="9" x="632" y="360">WPT-ALPHA [FIX]</text>
+<!-- Waypoint BRAVO (Next Handover) -->
+<polygon fill="#DDE3EB" points="650,422 656,432 644,432"></polygon>
+<text fill="#FFFFFF" font-family="JetBrains Mono" font-size="9" font-weight="600" x="662" y="430">WPT-BRAVO (HANDOVER)</text>
+</g>
+<!-- LIVE FLIGHT POSITION: VT-EM1 Archer Midnight Target Track -->
+<!-- Pos: ~ (630, 385) midway along the corridor -->
+<g id="activeAircraftTarget">
+<!-- Target Dynamic Vector Ribbon -->
+<line stroke="#7BD0FF" stroke-linecap="round" stroke-width="2" x1="630" x2="652" y1="385" y2="422"></line>
+<circle cx="630" cy="385" fill="none" r="18" stroke="#7BD0FF" stroke-width="1.5">
+<animate attributename="r" dur="2.4s" repeatcount="indefinite" values="8;24;8"></animate>
+<animate attributename="opacity" dur="2.4s" repeatcount="indefinite" values="1;0;1"></animate>
+</circle>
+<!-- Aircraft Diamond Glyph -->
+<path d="M 630,377 L 637,385 L 630,393 L 623,385 Z" fill="#FFFFFF" stroke="#00354A" stroke-width="1.5"></path>
+<!-- Real-time Flight Vector Callout Tag -->
+<g transform="translate(642, 368)">
+<rect fill="#0A0E13" fill-opacity="0.9" height="42" rx="4" stroke="#7BD0FF" stroke-width="1" width="138"></rect>
+<text fill="#FFFFFF" font-family="Space Grotesk" font-size="11" font-weight="700" x="8" y="15">VT-EM1</text>
+<text fill="#7BD0FF" font-family="JetBrains Mono" font-size="9" font-weight="600" x="56" y="15">ARCHER MIDNIGHT</text>
+<text fill="#C5C6CB" font-family="JetBrains Mono" font-size="9" x="8" y="32">125 KTAS · 3500 FT</text>
+</g>
+</g>
+</svg>
+</div>
+<!-- Upper Map Floating Controls Overlay (Machined Silver HUD Header) -->
+<div class="relative z-10 p-space-md flex flex-wrap items-center justify-between gap-space-sm bg-gradient-to-b from-surface-container-lowest/90 via-surface-container-lowest/50 to-transparent">
+<div class="flex items-center gap-space-sm">
+<div class="flex items-center gap-1.5 px-space-md py-1 rounded bg-surface-container-high/90 shadow-md">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="font-label-md text-label-md text-primary font-semibold tracking-wide">BLR-CORRIDOR-09</span>
+<span class="font-label-sm text-label-sm text-secondary font-bold ml-1">PRIMARY RADAR</span>
+</div>
+<div class="hidden sm:flex items-center gap-space-xs px-space-sm py-1 rounded bg-surface-container/70 shadow-sm">
+<span class="font-label-sm text-label-sm text-outline">CENTER:</span>
+<span class="font-label-sm text-label-sm text-on-surface font-semibold">12.9716° N, 77.5946° E</span>
+</div>
+</div>
+<!-- Airspace Display Layer Filter Toggles -->
+<div class="flex items-center gap-space-xs bg-surface-container-high/90 p-1 rounded-lg shadow-lg">
+<button class="flex items-center gap-1 px-space-sm py-1 rounded bg-surface-bright text-primary text-body-sm font-medium shadow-sm transition-all">
+<span class="material-symbols-outlined text-[16px] text-secondary">layers</span>
+<span class="font-label-sm text-label-sm">Class C/D</span>
+</button>
+<button class="flex items-center gap-1 px-space-sm py-1 rounded bg-surface-bright text-primary text-body-sm font-medium shadow-sm transition-all">
+<span class="material-symbols-outlined text-[16px] text-secondary">alt_route</span>
+<span class="font-label-sm text-label-sm">VFR Tunnels</span>
+</button>
+<button class="flex items-center gap-1 px-space-sm py-1 rounded bg-surface-bright text-primary text-body-sm font-medium shadow-sm transition-all">
+<span class="material-symbols-outlined text-[16px] text-tertiary-fixed-dim">electrical_services</span>
+<span class="font-label-sm text-label-sm">HT Grid</span>
+</button>
+<button class="flex items-center gap-1 px-space-sm py-1 rounded bg-surface-bright text-secondary text-body-sm font-medium shadow-sm transition-all">
+<span class="material-symbols-outlined text-[16px] text-secondary">ev_station</span>
+<span class="font-label-sm text-label-sm">MCS 350kW</span>
+</button>
+<button class="flex items-center gap-1 px-space-sm py-1 rounded bg-surface-container text-on-surface-variant hover:text-primary transition-all">
+<span class="material-symbols-outlined text-[16px]">radar</span>
+<span class="font-label-sm text-label-sm">Rings</span>
+</button>
+</div>
+</div>
+<!-- Lower Map HUD Compass & Instrument Overlay -->
+<div class="relative z-10 mt-auto p-space-md flex flex-wrap items-end justify-between gap-space-md bg-gradient-to-t from-surface-container-lowest/95 via-surface-container-lowest/60 to-transparent">
+<!-- Compass Rosette / Gyro Widget -->
+<div class="flex items-center gap-space-md bg-surface-container/90 px-space-md py-space-sm rounded-xl shadow-lg">
+<div class="w-12 h-12 rounded-full bg-surface-container-lowest flex items-center justify-center relative shadow-inner">
+<span class="material-symbols-outlined text-secondary text-[24px] transform rotate-45">navigation</span>
+<span class="absolute top-1 text-[8px] font-label-sm font-bold text-outline">N</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-outline uppercase tracking-wider">MAGNETIC BEARING</span>
+<span class="font-headline-sm text-headline-sm text-primary font-bold">148° SE</span>
+<span class="font-label-sm text-label-sm text-secondary font-medium">MAG VAR: +1.2° E</span>
+</div>
+</div>
+<!-- Fast Corridor Switching Pills -->
+<div class="hidden md:flex items-center gap-space-xs bg-surface-container-low/90 p-1.5 rounded-lg shadow-md">
+<span class="font-label-sm text-label-sm text-outline px-2 uppercase">Corridors:</span>
+<button class="px-space-sm py-1 rounded bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-semibold shadow-sm">
+              VOJK ➔ VOVK
+            </button>
+<button class="px-space-sm py-1 rounded text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-label-sm text-label-sm transition-all">
+              VOBL ➔ VOMM
+            </button>
+<button class="px-space-sm py-1 rounded text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-label-sm text-label-sm transition-all">
+              VOBH ➔ VOBL
+            </button>
+</div>
+<!-- Radar Calibration & Zoom Precision HUD -->
+<div class="flex items-center gap-space-xs bg-surface-container-high/90 px-space-sm py-1 rounded-lg shadow-md">
+<button class="w-7 h-7 rounded bg-surface-container flex items-center justify-center text-primary hover:bg-surface-bright transition-all">
+<span class="material-symbols-outlined text-[16px]">add</span>
+</button>
+<span class="font-label-sm text-label-sm px-2 text-primary font-semibold">1:250,000</span>
+<button class="w-7 h-7 rounded bg-surface-container flex items-center justify-center text-primary hover:bg-surface-bright transition-all">
+<span class="material-symbols-outlined text-[16px]">remove</span>
+</button>
+<button class="w-7 h-7 rounded bg-surface-container flex items-center justify-center text-secondary hover:bg-surface-bright ml-1 transition-all" title="Recenter Target">
+<span class="material-symbols-outlined text-[16px]">filter_center_focus</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Active Craft Waypoint Progression Strip (Bento Row) -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-md">
+<!-- Live Craft Telemetry Pod -->
+<div class="bg-surface-container-low rounded-xl p-space-md shadow-md flex flex-col justify-between">
+<div class="flex items-center justify-between mb-space-xs">
+<div class="flex items-center gap-space-xs">
+<span class="w-2 h-2 rounded-full bg-secondary shadow-sm"></span>
+<span class="font-label-sm text-label-sm text-primary font-bold">VT-EM1 (MISSION SKY-41)</span>
+</div>
+<span class="font-label-sm text-label-sm text-secondary bg-surface-container-high px-1.5 py-0.5 rounded font-semibold">AIRBORNE</span>
+</div>
+<div class="grid grid-cols-2 gap-space-sm my-space-xs">
+<div>
+<span class="font-label-sm text-label-sm text-outline block">TRUE AIRSPEED</span>
+<span class="font-headline-sm text-headline-sm text-primary font-bold">125 <span class="text-body-sm font-normal text-outline">KTAS</span></span>
+</div>
+<div>
+<span class="font-label-sm text-label-sm text-outline block">ALTITUDE AGL</span>
+<span class="font-headline-sm text-headline-sm text-primary font-bold">3,500 <span class="text-body-sm font-normal text-outline">FT</span></span>
+</div>
+<div>
+<span class="font-label-sm text-label-sm text-outline block">ENERGY SOC</span>
+<div class="flex items-center gap-1.5 mt-0.5">
+<span class="font-headline-sm text-headline-sm text-secondary font-bold">82.4%</span>
+<span class="material-symbols-outlined text-secondary text-[16px]">battery_charging_90</span>
+</div>
+</div>
+<div>
+<span class="font-label-sm text-label-sm text-outline block">TIME TO VOVK</span>
+<span class="font-headline-sm text-headline-sm text-primary font-bold">11:42 <span class="text-body-sm font-normal text-outline">MIN</span></span>
+</div>
+</div>
+<div class="w-full bg-surface-container-highest h-1.5 rounded-full overflow-hidden mt-space-xs">
+<div class="bg-secondary h-full rounded-full" style="width: 58%;"></div>
+</div>
+</div>
+<!-- Waypoint ALPHA to BRAVO Flight Corridor Handover Node -->
+<div class="bg-surface-container-low rounded-xl p-space-md shadow-md flex flex-col justify-between">
+<div class="flex items-center justify-between mb-space-xs">
+<span class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Waypoint Leg Handover</span>
+<span class="font-label-sm text-label-sm text-primary font-semibold">LEG 02 / 03</span>
+</div>
+<div class="flex items-center justify-between relative my-2">
+<!-- Handover Connector Line -->
+<div class="absolute left-6 right-6 top-1/2 -translate-y-1/2 h-0.5 bg-surface-container-highest"></div>
+<div class="absolute left-6 w-1/2 top-1/2 -translate-y-1/2 h-0.5 bg-secondary"></div>
+<!-- Alpha Station -->
+<div class="relative z-10 flex flex-col items-center">
+<div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center shadow-md">
+<span class="material-symbols-outlined text-secondary text-[18px]">check</span>
+</div>
+<span class="font-label-sm text-label-sm font-semibold text-primary mt-1">WPT-ALPHA</span>
+<span class="font-label-sm text-label-sm text-outline">VOJK +3.4NM</span>
+</div>
+<!-- Bravo Station -->
+<div class="relative z-10 flex flex-col items-center">
+<div class="w-8 h-8 rounded-full bg-secondary text-on-secondary flex items-center justify-center font-bold text-label-sm shadow-md animate-pulse">
+                B
+              </div>
+<span class="font-label-sm text-label-sm font-semibold text-secondary mt-1">WPT-BRAVO</span>
+<span class="font-label-sm text-label-sm text-secondary">EST 14:38 IST</span>
+</div>
+<!-- Dest Station -->
+<div class="relative z-10 flex flex-col items-center">
+<div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-outline shadow-md">
+<span class="material-symbols-outlined text-[16px]">location_on</span>
+</div>
+<span class="font-label-sm text-label-sm font-semibold text-on-surface-variant mt-1">VOVK</span>
+<span class="font-label-sm text-label-sm text-outline">HOSUR VERT</span>
+</div>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant pt-2">
+<span class="font-body-sm text-body-sm">Next Sector Freq</span>
+<span class="font-label-md text-label-md text-primary font-semibold">124.875 MHz (VOVK APP)</span>
+</div>
+</div>
+<!-- Mission Vehicle Specs Spotlight -->
+<div class="bg-surface-container-low rounded-xl p-space-md shadow-md flex items-center gap-space-md">
+<div class="w-24 h-24 rounded-lg bg-surface-container overflow-hidden shrink-0 shadow-inner relative">
+<img class="w-full h-full object-cover" data-alt="Futuristic Archer Midnight eVTOL aircraft parked on an ultra-modern concrete launchpad under moody cinematic silver spotlights, metallic titanium fuselage with gloss finish, electric propulsion tilt-rotors, precision aerospace industrial photography in dark slate tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB-FdLxBxS39hK7pj2xTQdQr7f2nWs8lpqPBpwRJvijvgsVZ-DKD3nM1G_jeOYjbopZiqgcP5xxsedO37ipwa0HbxEJXCe3c1U3n7uqaA42kK5ThrTKJCORtYF5nK40ZT3WVP3F2TvQlYZO542kqNso7GjqjdQ_r0uukBrP0j9GzeTP63xWCmNqMzJffDmIR-cMjUpxojFDjXPWrqbJu3VFAj7sF5lOkcN27XdhwxlL"/>
+<span class="absolute bottom-1 right-1 px-1 rounded bg-surface-container-lowest/80 font-label-sm text-label-sm text-secondary">eVTOL</span>
+</div>
+<div class="flex flex-col min-w-0 flex-1">
+<span class="font-headline-sm text-headline-sm text-primary font-semibold truncate">Archer Midnight</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant truncate">Tail: VT-EM1 · S/N #004</span>
+<div class="flex items-center gap-2 mt-2">
+<span class="px-2 py-0.5 rounded bg-surface-container-high font-label-sm text-label-sm text-secondary font-semibold">PAX: 04</span>
+<span class="px-2 py-0.5 rounded bg-surface-container-high font-label-sm text-label-sm text-primary font-semibold">MTOW 3,175 KG</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Side Drawer / Tactical Corridor Performance Inspector (Span 3 Desktop) -->
+<div class="col-span-12 xl:col-span-3 flex flex-col gap-space-md">
+<!-- Corridor Performance & Weather Synthesis Card -->
+<div class="bg-surface-container-low rounded-xl p-space-lg shadow-xl relative overflow-hidden flex flex-col gap-space-md">
+<!-- Drawer Header -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-secondary text-[20px]">air</span>
+<span class="font-headline-sm text-headline-sm text-primary font-semibold">Corridor Inspector</span>
+</div>
+<span class="px-2 py-0.5 rounded bg-surface-container-high text-secondary font-label-sm text-label-sm font-semibold">SYNTH LIVE</span>
+</div>
+<!-- Crosswind Vector & Wind Rose Module -->
+<div class="p-space-md bg-surface-container rounded-lg shadow-sm">
+<div class="flex items-center justify-between mb-space-sm">
+<span class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Crosswind &amp; Vectoring</span>
+<span class="font-label-sm text-label-sm text-secondary font-bold">HEADWIND 03 KT</span>
+</div>
+<div class="flex items-center justify-between gap-space-sm">
+<!-- Inline Mini Wind Vector Compass -->
+<div class="relative w-16 h-16 rounded-full bg-surface-container-lowest flex items-center justify-center shrink-0">
+<svg class="w-14 h-14" viewbox="0 0 100 100">
+<circle cx="50" cy="50" fill="none" r="45" stroke="#31353B" stroke-width="2"></circle>
+<!-- Arrow showing wind 070 at 06 kt -->
+<line stroke="#7BD0FF" stroke-linecap="round" stroke-width="2.5" x1="50" x2="78" y1="50" y2="25"></line>
+<circle cx="78" cy="25" fill="#7BD0FF" r="3"></circle>
+</svg>
+<span class="absolute text-[8px] font-label-sm text-outline">070°</span>
+</div>
+<div class="flex flex-col flex-1">
+<div class="flex justify-between items-baseline">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Wind Track</span>
+<span class="font-label-md text-label-md text-primary font-bold">070° @ 06 KT</span>
+</div>
+<div class="flex justify-between items-baseline mt-1">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Crosswind Comp</span>
+<span class="font-label-md text-label-md text-secondary font-bold">04 KT (Port)</span>
+</div>
+<div class="flex justify-between items-baseline mt-1">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Turbulence Index</span>
+<span class="font-label-md text-label-md text-primary font-bold">EDR 0.08 (NIL)</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Raw METAR & Environmental Ingestion -->
+<div class="p-space-md bg-surface-container rounded-lg shadow-sm">
+<span class="font-label-sm text-label-sm text-outline uppercase tracking-wider block mb-1">Synthesized Corridor METAR</span>
+<div class="p-space-sm bg-surface-container-lowest rounded font-label-sm text-label-sm text-secondary font-semibold leading-relaxed">
+            VOBL 240830Z 08005KT 6000 FEW025 28/19 Q1013 NOSIG RMK CORR-09 CLEARANCE OK
+          </div>
+<div class="grid grid-cols-2 gap-space-sm mt-space-sm">
+<div>
+<span class="font-label-sm text-label-sm text-outline block">SURFACE TEMP</span>
+<span class="font-headline-sm text-headline-sm text-primary font-semibold">28° C</span>
+</div>
+<div>
+<span class="font-label-sm text-label-sm text-outline block">DEW POINT</span>
+<span class="font-headline-sm text-headline-sm text-primary font-semibold">19° C</span>
+</div>
+</div>
+</div>
+<!-- Acoustic Footprint & Clearance Buffer -->
+<div class="grid grid-cols-1 gap-space-sm">
+<!-- Acoustic Footprint Card -->
+<div class="p-space-md bg-surface-container rounded-lg shadow-sm flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-outline uppercase">Acoustic Footprint</span>
+<span class="font-headline-sm text-headline-sm text-primary font-bold mt-0.5">48 dBA</span>
+<span class="font-label-sm text-label-sm text-secondary font-medium">Ground AGL Threshold: 55 dBA</span>
+</div>
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[20px]">volume_down</span>
+</div>
+</div>
+<!-- Clearance Buffer Card -->
+<div class="p-space-md bg-surface-container rounded-lg shadow-sm flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-outline uppercase">Clearance Buffer</span>
+<span class="font-headline-sm text-headline-sm text-primary font-bold mt-0.5">+840 FT</span>
+<span class="font-label-sm text-label-sm text-secondary font-medium">Above Obstacle Apex (MSL)</span>
+</div>
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[20px]">height</span>
+</div>
+</div>
+</div>
+<!-- Conditional Sector Alert Notification Box -->
+<div class="p-space-md bg-surface-container rounded-lg shadow-md flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-tertiary-fixed-dim text-[20px] shrink-0 mt-0.5">warning</span>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-primary font-semibold">Kolar Micro-Cell Convection</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant mt-0.5 leading-tight">
+              Isolated CB build-up 18NM East of Hosur. Corridor VOJK-VOVK clear, watch perimeter gusts.
+            </span>
+</div>
+</div>
+<!-- Mission Action Control Center -->
+<div class="flex flex-col gap-space-sm mt-auto pt-space-xs">
+<!-- Primary Flight Vector Reroute Button (Aviation Radiant Tinted Action) -->
+<button class="w-full py-space-sm px-space-md rounded-xl bg-tertiary text-on-tertiary font-headline-sm text-headline-sm font-semibold flex items-center justify-center gap-space-sm shadow-lg hover:opacity-95 transition-all">
+<span class="material-symbols-outlined text-[22px]">alt_route</span>
+<span>Initiate Vector Re-Route</span>
+</button>
+<!-- Secondary Emergency Hold Button -->
+<button class="w-full py-2 px-space-md rounded-xl bg-surface-container-high text-primary hover:bg-surface-bright font-label-md text-label-md uppercase tracking-wider font-semibold flex items-center justify-center gap-space-xs transition-all shadow-sm">
+<span class="material-symbols-outlined text-secondary text-[18px]">motion_photos_paused</span>
+<span>Command Sky-Tunnel Hold</span>
+</button>
+</div>
+</div>
+<!-- Quick Dispatch Telemetry Log -->
+<div class="bg-surface-container-low rounded-xl p-space-md shadow-md flex flex-col gap-space-xs">
+<div class="flex items-center justify-between pb-1">
+<span class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Flight Dispatch Log</span>
+<span class="font-label-sm text-label-sm text-secondary font-mono">UTC+05:30</span>
+</div>
+<div class="flex items-center justify-between py-1 text-on-surface-variant">
+<span class="font-label-sm text-label-sm font-mono text-outline">14:12:08</span>
+<span class="font-body-sm text-body-sm text-on-surface truncate px-2">Takeoff VOJK Helipad 2</span>
+<span class="font-label-sm text-label-sm text-secondary font-semibold">ACK</span>
+</div>
+<div class="flex items-center justify-between py-1 text-on-surface-variant">
+<span class="font-label-sm text-label-sm font-mono text-outline">14:20:45</span>
+<span class="font-body-sm text-body-sm text-on-surface truncate px-2">WPT-ALPHA Cleared 3500ft</span>
+<span class="font-label-sm text-label-sm text-secondary font-semibold">AUTO</span>
+</div>
+<div class="flex items-center justify-between py-1 text-on-surface-variant">
+<span class="font-label-sm text-label-sm font-mono text-outline">14:26:10</span>
+<span class="font-body-sm text-body-sm text-primary font-medium truncate px-2">BLR Approach Handover Pending</span>
+<span class="font-label-sm text-label-sm text-secondary font-semibold">IN-BOUND</span>
+</div>
+</div>
+</div>
+</div>
+</div></main></div></body></html>

@@ -101,9 +101,9 @@ export default function Analytics() {
           {loading
             ? <SkeletonBlock h={38} />
             : <>
-                <div className="viability-num" style={{ color: '#4ade80' }}>{viabilityCounts.high}</div>
+                <div className="viability-num" style={{ color: 'var(--viable)' }}>{viabilityCounts.high}</div>
                 <div className="viability-label">High Viability</div>
-                <div style={{ fontSize: 11.5, color: 'var(--text-2)', marginTop: 2 }}>Score ≥ 70</div>
+                <div style={{ fontSize: 11.5, color: 'var(--text-muted)', marginTop: 2 }}>Score ≥ 70</div>
               </>
           }
         </div>
@@ -111,9 +111,9 @@ export default function Analytics() {
           {loading
             ? <SkeletonBlock h={38} />
             : <>
-                <div className="viability-num" style={{ color: '#facc15' }}>{viabilityCounts.moderate}</div>
+                <div className="viability-num" style={{ color: 'var(--conditional)' }}>{viabilityCounts.moderate}</div>
                 <div className="viability-label">Moderate Viability</div>
-                <div style={{ fontSize: 11.5, color: 'var(--text-2)', marginTop: 2 }}>Score 40–69</div>
+                <div style={{ fontSize: 11.5, color: 'var(--text-muted)', marginTop: 2 }}>Score 40–69</div>
               </>
           }
         </div>
@@ -121,9 +121,9 @@ export default function Analytics() {
           {loading
             ? <SkeletonBlock h={38} />
             : <>
-                <div className="viability-num" style={{ color: '#f87171' }}>{viabilityCounts.low}</div>
+                <div className="viability-num" style={{ color: 'var(--not-viable)' }}>{viabilityCounts.low}</div>
                 <div className="viability-label">Low Viability</div>
-                <div style={{ fontSize: 11.5, color: 'var(--text-2)', marginTop: 2 }}>Score &lt; 40</div>
+                <div style={{ fontSize: 11.5, color: 'var(--text-muted)', marginTop: 2 }}>Score &lt; 40</div>
               </>
           }
         </div>
@@ -180,7 +180,7 @@ export default function Analytics() {
                         className="horiz-bar-fill"
                         style={{
                           width: maxScoreDist ? `${(bin.count / maxScoreDist) * 100}%` : '0%',
-                          background: bin.min >= 70 ? '#22c55e' : bin.min >= 40 ? '#eab308' : '#ef4444',
+                          background: bin.min >= 70 ? 'var(--viable)' : bin.min >= 40 ? 'var(--conditional)' : 'var(--not-viable)',
                         }}
                       />
                     </div>
@@ -197,7 +197,7 @@ export default function Analytics() {
         <div className="panel">
           <div className="panel-header">
             <span className="panel-title">State Coverage</span>
-            <span style={{ fontSize: 12, color: 'var(--text-2)' }}>
+            <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
               {loading ? '—' : `${stateCounts.length} states`}
             </span>
           </div>
@@ -229,14 +229,14 @@ export default function Analytics() {
                         : 0
                       return (
                         <tr key={state}>
-                          <td style={{ color: 'var(--text-2)', fontFamily: 'var(--mono)', fontSize: 12 }}>{idx + 1}</td>
+                          <td style={{ color: 'var(--text-muted)', fontFamily: 'var(--mono)', fontSize: 12 }}>{idx + 1}</td>
                           <td className="col-name">{state}</td>
                           <td className="col-mono">{count}</td>
                           <td>
                             <span
                               className="col-mono"
                               style={{
-                                color: avgScore >= 70 ? '#4ade80' : avgScore >= 40 ? '#facc15' : '#f87171',
+                                color: avgScore >= 70 ? 'var(--viable)' : avgScore >= 40 ? 'var(--conditional)' : 'var(--not-viable)',
                               }}
                             >
                               {avgScore}
