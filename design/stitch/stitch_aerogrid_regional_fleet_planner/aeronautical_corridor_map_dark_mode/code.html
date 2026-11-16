@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&amp;family=JetBrains+Mono:wght@400;500;600;700&amp;family=Space+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100%;margin:0;padding:0;background-color:#101419;color:#e0e2ea;font-family:'Geist',sans-serif;-webkit-tap-highlight-color:transparent;}body{overscroll-behavior:none;min-height:100vh;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "on-tertiary-fixed": "#380d00", "tertiary-fixed-dim": "#ffb59a", "on-primary-fixed-variant": "#41474e", "on-error": "#690005", "on-secondary-fixed": "#001e2c", "on-secondary": "#00354a", "primary": "#ffffff", "surface-container-highest": "#31353b", "tertiary": "#ffffff", "on-background": "#e0e2ea", "on-primary-container": "#5f656c", "surface-bright": "#36393f", "on-tertiary-container": "#b23d00", "tertiary-fixed": "#ffdbce", "primary-fixed-dim": "#c1c7cf", "on-secondary-fixed-variant": "#004c69", "background": "#101419", "secondary-fixed": "#c4e7ff", "on-tertiary-fixed-variant": "#802a00", "inverse-surface": "#e0e2ea", "secondary-container": "#00a6e0", "on-surface": "#e0e2ea", "on-surface-variant": "#c5c6cb", "surface-variant": "#31353b", "inverse-on-surface": "#2d3136", "on-error-container": "#ffdad6", "primary-fixed": "#dde3eb", "on-primary-fixed": "#161c22", "secondary": "#7bd0ff", "primary-container": "#dde3eb", "outline-variant": "#44474a", "secondary-fixed-dim": "#7bd0ff", "on-primary": "#2b3137", "on-tertiary": "#5b1b00", "surface": "#101419", "surface-container-low": "#181c21", "surface-container-high": "#262a30", "error": "#ffb4ab", "surface-dim": "#101419", "on-secondary-container": "#00374d", "outline": "#8e9195", "tertiary-container": "#ffdbce", "inverse-primary": "#595f66", "surface-container-lowest": "#0a0e13", "surface-container": "#1c2025", "surface-tint": "#c1c7cf", "error-container": "#93000a" }, "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, "spacing": { "space-md": "1rem", "space-xs": "0.25rem", "gutter": "1.5rem", "space-lg": "1.5rem", "space-xl": "2.5rem", "gutter-mobile": "0.75rem", "margin-mobile": "1rem", "space-sm": "0.5rem", "margin": "2rem" }, "fontFamily": { "display-mobile": [ "Space Grotesk" ], "body-lg": [ "Geist" ], "headline-lg": [ "Space Grotesk" ], "body-sm": [ "Geist" ], "headline-lg-mobile": [ "Space Grotesk" ], "display": [ "Space Grotesk" ], "label-sm": [ "JetBrains Mono" ], "label-md": [ "JetBrains Mono" ], "headline-md": [ "Space Grotesk" ], "body-md": [ "Geist" ], "headline-sm": [ "Space Grotesk" ] }, "fontSize": { "display-mobile": [ "32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "600" } ], "body-lg": [ "16px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "400" } ], "headline-lg": [ "32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "500" } ], "body-sm": [ "12px", { "lineHeight": "18px", "letterSpacing": "0.01em", "fontWeight": "400" } ], "headline-lg-mobile": [ "24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "500" } ], "display": [ "48px", { "lineHeight": "56px", "letterSpacing": "-0.03em", "fontWeight": "600" } ], "label-sm": [ "10px", { "lineHeight": "14px", "letterSpacing": "0.08em", "fontWeight": "600" } ], "label-md": [ "12px", { "lineHeight": "16px", "letterSpacing": "0.06em", "fontWeight": "500" } ], "headline-md": [ "24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "500" } ], "body-md": [ "14px", { "lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "400" } ], "headline-sm": [ "18px", { "lineHeight": "26px", "letterSpacing": "0em", "fontWeight": "500" } ] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface text-on-surface antialiased select-none"><header class="fixed top-0 w-full z-50 pt-safe bg-surface-container-lowest/80 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.6)]"><div class="w-full h-16 px-margin-mobile flex items-center justify-between relative before:absolute before:inset-x-0 before:top-0 before:h-[1px] before:bg-gradient-to-r before:from-transparent before:via-white/50 before:to-transparent after:absolute after:inset-x-0 after:bottom-0 after:h-[1px] after:bg-gradient-to-r after:from-transparent after:via-outline-variant/30 after:to-transparent"><div class="flex items-center gap-space-sm min-w-0"><div class="w-9 h-9 rounded bg-gradient-to-b from-primary-fixed via-primary-fixed-dim to-surface-container-highest p-[1px] flex items-center justify-center shrink-0 shadow-[0_0_12px_rgba(255,255,255,0.15)]"><div class="w-full h-full bg-surface-container-lowest rounded flex items-center justify-center"><span class="material-symbols-outlined text-secondary text-[20px] transition-transform duration-700 hover:rotate-45">explore</span></div></div><div class="flex flex-col min-w-0"><div class="flex items-center gap-space-xs"><span class="font-headline-sm text-headline-sm text-primary tracking-tight font-semibold uppercase truncate">AeroGrid</span><span class="px-1.5 py-0.5 rounded bg-secondary-container/20 text-secondary font-label-sm text-label-sm tracking-widest uppercase border border-secondary/30 shadow-[0_0_8px_rgba(123,208,255,0.25)] flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span>SEC-DEL-BLR LIVE</span></div><span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider truncate">Map</span></div></div><div class="flex items-center gap-space-xs shrink-0"><div class="hidden sm:flex flex-col items-end pr-1"><span class="font-label-sm text-label-sm text-primary uppercase font-bold tracking-wider">SQN-LDR V. Sharma</span><span class="font-label-sm text-label-sm text-outline uppercase">CMD DISPATCH</span></div><div class="w-9 h-9 rounded bg-gradient-to-b from-white/70 via-outline/40 to-transparent p-[1px] shadow-[0_2px_8px_rgba(0,0,0,0.5)]"><div class="w-full h-full rounded bg-surface-container-high flex items-center justify-center"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-[inset_0_1px_1px_rgba(255,255,255,0.8)]"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></div></div></header><main class="flex flex-col relative w-full pt-16 pb-20 bg-surface min-h-screen"><div class="flex flex-col w-full text-on-surface">
+<!-- Tactical Corridor Header & Sector Query -->
+<section class="flex flex-col px-margin-mobile pt-space-sm pb-space-xs gap-space-xs">
+<!-- Breadcrumb & Mode Tag -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary shadow-[0_0_8px_rgba(123,208,255,0.8)] animate-pulse"></span>
+<span class="font-label-sm text-label-sm text-secondary tracking-widest uppercase">RADAR OPS • SECTOR BLR-04</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant tracking-wider uppercase">UTC 08:42:19</span>
+</div>
+<!-- Title & Sector Badge -->
+<div class="flex items-baseline justify-between gap-space-xs">
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-primary tracking-tight font-semibold uppercase">
+        Flight Corridor Map
+      </h1>
+<span class="px-2 py-0.5 rounded bg-surface-container-high text-secondary font-label-sm text-label-sm tracking-wider uppercase shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]">
+        LIVE MFD
+      </span>
+</div>
+<!-- Search Input Bay -->
+<div class="relative w-full mt-1">
+<div class="w-full h-11 bg-surface-container-lowest rounded-lg flex items-center px-space-sm gap-space-xs shadow-[0_2px_12px_rgba(0,0,0,0.6)] relative overflow-hidden before:absolute before:inset-x-0 before:top-0 before:h-[1px] before:bg-gradient-to-r before:from-white/40 before:via-white/10 before:to-transparent">
+<span class="material-symbols-outlined text-secondary text-[20px] shrink-0">my_location</span>
+<input aria-label="Search corridor sector or aerodrome" class="w-full bg-transparent font-label-md text-label-md text-primary placeholder-outline focus:outline-none tracking-wide" id="corridor-search-input" type="text" value="VOJK Jakkur Aerodrome"/>
+<button aria-label="Filter parameters" class="w-7 h-7 rounded bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors" type="button">
+<span class="material-symbols-outlined text-[16px]">tune</span>
+</button>
+<button aria-label="Clear search" class="w-7 h-7 rounded bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors" type="button">
+<span class="material-symbols-outlined text-[16px]">close</span>
+</button>
+</div>
+</div>
+<!-- Quick Filter Toggles (Kinetic Rail) -->
+<div class="flex items-center gap-space-xs overflow-x-auto py-1 no-scrollbar text-nowrap">
+<!-- Filter 1: Active Cyan -->
+<button class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-secondary-container/20 text-secondary font-label-sm text-label-sm tracking-wider uppercase shadow-[0_0_10px_rgba(123,208,255,0.25)] shrink-0" type="button">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+<span>Paved / Unpaved</span>
+<span class="material-symbols-outlined text-[14px]">check</span>
+</button>
+<!-- Filter 2: MCS Feed -->
+<button class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-surface-container text-on-surface-variant hover:text-primary font-label-sm text-label-sm tracking-wider uppercase shrink-0" type="button">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary-fixed-dim shadow-[0_0_6px_rgba(255,181,154,0.7)]"></span>
+<span>Grid &gt;250kW MCS</span>
+</button>
+<!-- Filter 3: Airspace Class -->
+<button class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-surface-container text-on-surface-variant hover:text-primary font-label-sm text-label-sm tracking-wider uppercase shrink-0" type="button">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary-fixed shadow-[0_0_6px_rgba(196,231,255,0.8)]"></span>
+<span>Class D / G Corridor</span>
+</button>
+</div>
+</section>
+<!-- Vector Radar Canvas Container -->
+<section class="relative w-full px-margin-mobile pt-space-xs pb-space-sm">
+<div class="relative w-full h-[340px] rounded-xl bg-surface-container-lowest overflow-hidden shadow-[0_12px_36px_rgba(0,0,0,0.8)] before:absolute before:inset-x-0 before:top-0 before:h-[1px] before:bg-gradient-to-r before:from-transparent before:via-white/70 before:to-transparent z-0">
+<!-- Coordinate Markings (Cockpit HUD Style) -->
+<div class="absolute inset-0 pointer-events-none z-10 flex flex-col justify-between p-2 font-label-sm text-[9px] text-outline opacity-60">
+<div class="flex justify-between">
+<span>13°30'00"N • 77°00'00"E</span>
+<span>FL045 • 4,500FT MSL</span>
+<span>13°30'00"N • 77°50'00"E</span>
+</div>
+<div class="flex justify-between items-center text-[8px] tracking-widest text-outline-variant">
+<span>GRID 28-K</span>
+<span class="text-secondary/70 font-semibold tracking-wider">CORRIDOR PENINSULAR-SOUTH</span>
+<span>MAG 01°22'E</span>
+</div>
+<div class="flex justify-between">
+<span>12°50'00"N • 77°00'00"E</span>
+<span class="text-secondary/90">RANGE 50 NM</span>
+<span>12°50'00"N • 77°50'00"E</span>
+</div>
+</div>
+<!-- Tactical SVG Vector Overlay & Flight Corridors -->
+<svg class="absolute inset-0 w-full h-full z-0 select-none" fill="none" viewbox="0 0 360 340" xmlns="http://www.w3.org/2000/svg">
+<!-- Precision Graticule Grid -->
+<defs>
+<pattern height="34" id="radarGrid" patternunits="userSpaceOnUse" width="36">
+<path d="M 36 0 L 0 0 0 34" fill="none" opacity="0.45" stroke="#262A30" stroke-dasharray="2 3" stroke-width="0.5"></path>
+</pattern>
+<lineargradient id="corridorGleam" x1="0%" x2="100%" y1="0%" y2="100%">
+<stop offset="0%" stop-color="#ffffff" stop-opacity="0.9"></stop>
+<stop offset="50%" stop-color="#7bd0ff" stop-opacity="0.95"></stop>
+<stop offset="100%" stop-color="#00a6e0" stop-opacity="0.6"></stop>
+</lineargradient>
+<lineargradient id="rangeRingGlow" x1="0%" x2="100%" y1="0%" y2="0%">
+<stop offset="0%" stop-color="#7bd0ff" stop-opacity="0.25"></stop>
+<stop offset="50%" stop-color="#ffffff" stop-opacity="0.4"></stop>
+<stop offset="100%" stop-color="#7bd0ff" stop-opacity="0.05"></stop>
+</lineargradient>
+<radialgradient cx="50%" cy="50%" id="airspaceHalo" r="50%">
+<stop offset="0%" stop-color="#7bd0ff" stop-opacity="0.18"></stop>
+<stop offset="100%" stop-color="#7bd0ff" stop-opacity="0"></stop>
+</radialgradient>
+</defs>
+<!-- Base Grid Fill -->
+<rect fill="url(#radarGrid)" height="100%" width="100%"></rect>
+<!-- 20NM & 40NM Distance Concentric Range Rings centered on VOJK (180, 110) -->
+<circle cx="180" cy="110" fill="none" opacity="0.4" r="60" stroke="#44474A" stroke-dasharray="3 4" stroke-width="1"></circle>
+<circle cx="180" cy="110" fill="none" opacity="0.3" r="120" stroke="#44474A" stroke-dasharray="4 6" stroke-width="0.8"></circle>
+<circle cx="180" cy="110" fill="url(#airspaceHalo)" r="32"></circle>
+<!-- Restricted Tumakuru Sector Zone (Top-Left Red Area) -->
+<polygon fill="#93000A" fill-opacity="0.18" points="20,25 110,20 85,85 10,70" stroke="#FFB4AB" stroke-dasharray="4 3" stroke-width="1.2"></polygon>
+<text fill="#FFB4AB" font-family="'JetBrains Mono', monospace" font-size="8" font-weight="600" letter-spacing="0.08em" x="32" y="52">R-4109 RESTRICTED</text>
+<text fill="#FFDAD6" font-family="'JetBrains Mono', monospace" font-size="7" opacity="0.7" x="32" y="62">SFC - UNL / HT GRID</text>
+<!-- HAL / Yelahanka Controlled Airspace Arc -->
+<path d="M 230,85 A 45,45 0 0,0 135,70" fill="none" opacity="0.8" stroke="#FFB59A" stroke-dasharray="2 3" stroke-width="1"></path>
+<text fill="#FFB59A" font-family="'JetBrains Mono', monospace" font-size="7" x="210" y="66">VOBL CTR-D</text>
+<!-- Flight Corridors (Neon Vector Lines) -->
+<!-- Primary Peninsular Vector: VOJK (180, 110) -> Hosur VOVT (235, 235) -->
+<line opacity="0.15" stroke="#7BD0FF" stroke-linecap="round" stroke-width="6" x1="180" x2="235" y1="110" y2="235"></line>
+<line stroke="url(#corridorGleam)" stroke-linecap="round" stroke-width="2.5" x1="180" x2="235" y1="110" y2="235"></line>
+<!-- Animated Pulse Beam along VOJK -> VOVT -->
+<circle cx="210" cy="178" fill="#FFFFFF" r="3.5">
+<animate attributename="cx" dur="3.5s" repeatcount="indefinite" values="180;235"></animate>
+<animate attributename="cy" dur="3.5s" repeatcount="indefinite" values="110;235"></animate>
+<animate attributename="opacity" dur="3.5s" repeatcount="indefinite" values="0.1;1;0.1"></animate>
+</circle>
+<!-- Branch 2: VOJK (180, 110) -> Mysuru MYQ (70, 275) -->
+<line opacity="0.75" stroke="#7BD0FF" stroke-dasharray="4 3" stroke-width="1.5" x1="180" x2="70" y1="110" y2="275"></line>
+<!-- Branch 3: VOJK (180, 110) -> Kolar VDKL (310, 145) -->
+<line opacity="0.8" stroke="#FFB59A" stroke-dasharray="3 3" stroke-width="1.5" x1="180" x2="310" y1="110" y2="145"></line>
+<!-- Track Data Callouts -->
+<!-- VOJK -> VOVT Vector Bearing & Dist -->
+<rect fill="#181C21" fill-opacity="0.9" height="20" rx="3" width="70" x="216" y="160"></rect>
+<text fill="#C4E7FF" font-family="'JetBrains Mono', monospace" font-size="8" font-weight="600" x="221" y="174">28 NM • 142°</text>
+<!-- VOJK -> MYQ Vector Callout -->
+<rect fill="#181C21" fill-opacity="0.85" height="18" rx="3" width="70" x="98" y="195"></rect>
+<text fill="#E0E2EA" font-family="'JetBrains Mono', monospace" font-size="7.5" x="103" y="208">74 NM • 218°</text>
+<!-- VOJK -> Kolar Callout -->
+<text fill="#FFB59A" font-family="'JetBrains Mono', monospace" font-size="7.5" x="245" y="125">34 NM • 078°</text>
+<!-- Waypoint Nodes with Glowing Halos -->
+<!-- Node 1: VOJK (Selected Master) -->
+<circle cx="180" cy="110" fill="#7BD0FF" fill-opacity="0.2" r="14"></circle>
+<circle cx="180" cy="110" fill="#101419" r="7" stroke="#FFFFFF" stroke-width="2"></circle>
+<circle cx="180" cy="110" fill="#7BD0FF" r="2.5"></circle>
+<!-- Node 2: Hosur VOVT -->
+<circle cx="235" cy="235" fill="#101419" r="5" stroke="#7BD0FF" stroke-width="1.8"></circle>
+<circle cx="235" cy="235" fill="#FFFFFF" r="2"></circle>
+<!-- Node 3: Mysuru MYQ -->
+<circle cx="70" cy="275" fill="#101419" r="4.5" stroke="#C5C6CB" stroke-width="1.5"></circle>
+<circle cx="70" cy="275" fill="#C5C6CB" r="1.5"></circle>
+<!-- Node 4: Kolar VDKL -->
+<circle cx="310" cy="145" fill="#101419" r="4.5" stroke="#FFB59A" stroke-width="1.5"></circle>
+<circle cx="310" cy="145" fill="#FFB59A" r="1.5"></circle>
+</svg>
+<!-- Floating Waypoint Floating HTML Badges (Positioned absolutely over canvas) -->
+<!-- VOJK Badge (Selected Node) -->
+<div class="absolute top-[82px] left-[105px] z-20 pointer-events-auto">
+<div class="flex items-center gap-1.5 px-2 py-1 rounded bg-surface-container-high/95 backdrop-blur-md shadow-[0_4px_16px_rgba(0,0,0,0.7)] text-primary">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary shadow-[0_0_8px_rgba(123,208,255,0.9)] animate-ping"></span>
+<span class="font-label-sm text-[10px] font-bold text-primary tracking-wider uppercase">VOJK • JAKKUR</span>
+<span class="px-1 py-0.2 rounded bg-secondary/20 text-secondary text-[8px] font-label-sm font-semibold">HUB</span>
+</div>
+</div>
+<!-- Hosur Vertipad Badge -->
+<div class="absolute bottom-[72px] right-[24px] z-20 pointer-events-auto">
+<div class="flex items-center gap-1 px-1.5 py-0.5 rounded bg-surface-container-low/90 backdrop-blur-sm text-on-surface shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
+<span class="w-1 h-1 rounded-full bg-secondary"></span>
+<span class="font-label-sm text-[9px] text-on-surface-variant uppercase font-medium">HOSUR (VOVT)</span>
+</div>
+</div>
+<!-- Kolar Strip Badge -->
+<div class="absolute top-[125px] right-[12px] z-20 pointer-events-auto">
+<div class="flex items-center gap-1 px-1.5 py-0.5 rounded bg-surface-container-low/90 backdrop-blur-sm text-on-surface shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
+<span class="w-1 h-1 rounded-full bg-tertiary-fixed-dim"></span>
+<span class="font-label-sm text-[9px] text-on-surface-variant uppercase font-medium">KOLAR STRIP</span>
+</div>
+</div>
+<!-- Top Right: Silver Compass Rose & Target Reticle -->
+<div class="absolute top-2 right-2 z-20 flex flex-col items-center gap-1.5">
+<div class="w-9 h-9 rounded-full bg-surface-container-high/90 backdrop-blur-md flex items-center justify-center shadow-[0_2px_12px_rgba(0,0,0,0.6)] relative overflow-hidden before:absolute before:inset-x-0 before:top-0 before:h-[1px] before:bg-white/40">
+<div class="relative w-7 h-7 flex items-center justify-center">
+<!-- Compass Needle -->
+<div class="w-0.5 h-6 bg-gradient-to-b from-error via-white to-outline rounded-full"></div>
+<span class="absolute top-0 text-[8px] font-label-sm font-bold text-error">N</span>
+</div>
+</div>
+</div>
+<!-- Bottom Left: Precision Zoom & Recenter Controls -->
+<div class="absolute bottom-2 left-2 z-20 flex items-center gap-1 bg-surface-container-lowest/90 backdrop-blur-md rounded-lg p-1 shadow-[0_4px_16px_rgba(0,0,0,0.7)]">
+<button aria-label="Zoom in" class="w-7 h-7 rounded bg-surface-container flex items-center justify-center text-primary active:scale-95 transition-transform" type="button">
+<span class="material-symbols-outlined text-[16px]">add</span>
+</button>
+<button aria-label="Zoom out" class="w-7 h-7 rounded bg-surface-container flex items-center justify-center text-primary active:scale-95 transition-transform" type="button">
+<span class="material-symbols-outlined text-[16px]">remove</span>
+</button>
+<div class="w-[1px] h-4 bg-outline-variant/40 mx-0.5"></div>
+<button aria-label="Recenter corridor vector" class="w-7 h-7 rounded bg-secondary-container/20 text-secondary flex items-center justify-center active:scale-95 transition-transform" type="button">
+<span class="material-symbols-outlined text-[16px]">center_focus_strong</span>
+</button>
+</div>
+<!-- Bottom Right: Scale Bar -->
+<div class="absolute bottom-2.5 right-2.5 z-10 flex flex-col items-end pointer-events-none">
+<div class="flex items-center gap-1">
+<div class="w-12 h-1 bg-gradient-to-r from-white via-secondary to-white/40 rounded-full"></div>
+<span class="font-label-sm text-[9px] text-on-surface-variant font-semibold">10 NM</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Selected Aerodrome Telemetry Sheet -->
+<section class="flex flex-col px-margin-mobile pt-space-xs pb-space-sm">
+<div class="w-full rounded-xl bg-surface-container-low p-space-md shadow-[0_8px_32px_rgba(0,0,0,0.7)] relative overflow-hidden before:absolute before:inset-x-0 before:top-0 before:h-[1px] before:bg-gradient-to-r before:from-transparent before:via-white/70 before:to-transparent">
+<!-- Aerodrome Header & Bookmark Action -->
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-space-xs">
+<span class="font-headline-sm text-headline-sm text-primary font-semibold tracking-tight uppercase truncate">
+              VOJK • Jakkur Aerodrome
+            </span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+            Bengaluru Urban, Karnataka • 13°04'48"N 77°35'50"E
+          </span>
+</div>
+<button aria-label="Bookmark corridor waypoint" class="w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-secondary hover:text-primary transition-colors shrink-0 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]" type="button">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">bookmark</span>
+</button>
+</div>
+<!-- Regulatory & Viability Chips -->
+<div class="flex flex-wrap items-center gap-space-xs mt-3">
+<span class="px-2 py-0.5 rounded bg-secondary-container/20 text-secondary font-label-sm text-label-sm font-semibold tracking-wider uppercase flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+          VIABLE
+        </span>
+<span class="px-2 py-0.5 rounded bg-surface-container-high text-primary font-label-sm text-label-sm tracking-wider uppercase">
+          FIELD VERIFIED
+        </span>
+<span class="px-2 py-0.5 rounded bg-surface-container text-on-surface-variant font-label-sm text-label-sm tracking-wider uppercase">
+          DGCA REG: CAR-14
+        </span>
+</div>
+<!-- Infrastructure Metrics: 2-Column Grid -->
+<div class="grid grid-cols-2 gap-space-xs mt-4">
+<!-- Metric 1: Runway Asset -->
+<div class="flex flex-col p-2.5 rounded-lg bg-surface-container-lowest shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+<div class="flex items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined text-[15px] text-secondary">flight</span>
+<span class="font-label-sm text-label-sm uppercase tracking-wider">Runway Asset</span>
+</div>
+<span class="font-headline-sm text-[15px] text-primary font-semibold mt-1">08/26 (900m)</span>
+<span class="font-label-sm text-[10px] text-outline mt-0.5">PCN 18/F/C/W/T • Lighted</span>
+</div>
+<!-- Metric 2: Grid Electrification -->
+<div class="flex flex-col p-2.5 rounded-lg bg-surface-container-lowest shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+<div class="flex items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined text-[15px] text-tertiary-fixed-dim">bolt</span>
+<span class="font-label-sm text-label-sm uppercase tracking-wider">Grid Power</span>
+</div>
+<span class="font-headline-sm text-[15px] text-primary font-semibold mt-1">350kW MCS Feed</span>
+<span class="font-label-sm text-[10px] text-outline mt-0.5">BESCOM 11kV Sub (300m)</span>
+</div>
+</div>
+<!-- South Corridor Throughput Capacity Bar -->
+<div class="flex flex-col mt-4 p-2.5 rounded-lg bg-surface-container-lowest shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">South Corridor Capacity</span>
+<div class="flex items-center gap-1">
+<span class="font-label-sm text-label-sm text-primary font-bold">14 eVTOL / hr</span>
+<span class="font-label-sm text-[10px] text-secondary font-medium">(+4 Buffer)</span>
+</div>
+</div>
+<!-- Progress Bar Meter -->
+<div class="w-full h-2 rounded-full bg-surface-container-highest mt-2 overflow-hidden relative">
+<div class="h-full bg-gradient-to-r from-secondary-container via-secondary to-primary rounded-full" style="width: 68%;"></div>
+</div>
+<div class="flex justify-between items-center mt-1.5 font-label-sm text-[9px] text-outline">
+<span>LOAD: 68% NOMINAL</span>
+<span>SLOT INTERVAL: 4.2 MIN</span>
+</div>
+</div>
+<!-- Primary Action Button (Aviation Orange CTA) -->
+<button class="w-full mt-4 h-12 rounded-lg bg-gradient-to-r from-[#ff6b2b] via-[#ff7e47] to-[#e05316] text-[#0b0f14] font-headline-sm text-headline-sm font-semibold tracking-wide uppercase flex items-center justify-center gap-2 shadow-[0_4px_20px_rgba(255,107,43,0.35),inset_0_1px_0_rgba(255,255,255,0.8)] active:scale-[0.98] transition-transform" id="btn-feasibility-audit" type="button">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">insights</span>
+<span>Open Full Feasibility Audit</span>
+</button>
+<!-- Regulatory Disclaimer Support -->
+<p class="font-body-sm text-[11px] text-outline-variant mt-2 text-center leading-snug">
+        * Decision-support estimate. Verify with a physical site LiDAR survey before capital deployment.
+      </p>
+</div>
+</section>
+<!-- Regional Corridors Operational Status List -->
+<section class="flex flex-col px-margin-mobile pt-space-xs pb-space-lg">
+<!-- Header with Connected Count -->
+<div class="flex items-center justify-between mb-space-xs">
+<div class="flex items-center gap-space-xs">
+<span class="font-headline-sm text-headline-sm text-primary font-semibold tracking-tight uppercase">
+          Regional Corridors
+        </span>
+</div>
+<span class="px-2 py-0.5 rounded bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider">
+        4 Active Routes
+      </span>
+</div>
+<!-- Corridors Stack -->
+<div class="flex flex-col gap-space-xs">
+<!-- Corridor Row 1: VOJK <-> Hosur (Optimal) -->
+<div class="w-full rounded-lg bg-surface-container p-3 flex items-center justify-between shadow-[0_2px_8px_rgba(0,0,0,0.5)] relative overflow-hidden before:absolute before:inset-x-0 before:top-0 before:h-[1px] before:bg-gradient-to-r before:from-transparent before:via-white/30 before:to-transparent">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-9 h-9 rounded bg-surface-container-lowest flex items-center justify-center shrink-0 text-secondary">
+<span class="material-symbols-outlined text-[20px]">alt_route</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-1.5">
+<span class="font-label-md text-label-md text-primary font-semibold truncate">Jakkur (VOJK) ⇄ Hosur (VOVT)</span>
+</div>
+<span class="font-label-sm text-label-sm text-outline mt-0.5 truncate">
+              28 NM • 142° Bearing • Class G Corridor
+            </span>
+</div>
+</div>
+<div class="flex flex-col items-end shrink-0 ml-2">
+<span class="px-2 py-0.5 rounded bg-secondary-container/20 text-secondary font-label-sm text-label-sm font-semibold tracking-wider uppercase">
+            OPTIMAL
+          </span>
+<span class="font-label-sm text-[10px] text-outline mt-1">11 MIN ETE</span>
+</div>
+</div>
+<!-- Corridor Row 2: VOJK <-> Mysuru (Optimal) -->
+<div class="w-full rounded-lg bg-surface-container p-3 flex items-center justify-between shadow-[0_2px_8px_rgba(0,0,0,0.5)] relative overflow-hidden before:absolute before:inset-x-0 before:top-0 before:h-[1px] before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-9 h-9 rounded bg-surface-container-lowest flex items-center justify-center shrink-0 text-on-surface-variant">
+<span class="material-symbols-outlined text-[20px]">navigation</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-1.5">
+<span class="font-label-md text-label-md text-primary font-semibold truncate">Jakkur (VOJK) ⇄ Mysuru (MYQ)</span>
+</div>
+<span class="font-label-sm text-label-sm text-outline mt-0.5 truncate">
+              74 NM • 218° Bearing • Low Terrain Safe
+            </span>
+</div>
+</div>
+<div class="flex flex-col items-end shrink-0 ml-2">
+<span class="px-2 py-0.5 rounded bg-secondary-container/20 text-secondary font-label-sm text-label-sm font-semibold tracking-wider uppercase">
+            OPTIMAL
+          </span>
+<span class="font-label-sm text-[10px] text-outline mt-1">29 MIN ETE</span>
+</div>
+</div>
+<!-- Corridor Row 3: VOJK <-> Kolar Gold Strip (Review Required) -->
+<div class="w-full rounded-lg bg-surface-container p-3 flex items-center justify-between shadow-[0_2px_8px_rgba(0,0,0,0.5)] relative overflow-hidden before:absolute before:inset-x-0 before:top-0 before:h-[1px] before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-9 h-9 rounded bg-surface-container-lowest flex items-center justify-center shrink-0 text-tertiary-fixed-dim">
+<span class="material-symbols-outlined text-[20px]">warning</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-1.5">
+<span class="font-label-md text-label-md text-primary font-semibold truncate">Jakkur (VOJK) ⇄ Kolar Gold Strip</span>
+</div>
+<span class="font-label-sm text-label-sm text-outline mt-0.5 truncate">
+              34 NM • 078° Bearing • Grid Constrained
+            </span>
+</div>
+</div>
+<div class="flex flex-col items-end shrink-0 ml-2">
+<span class="px-2 py-0.5 rounded bg-tertiary-container/30 text-on-tertiary-container font-label-sm text-label-sm font-semibold tracking-wider uppercase">
+            REVIEW
+          </span>
+<span class="font-label-sm text-[10px] text-tertiary-fixed-dim mt-1">NO MCS FEED</span>
+</div>
+</div>
+</div>
+</section>
+</div>
+<script>
+  // Tactical Corridor Micro-interactions
+  document.addEventListener('DOMContentLoaded', () => {
+    const searchInput = document.getElementById('corridor-search-input');
+    const ctaBtn = document.getElementById('btn-feasibility-audit');
+
+    if (searchInput) {
+      searchInput.addEventListener('focus', () => {
+        searchInput.parentElement.classList.add('shadow-[0_0_12px_rgba(123,208,255,0.4)]');
+      });
+      searchInput.addEventListener('blur', () => {
+        searchInput.parentElement.classList.remove('shadow-[0_0_12px_rgba(123,208,255,0.4)]');
+      });
+    }
+
+    if (ctaBtn) {
+      ctaBtn.addEventListener('click', () => {
+        // Haptic feel vibration if supported
+        if (navigator.vibrate) {
+          navigator.vibrate(40);
+        }
+      });
+    }
+  });
+</script></main><nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface-container-lowest/85 backdrop-blur-2xl shadow-[0_-4px_24px_rgba(0,0,0,0.7)]" data-active-classes="text-primary after:scale-x-100 font-semibold"><div class="w-full h-20 px-space-xs flex items-center justify-around relative before:absolute before:inset-x-0 before:top-0 before:h-[1px] before:bg-gradient-to-r before:from-transparent before:via-white/30 before:to-transparent"><a class="group flex flex-col items-center justify-center gap-1 min-w-[56px] h-full text-on-surface-variant transition-all relative after:absolute after:bottom-1 after:w-5 after:h-[2px] after:bg-secondary after:rounded-full after:scale-x-0 after:transition-transform hover:text-primary" data-path="overview" href="#"><div class="w-8 h-8 rounded flex items-center justify-center transition-colors group-hover:bg-surface-container-high"><span class="material-symbols-outlined text-[22px]">dashboard</span></div><span class="font-label-sm text-label-sm uppercase tracking-wider">Overview</span></a><a aria-current="page" class="group flex flex-col items-center justify-center gap-1 min-w-[56px] h-full transition-all relative after:absolute after:bottom-1 after:w-5 after:h-[2px] after:bg-secondary after:rounded-full after:transition-transform text-primary after:scale-x-100 font-semibold" data-path="map" href="#"><div class="w-8 h-8 rounded flex items-center justify-center transition-colors group-hover:bg-surface-container-high"><span class="material-symbols-outlined text-[22px]">map</span></div><span class="font-label-sm text-label-sm uppercase tracking-wider">Map</span></a><a class="group flex flex-col items-center justify-center gap-1 min-w-[56px] h-full text-on-surface-variant transition-all relative after:absolute after:bottom-1 after:w-5 after:h-[2px] after:bg-secondary after:rounded-full after:scale-x-0 after:transition-transform hover:text-primary" data-path="deployments" href="#"><div class="w-8 h-8 rounded flex items-center justify-center transition-colors group-hover:bg-surface-container-high"><span class="material-symbols-outlined text-[22px]">flight_takeoff</span></div><span class="font-label-sm text-label-sm uppercase tracking-wider">Deployments</span></a><a class="group flex flex-col items-center justify-center gap-1 min-w-[56px] h-full text-on-surface-variant transition-all relative after:absolute after:bottom-1 after:w-5 after:h-[2px] after:bg-secondary after:rounded-full after:scale-x-0 after:transition-transform hover:text-primary" data-path="airstrips" href="#"><div class="w-8 h-8 rounded flex items-center justify-center transition-colors group-hover:bg-surface-container-high"><span class="material-symbols-outlined text-[22px]">connecting_airports</span></div><span class="font-label-sm text-label-sm uppercase tracking-wider">Airstrips</span></a><a class="group flex flex-col items-center justify-center gap-1 min-w-[56px] h-full text-on-surface-variant transition-all relative after:absolute after:bottom-1 after:w-5 after:h-[2px] after:bg-secondary after:rounded-full after:scale-x-0 after:transition-transform hover:text-primary" data-path="settings" href="#"><div class="w-8 h-8 rounded flex items-center justify-center transition-colors group-hover:bg-surface-container-high"><span class="material-symbols-outlined text-[22px]">tune</span></div><span class="font-label-sm text-label-sm uppercase tracking-wider">Settings</span></a></div></nav></body></html>

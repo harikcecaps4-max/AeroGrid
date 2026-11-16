@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script><script id="tailwind-config">
+tailwind.config = {
+  darkMode: 'class',
+  theme: {
+    extend: {
+      colors: {
+        'surface-bright': '#36393f',
+        'tertiary-container': '#a4b2cb',
+        'background': '#0a0e14',
+        'surface': '#101419',
+        'on-background': '#f1f5f9',
+        'on-surface': '#f1f5f9',
+        'on-surface-variant': '#94a3b8',
+        'primary': '#8ed5ff',
+        'primary-container': '#38bdf8',
+        'surface-container-lowest': '#090d13',
+        'surface-container-low': '#0e131b',
+        'surface-container': '#131922',
+        'surface-container-high': '#1a222e',
+        'surface-container-highest': '#232c3a',
+        'outline': '#334155',
+        'outline-variant': '#1e293b'
+      },
+      borderRadius: {
+        'DEFAULT': '0.25rem',
+        'lg': '0.5rem',
+        'xl': '0.75rem',
+        'full': '9999px'
+      },
+      spacing: {
+        'space-xxs': '0.125rem',
+        'margin-md': '1.5rem',
+        'space-md': '0.75rem',
+        'gutter-lg': '1.5rem',
+        'space-sm': '0.5rem',
+        'space-xs': '0.25rem',
+        'margin-lg': '2.5rem',
+        'space-xl': '1.5rem',
+        'margin': '1rem',
+        'space-lg': '1rem',
+        'gutter': '1rem',
+        'space-2xl': '2.25rem'
+      },
+      fontFamily: {
+        'headline-lg': ['Space Grotesk', 'sans-serif'],
+        'body-md': ['Inter', 'sans-serif'],
+        'headline-md': ['Space Grotesk', 'sans-serif'],
+        'body-sm': ['Inter', 'sans-serif'],
+        'display-lg': ['Space Grotesk', 'sans-serif'],
+        'body-lg': ['Inter', 'sans-serif'],
+        'headline-lg-mobile': ['Space Grotesk', 'sans-serif'],
+        'label-mono-lg': ['JetBrains Mono', 'monospace'],
+        'display-lg-mobile': ['Space Grotesk', 'sans-serif'],
+        'label-mono-sm': ['JetBrains Mono', 'monospace'],
+        'label-mono-md': ['JetBrains Mono', 'monospace']
+      },
+      fontSize: {
+        'headline-lg': ['28px', { lineHeight: '36px', letterSpacing: '-0.01em', fontWeight: '600' }],
+        'body-md': ['14px', { lineHeight: '20px', fontWeight: '400' }],
+        'headline-md': ['20px', { lineHeight: '26px', letterSpacing: '-0.005em', fontWeight: '500' }],
+        'body-sm': ['12px', { lineHeight: '16px', fontWeight: '400' }],
+        'display-lg': ['40px', { lineHeight: '48px', letterSpacing: '-0.02em', fontWeight: '600' }],
+        'body-lg': ['16px', { lineHeight: '24px', fontWeight: '400' }],
+        'headline-lg-mobile': ['22px', { lineHeight: '28px', letterSpacing: '-0.01em', fontWeight: '600' }],
+        'label-mono-lg': ['14px', { lineHeight: '18px', letterSpacing: '0.02em', fontWeight: '500' }],
+        'display-lg-mobile': ['32px', { lineHeight: '38px', letterSpacing: '-0.02em', fontWeight: '600' }],
+        'label-mono-sm': ['10px', { lineHeight: '14px', letterSpacing: '0.06em', fontWeight: '600' }],
+        'label-mono-md': ['12px', { lineHeight: '16px', letterSpacing: '0.04em', fontWeight: '500' }]
+      }
+    }
+  }
+}
+</script>
+<style>
+@layer base {
+  html, body {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+  body {
+    overscroll-behavior-y: none;
+    background-color: #0A0E14;
+    background-image: 
+      radial-gradient(ellipse 90% 50% at 50% -10%, rgba(56, 189, 248, 0.08), transparent 70%),
+      radial-gradient(circle at 80% 20%, rgba(203, 213, 225, 0.04), transparent 50%),
+      linear-gradient(180deg, #0A0E14 0%, #070A0F 100%);
+    background-attachment: fixed;
+  }
+  .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
+  .pt-safe { padding-top: env(safe-area-inset-top, 0px); }
+  main > :first-child { margin-top: 0 !important; }
+  main > :last-child { margin-bottom: 0 !important; }
+}
+::-webkit-scrollbar { display: none; }
+
+/* Metallic & Polished Titanium Styling */
+.titanium-card {
+  position: relative;
+  background: rgba(19, 25, 34, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(71, 85, 105, 0.35);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.6), inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
+}
+.titanium-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.4) 30%, rgba(203, 213, 225, 0.7) 50%, rgba(255, 255, 255, 0.4) 70%, transparent 100%);
+  pointer-events: none;
+}
+.brushed-badge {
+  background: linear-gradient(180deg, #222c3a 0%, #171f2a 100%);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+.chrome-icon {
+  background: linear-gradient(145deg, #263344 0%, #151d27 100%);
+  border: 1px solid rgba(203, 213, 225, 0.28);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+@keyframes radar-pulse {
+  0% { transform: scale(0.8); opacity: 1; }
+  50% { transform: scale(2.0); opacity: 0.25; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+.animate-radar {
+  animation: radar-pulse 2.2s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+}
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(1000%); }
+}
+.animate-scanline {
+  animation: scanline 4.5s linear infinite;
+}
+</style>
+<style>
+  body {
+    min-height: max(884px, 100dvh);
+  }
+</style>
+</head>
+<body class="bg-[#0A0E14] text-[#F1F5F9] font-body-md text-body-md antialiased selection:bg-primary-container selection:text-black">
+<!-- Fixed Top App Header with Frosted Smoked Glass & Metallic Shine -->
+<header class="fixed top-0 w-full z-50 pt-safe bg-[#0A0E14]/85 backdrop-blur-xl border-b border-[#2E3846]/70 shadow-[0_4px_24px_rgba(0,0,0,0.7)]">
+<div class="h-20 px-margin flex items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="p-1 rounded-lg bg-gradient-to-b from-[#2E3846] to-[#141B24] border border-[#475569]/40 shadow-sm shrink-0">
+<img alt="AeroGrid Compass Rose Logo" class="h-7 w-auto object-contain filter drop-shadow-[0_0_6px_rgba(56,189,248,0.4)]" src="https://lh3.googleusercontent.com/aida/ALJJyrCJQmYkcPXh3U970oPW7pNN4T0A7EHlRl5FpoPlNZdqHQN-DITNiQvC25a218CVFtNTbjbg5ATDhg9NR0dLB7hMcqP_QobBKK8fSukkliFjtLdnU-DjX98uidbnzXLRXwMEIcriBZAZXmE8HepD5ZHr_jS3q5hs4ALT2P03NXCup8ONNFGru9HZgrDOpp4cL2GycWhUV1I1-4KOBniDmuWgrRIpElqnwavTCfL0AM4B"/>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-space-xs">
+<span class="font-headline-md text-headline-md font-bold tracking-tight text-[#F1F5F9] truncate drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">AeroGrid</span>
+<span class="relative flex h-2 w-2 shrink-0 items-center justify-center">
+<span class="animate-radar absolute inline-flex h-full w-full rounded-full bg-[#38BDF8] opacity-75"></span>
+<span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#38BDF8] shadow-[0_0_6px_#38BDF8]"></span>
+</span>
+</div>
+<span class="font-label-mono-sm text-label-mono-sm uppercase text-[#818EA2] tracking-wider truncate font-medium">Regional Air Taxi Feasibility</span>
+</div>
+</div>
+<div class="flex items-center gap-space-xs shrink-0">
+<button aria-label="Search Corridors" class="w-10 h-10 flex items-center justify-center rounded-lg text-[#CBD5E1] hover:text-white bg-[#131922] hover:bg-[#1C2430] border border-[#2E3846] transition-all shadow-sm">
+<span class="material-symbols-outlined text-[19px]">search</span>
+</button>
+<div class="relative flex items-center justify-center w-10 h-10">
+<img alt="Profile" class="w-8 h-8 rounded-full object-cover ring-1 ring-[#94A3B8]/40 shadow-sm" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAYgS6eBqAPd1K-p9zN0KGC1lFYw3iG17M2aq64QeHIk05GK3XvYIFMuJM8Vy3URJYMhJ86oaMNSKX-DUj2HgoRLI6wBV6ha8bHYFD1IJo7KpRIwee4CESmnde6iSatgJyfb77jbcNHEgiXpmuWP_TQ5yoetfSak_8uZysErDX1H2TFAURsiNqIRoOF09Zm6L6X2DYC7GyTL-wRGaH7c24dFmAMIPYSPiIO3pIoUfk_"/>
+<span class="absolute bottom-1 right-1 w-2.5 h-2.5 rounded-full bg-[#10B981] ring-2 ring-[#0A0E14] shadow-[0_0_6px_#10B981]"></span>
+</div>
+</div>
+</div>
+<div class="px-margin pb-2.5 flex items-center justify-between border-t border-[#1E2734]/80 pt-2">
+<span class="font-headline-lg-mobile text-headline-lg-mobile font-bold text-[#F8FAFC] tracking-tight truncate flex items-center gap-2">
+      Overview
+    </span>
+<span class="font-label-mono-sm text-label-mono-sm brushed-badge px-2.5 py-0.5 rounded text-[#38BDF8] flex items-center gap-1.5 font-semibold tracking-wider">
+<span class="w-1.5 h-1.5 rounded-full bg-[#38BDF8] animate-pulse shadow-[0_0_6px_#38BDF8]"></span>
+      SEC-DEL-BLR LIVE
+    </span>
+</div>
+</header>
+<!-- Main Feed Content -->
+<main class="flex flex-col relative w-full pt-24 pb-24">
+<div class="flex flex-col w-full px-margin pb-space-2xl gap-space-lg">
+<!-- Status Bar Banner: Tactical Aviation Sweep Header -->
+<section class="titanium-card p-space-md rounded-xl overflow-hidden">
+<div class="flex items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-xs min-w-0">
+<span class="relative flex h-2 w-2 shrink-0 items-center justify-center">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#38BDF8] opacity-75"></span>
+<span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#38BDF8] shadow-[0_0_6px_#38BDF8]"></span>
+</span>
+<span class="font-label-mono-sm text-label-mono-sm text-[#E2E8F0] uppercase tracking-wider truncate font-semibold">
+            DGCA Sandbox 2025 · Fleet Sweep
+          </span>
+</div>
+<div class="flex items-center gap-space-xxs shrink-0 bg-[#0E1520] border border-[#38BDF8]/40 px-2 py-0.5 rounded shadow-[0_0_8px_rgba(56,189,248,0.15)]">
+<span class="font-label-mono-sm text-label-mono-sm text-[#38BDF8] font-bold tracking-wide">14 ACTIVE V-CORRIDORS</span>
+</div>
+</div>
+<div class="mt-space-xs flex items-center justify-between text-[#818EA2] pt-2 border-t border-[#232F40]/80">
+<span class="font-label-mono-sm text-label-mono-sm tracking-tight text-[#94A3B8]">DATUM: WGS 84 / GEOID EGM96</span>
+<span class="font-label-mono-sm text-label-mono-sm font-semibold text-[#CBD5E1] flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px] text-[#38BDF8]">schedule</span>
+          SYNC: T-00:04:12
+        </span>
+</div>
+</section>
+<!-- Interactive Regional Chart / Visual Radar Snapshot -->
+<section class="titanium-card p-space-md rounded-xl overflow-hidden">
+<div class="flex items-center justify-between mb-space-sm">
+<div class="flex items-center gap-2">
+<div class="chrome-icon w-7 h-7 rounded flex items-center justify-center text-[#38BDF8]">
+<span class="material-symbols-outlined text-[17px]">radar</span>
+</div>
+<h2 class="font-headline-md text-headline-md text-[#F1F5F9] font-bold tracking-tight">Active Peninsular Airspace</h2>
+</div>
+<span class="font-label-mono-sm text-label-mono-sm text-[#94A3B8] brushed-badge px-2 py-0.5 rounded font-medium">SEC-SOUTH-01</span>
+</div>
+<!-- Map & Flight Vector Visual Layer -->
+<div class="relative w-full h-44 rounded-lg overflow-hidden border border-[#2E3846] bg-[#0A0E15] shadow-inner" data-location="Bengaluru, Karnataka, India">
+<!-- Radar Scan Grid & Circular Sweeps -->
+<div class="absolute inset-0 opacity-40 bg-[radial-gradient(#38BDF8_1px,transparent_1px)] [background-size:16px_16px]"></div>
+<div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-30">
+<div class="w-64 h-64 rounded-full border border-[#38BDF8]/40"></div>
+<div class="absolute w-44 h-44 rounded-full border border-dashed border-[#38BDF8]/50"></div>
+<div class="absolute w-24 h-24 rounded-full border border-[#38BDF8]/60"></div>
+<div class="absolute w-full h-[1px] bg-[#38BDF8]/30"></div>
+<div class="absolute h-full w-[1px] bg-[#38BDF8]/30"></div>
+</div>
+<!-- Compass Rose Watermark Inset (Metallic Finished) -->
+<div class="absolute top-2 right-2 w-10 h-10 pointer-events-none z-10 flex items-center justify-center">
+<svg class="w-full h-full drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]" viewbox="0 0 100 100">
+<circle cx="50" cy="50" fill="none" opacity="0.4" r="44" stroke="#38BDF8" stroke-dasharray="3 3" stroke-width="2"></circle>
+<circle cx="50" cy="50" fill="#131922" r="36" stroke="#475569" stroke-width="1.5"></circle>
+<polygon fill="#FF6B2B" points="50,12 55,48 50,45"></polygon>
+<polygon fill="#94A3B8" points="50,12 45,48 50,45"></polygon>
+<polygon fill="#38BDF8" points="50,88 55,52 50,55"></polygon>
+<polygon fill="#475569" points="50,88 45,52 50,55"></polygon>
+<polygon fill="#CBD5E1" points="12,50 48,45 45,50"></polygon>
+<polygon fill="#334155" points="12,50 48,55 45,50"></polygon>
+<polygon fill="#CBD5E1" points="88,50 52,45 55,50"></polygon>
+<polygon fill="#334155" points="88,50 52,55 55,50"></polygon>
+<circle cx="50" cy="50" fill="#0A0E14" r="5" stroke="#CBD5E1" stroke-width="1.5"></circle>
+</svg>
+</div>
+<!-- Flight Path Trajectory Graphic Representation -->
+<div class="absolute inset-0 pointer-events-none">
+<svg class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<lineargradient id="corridorGlow" x1="0%" x2="100%" y1="100%" y2="0%">
+<stop offset="0%" stop-color="#10B981" stop-opacity="0.9"></stop>
+<stop offset="50%" stop-color="#38BDF8" stop-opacity="0.9"></stop>
+<stop offset="100%" stop-color="#38BDF8" stop-opacity="0.2"></stop>
+</lineargradient>
+</defs>
+<path d="M 40 130 Q 150 50, 290 35" fill="none" stroke="url(#corridorGlow)" stroke-dasharray="6 4" stroke-width="2.5"></path>
+<circle cx="40" cy="130" fill="#10B981" r="4" stroke="#F1F5F9" stroke-width="1.5"></circle>
+<circle cx="290" cy="35" fill="#38BDF8" r="4" stroke="#F1F5F9" stroke-width="1.5"></circle>
+</svg>
+</div>
+<!-- Corridor Trajectory Overlay -->
+<div class="absolute inset-0 bg-gradient-to-t from-[#0A0E14] via-transparent to-transparent flex flex-col justify-end p-space-sm text-surface-bright">
+<div class="flex items-center justify-between text-white">
+<div class="flex items-center gap-space-xs">
+<span class="w-2 h-2 rounded-full bg-[#10B981] animate-pulse shadow-[0_0_8px_#10B981]"></span>
+<span class="font-label-mono-sm text-label-mono-sm tracking-wide text-[#F1F5F9] font-bold">VOJK ⇄ VOBH EXP-LINK</span>
+</div>
+<span class="font-label-mono-sm text-label-mono-sm text-[#38BDF8] bg-[#0E1520]/90 px-1.5 py-0.5 rounded border border-[#38BDF8]/30 font-semibold">ALT: 3,500 FT AGL</span>
+</div>
+<span class="font-label-mono-sm text-label-mono-sm text-[#94A3B8] font-mono mt-0.5">LAT 13°04′48″N · LON 77°35′50″E</span>
+</div>
+</div>
+</section>
+<!-- 2x2 Analytical KPI Grid with Polished Titanium Finish -->
+<section class="grid grid-cols-2 gap-space-sm w-full">
+<!-- Tile 1: Evaluated Strips -->
+<div class="titanium-card p-space-md rounded-xl flex flex-col justify-between">
+<div class="flex items-center justify-between text-[#818EA2]">
+<span class="font-label-mono-sm text-label-mono-sm uppercase tracking-wide font-medium">Evaluated Strips</span>
+<div class="chrome-icon w-6 h-6 rounded flex items-center justify-center text-[#38BDF8]">
+<span class="material-symbols-outlined text-[15px]">flight_takeoff</span>
+</div>
+</div>
+<div class="my-space-xs">
+<span class="font-headline-lg-mobile text-headline-lg-mobile font-bold text-[#F8FAFC] tracking-tight drop-shadow">142</span>
+</div>
+<div class="flex items-center gap-space-xxs">
+<span class="font-label-mono-sm text-label-mono-sm text-[#10B981] font-semibold drop-shadow-[0_0_4px_rgba(16,185,129,0.4)]">+8 this week</span>
+<span class="font-label-mono-sm text-label-mono-sm text-[#818EA2]">· audited</span>
+</div>
+</div>
+<!-- Tile 2: Viable Corridors -->
+<div class="titanium-card p-space-md rounded-xl flex flex-col justify-between">
+<div class="flex items-center justify-between text-[#818EA2]">
+<span class="font-label-mono-sm text-label-mono-sm uppercase tracking-wide font-medium">Viable Nodes</span>
+<span class="w-2.5 h-2.5 rounded-full bg-[#10B981] shadow-[0_0_8px_#10B981]"></span>
+</div>
+<div class="my-space-xs">
+<span class="font-headline-lg-mobile text-headline-lg-mobile font-bold text-[#F8FAFC] tracking-tight drop-shadow">38</span>
+</div>
+<div class="inline-flex items-center gap-1 bg-[#10B981]/15 border border-[#10B981]/40 px-2 py-0.5 rounded self-start shadow-[0_0_8px_rgba(16,185,129,0.15)]">
+<span class="material-symbols-outlined text-[12px] text-[#10B981]">check_circle</span>
+<span class="font-label-mono-sm text-label-mono-sm text-[#34D399] font-bold">PASS MCS READY</span>
+</div>
+</div>
+<!-- Tile 3: Conditional -->
+<div class="titanium-card p-space-md rounded-xl flex flex-col justify-between">
+<div class="flex items-center justify-between text-[#818EA2]">
+<span class="font-label-mono-sm text-label-mono-sm uppercase tracking-wide font-medium">Conditional</span>
+<span class="w-2.5 h-2.5 rounded-full bg-[#F59E0B] shadow-[0_0_8px_#F59E0B]"></span>
+</div>
+<div class="my-space-xs">
+<span class="font-headline-lg-mobile text-headline-lg-mobile font-bold text-[#F8FAFC] tracking-tight drop-shadow">64</span>
+</div>
+<div class="inline-flex items-center gap-1 bg-[#F59E0B]/15 border border-[#F59E0B]/40 px-2 py-0.5 rounded self-start shadow-[0_0_8px_rgba(245,158,11,0.15)]">
+<span class="material-symbols-outlined text-[12px] text-[#F59E0B]">warning</span>
+<span class="font-label-mono-sm text-label-mono-sm text-[#FBBF24] font-bold">GRID CONSTRAINED</span>
+</div>
+</div>
+<!-- Tile 4: Not Viable -->
+<div class="titanium-card p-space-md rounded-xl flex flex-col justify-between">
+<div class="flex items-center justify-between text-[#818EA2]">
+<span class="font-label-mono-sm text-label-mono-sm uppercase tracking-wide font-medium">Not Viable</span>
+<span class="w-2.5 h-2.5 rounded-full bg-[#EF4444] shadow-[0_0_8px_#EF4444]"></span>
+</div>
+<div class="my-space-xs">
+<span class="font-headline-lg-mobile text-headline-lg-mobile font-bold text-[#F8FAFC] tracking-tight drop-shadow">40</span>
+</div>
+<div class="inline-flex items-center gap-1 bg-[#EF4444]/15 border border-[#EF4444]/40 px-2 py-0.5 rounded self-start shadow-[0_0_8px_rgba(239,68,68,0.15)]">
+<span class="material-symbols-outlined text-[12px] text-[#EF4444]">block</span>
+<span class="font-label-mono-sm text-label-mono-sm text-[#F87171] font-bold">TERRAIN / OBST</span>
+</div>
+</div>
+</section>
+<!-- Quick Filter Pills: Corridors & Sub-regions -->
+<section class="flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-label-mono-sm text-label-mono-sm uppercase text-[#818EA2] font-semibold tracking-wider">
+          Region Sub-sectors
+        </span>
+<button class="font-label-mono-sm text-label-mono-sm text-[#38BDF8] hover:text-[#7DD3FC] font-semibold tracking-wide flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">tune</span>
+          Filter Map
+        </button>
+</div>
+<div class="flex items-center gap-space-xs overflow-x-auto pb-1 no-scrollbar">
+<button class="bg-gradient-to-r from-[#38BDF8] to-[#0284C7] text-[#0A0E14] font-bold px-space-md py-1.5 rounded-lg font-label-mono-sm text-label-mono-sm whitespace-nowrap shadow-[0_0_12px_rgba(56,189,248,0.35)] border border-[#7DD3FC]/50">
+          All India (142)
+        </button>
+<button class="bg-[#131922] text-[#CBD5E1] hover:text-white hover:bg-[#1A2330] border border-[#2E3846] px-space-md py-1.5 rounded-lg font-label-mono-sm text-label-mono-sm whitespace-nowrap transition-colors">
+          Bengaluru Hub (KA)
+        </button>
+<button class="bg-[#131922] text-[#CBD5E1] hover:text-white hover:bg-[#1A2330] border border-[#2E3846] px-space-md py-1.5 rounded-lg font-label-mono-sm text-label-mono-sm whitespace-nowrap transition-colors">
+          Mumbai–Pune (MH)
+        </button>
+<button class="bg-[#131922] text-[#CBD5E1] hover:text-white hover:bg-[#1A2330] border border-[#2E3846] px-space-md py-1.5 rounded-lg font-label-mono-sm text-label-mono-sm whitespace-nowrap transition-colors">
+          NCR Heli-Grid
+        </button>
+<button class="bg-[#131922] text-[#CBD5E1] hover:text-white hover:bg-[#1A2330] border border-[#2E3846] px-space-md py-1.5 rounded-lg font-label-mono-sm text-label-mono-sm whitespace-nowrap transition-colors">
+          Chennai–Hosur
+        </button>
+</div>
+</section>
+<!-- Live Feasibility Feed / Priority Assessments -->
+<section class="flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="chrome-icon w-6 h-6 rounded flex items-center justify-center text-[#CBD5E1]">
+<span class="material-symbols-outlined text-[16px]">explore</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-[#F1F5F9] font-bold tracking-tight">Priority Airfield Audits</h3>
+</div>
+<span class="font-label-mono-sm text-label-mono-sm text-[#818EA2] font-mono tracking-wider">LATEST PASS</span>
+</div>
+<!-- Airfield Assessment Card 1: VIABLE -->
+<article class="titanium-card p-space-md rounded-xl flex flex-col gap-space-sm">
+<div class="flex items-start justify-between gap-space-xs">
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-space-xs flex-wrap">
+<span class="font-label-mono-md text-label-mono-md font-bold text-[#38BDF8] bg-[#0E1520] border border-[#38BDF8]/40 px-1.5 py-0.5 rounded shadow-sm">VOJK</span>
+<span class="font-body-md text-body-md font-bold text-[#F8FAFC] truncate">Jakkur Aerodrome</span>
+</div>
+<span class="font-label-mono-sm text-label-mono-sm text-[#818EA2] mt-0.5">Bengaluru, Karnataka · 13°04′48″N 77°35′50″E</span>
+</div>
+<!-- Verdict Badge -->
+<span class="inline-flex items-center gap-1.5 bg-[#10B981]/15 border border-[#10B981]/50 px-2.5 py-1 rounded shrink-0 shadow-[0_0_10px_rgba(16,185,129,0.2)]">
+<span class="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-pulse"></span>
+<span class="font-label-mono-sm text-label-mono-sm font-bold text-[#34D399] tracking-wider">VIABLE</span>
+</span>
+</div>
+<!-- Facility Specs & Drone/eVTOL Readiness Tags -->
+<div class="bg-[#0C1118] border border-[#232F40] p-2.5 rounded-lg flex flex-wrap items-center gap-y-1.5 gap-x-3 text-[#94A3B8] font-label-mono-sm text-label-mono-sm">
+<span class="flex items-center gap-1 text-[#CBD5E1]">
+<span class="material-symbols-outlined text-[14px] text-[#818EA2]">straighten</span> 08/26 · 900m Asphalt
+          </span>
+<span class="flex items-center gap-1 text-[#34D399] font-semibold drop-shadow-[0_0_3px_rgba(16,185,129,0.3)]">
+<span class="material-symbols-outlined text-[14px]">bolt</span> 480V 350kW MCS Ready
+          </span>
+<span class="flex items-center gap-1 text-[#CBD5E1]">
+<span class="material-symbols-outlined text-[14px] text-[#818EA2]">timer</span> 12 min TAT
+          </span>
+</div>
+<!-- Trust Badge & Meta -->
+<div class="flex items-center justify-between pt-1 border-t border-[#1E2734]">
+<span class="font-label-mono-sm text-label-mono-sm uppercase text-[#F8FAFC] brushed-badge px-2 py-0.5 rounded font-bold tracking-wider">
+            Field Verified
+          </span>
+<span class="font-body-sm text-body-sm text-[#818EA2] italic">Decision-support estimate. Verify via site survey.</span>
+</div>
+</article>
+<!-- Airfield Assessment Card 2: CONDITIONAL -->
+<article class="titanium-card p-space-md rounded-xl flex flex-col gap-space-sm">
+<div class="flex items-start justify-between gap-space-xs">
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-space-xs flex-wrap">
+<span class="font-label-mono-md text-label-mono-md font-bold text-[#F59E0B] bg-[#171309] border border-[#F59E0B]/40 px-1.5 py-0.5 rounded shadow-sm">VOBH</span>
+<span class="font-body-md text-body-md font-bold text-[#F8FAFC] truncate">Begumpet Airport</span>
+</div>
+<span class="font-label-mono-sm text-label-mono-sm text-[#818EA2] mt-0.5">Hyderabad, Telangana · 17°27′08″N 78°28′08″E</span>
+</div>
+<!-- Verdict Badge -->
+<span class="inline-flex items-center gap-1.5 bg-[#F59E0B]/15 border border-[#F59E0B]/50 px-2.5 py-1 rounded shrink-0 shadow-[0_0_10px_rgba(245,158,11,0.2)]">
+<span class="w-1.5 h-1.5 rounded-full bg-[#F59E0B]"></span>
+<span class="font-label-mono-sm text-label-mono-sm font-bold text-[#FBBF24] tracking-wider">CONDITIONAL</span>
+</span>
+</div>
+<!-- Constraints Callout Box -->
+<div class="bg-[#1C160B]/70 border border-[#F59E0B]/30 p-2.5 rounded-lg flex items-start gap-space-xs text-[#F1F5F9]">
+<span class="material-symbols-outlined text-[16px] text-[#F59E0B] shrink-0 mt-0.5">electric_meter</span>
+<p class="font-body-sm text-body-sm text-[#CBD5E1]">
+            Substation grid capacity capped at 150kW during peak regional load. High-power Megawatt Charging System requires dedicated battery buffer buffer ESS.
+          </p>
+</div>
+<!-- Trust Badge & Meta -->
+<div class="flex items-center justify-between pt-1 border-t border-[#1E2734]">
+<span class="font-label-mono-sm text-label-mono-sm uppercase text-[#38BDF8] brushed-badge px-2 py-0.5 rounded font-bold tracking-wider">
+            Desk Verified
+          </span>
+<span class="font-body-sm text-body-sm text-[#818EA2] italic">Decision-support estimate. Verify via site survey.</span>
+</div>
+</article>
+<!-- Airfield Assessment Card 3: NOT VIABLE -->
+<article class="titanium-card p-space-md rounded-xl flex flex-col gap-space-sm">
+<div class="flex items-start justify-between gap-space-xs">
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-space-xs flex-wrap">
+<span class="font-label-mono-md text-label-mono-md font-bold text-[#EF4444] bg-[#180A0A] border border-[#EF4444]/40 px-1.5 py-0.5 rounded shadow-sm">VOND</span>
+<span class="font-body-md text-body-md font-bold text-[#F8FAFC] truncate">Nanded Airfield</span>
+</div>
+<span class="font-label-mono-sm text-label-mono-sm text-[#818EA2] mt-0.5">Nanded, Maharashtra · 19°10′52″N 77°19′08″E</span>
+</div>
+<!-- Verdict Badge -->
+<span class="inline-flex items-center gap-1.5 bg-[#EF4444]/15 border border-[#EF4444]/50 px-2.5 py-1 rounded shrink-0 shadow-[0_0_10px_rgba(239,68,68,0.2)]">
+<span class="w-1.5 h-1.5 rounded-full bg-[#EF4444]"></span>
+<span class="font-label-mono-sm text-label-mono-sm font-bold text-[#F87171] tracking-wider">NOT VIABLE</span>
+</span>
+</div>
+<!-- Constraints Callout Box -->
+<div class="bg-[#1B0B0C]/70 border border-[#EF4444]/30 p-2.5 rounded-lg flex items-start gap-space-xs text-[#F1F5F9]">
+<span class="material-symbols-outlined text-[16px] text-[#EF4444] shrink-0 mt-0.5">terrain</span>
+<p class="font-body-sm text-body-sm text-[#CBD5E1]">
+            Strip unpaved gravel; approach obstacle glide path gradient exceeds 4.2°. High-tension power transmission lines traverse western approach corridor.
+          </p>
+</div>
+<!-- Trust Badge & Meta -->
+<div class="flex items-center justify-between pt-1 border-t border-[#1E2734]">
+<span class="font-label-mono-sm text-label-mono-sm uppercase text-[#94A3B8] brushed-badge px-2 py-0.5 rounded font-bold tracking-wider">
+            Synthetic
+          </span>
+<span class="font-body-sm text-body-sm text-[#818EA2] italic">Decision-support estimate. Verify via site survey.</span>
+</div>
+</article>
+</section>
+<!-- Interactive Flight Feasibility Simulator Call-to-Action -->
+<section class="titanium-card p-space-md rounded-xl flex flex-col gap-space-sm relative overflow-hidden">
+<!-- Metallic Amber & Cyan Glow Insets -->
+<div class="absolute -right-10 -bottom-10 w-36 h-36 rounded-full bg-[#FF6B2B]/15 blur-2xl pointer-events-none"></div>
+<div class="absolute -left-10 -top-10 w-28 h-28 rounded-full bg-[#38BDF8]/10 blur-2xl pointer-events-none"></div>
+<div class="flex items-center justify-between relative z-10">
+<div class="flex flex-col">
+<span class="font-label-mono-sm text-label-mono-sm uppercase text-[#FF9254] tracking-wider font-bold">Corridor Dispatcher</span>
+<h4 class="font-headline-md text-headline-md font-bold text-[#F8FAFC]">Flight Path Matrix</h4>
+</div>
+<div class="chrome-icon w-9 h-9 rounded-lg flex items-center justify-center text-[#FF9254]">
+<span class="material-symbols-outlined text-[20px]">alt_route</span>
+</div>
+</div>
+<p class="font-body-sm text-body-sm text-[#94A3B8] relative z-10">
+        Compute true airspeeds, density altitude variations across the Western Ghats, and reserve battery SOC margins.
+      </p>
+<!-- Primary Aviation Burnished Orange CTA Button with Metallic Edge Sheen -->
+<button class="relative group w-full mt-1 overflow-hidden py-3 px-space-md rounded-lg font-headline-md text-headline-md font-bold flex items-center justify-center gap-space-xs text-white shadow-[0_4px_20px_rgba(232,89,12,0.4)] transition-all duration-200 active:scale-[0.98]" id="simulateBtn" style="background: linear-gradient(135deg, #FF6B2B 0%, #D9480F 100%); border: 1px solid rgba(255, 255, 255, 0.35);">
+<!-- Specular Highlight Line -->
+<span class="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/70 to-transparent"></span>
+<span class="relative z-10">Simulate Fleet Route</span>
+<span class="material-symbols-outlined text-[20px] relative z-10 group-hover:translate-x-0.5 transition-transform">arrow_forward</span>
+</button>
+</section>
+<!-- Telemetry Footnote -->
+<footer class="flex items-center justify-between py-space-xs text-[#818EA2] border-t border-[#1C2430]">
+<div class="flex items-center gap-space-xxs font-label-mono-sm text-label-mono-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-[#10B981] shadow-[0_0_6px_#10B981]"></span>
+<span class="text-[#CBD5E1] font-semibold">NAVIC / GAGAN CALIBRATED</span>
+</div>
+<span class="font-label-mono-sm text-label-mono-sm text-[#818EA2] font-mono">AEROGRID ENGINE v4.2</span>
+</footer>
+</div>
+<script>
+    // Micro-interaction for simulate button feedback
+    document.getElementById('simulateBtn')?.addEventListener('click', function() {
+      const btn = this;
+      const originalContent = btn.innerHTML;
+      btn.innerHTML = `<span class="material-symbols-outlined text-[20px] animate-spin">refresh</span><span>Computing Trajectories...</span>`;
+      setTimeout(() => {
+        btn.innerHTML = `<span class="material-symbols-outlined text-[20px]">check_circle</span><span>Trajectory Validated (38 Strips)</span>`;
+        setTimeout(() => {
+          btn.innerHTML = originalContent;
+        }, 2500);
+      }, 1200);
+    });
+  </script>
+</main>
+<!-- Bottom Nav in Polished Silver Dark Titanium Style -->
+<nav class="fixed bottom-0 w-full z-50 pb-safe bg-[#0A0E14]/90 backdrop-blur-xl border-t border-[#2E3846]/80 shadow-[0_-4px_24px_rgba(0,0,0,0.8)]" data-active-classes="text-[#38BDF8] font-bold">
+<div class="flex justify-around items-center h-16 px-space-xs">
+<a aria-current="page" class="flex flex-col items-center justify-center gap-space-xxs min-w-[56px] h-12 transition-all text-[#38BDF8] font-bold relative" data-path="overview" href="#">
+<span class="absolute -top-1 w-6 h-[2px] bg-[#38BDF8] rounded-full shadow-[0_0_6px_#38BDF8]"></span>
+<span class="material-symbols-outlined text-[22px] drop-shadow-[0_0_6px_rgba(56,189,248,0.5)]">dashboard</span>
+<span class="font-label-mono-sm text-label-mono-sm tracking-normal">Overview</span>
+</a>
+<a class="flex flex-col items-center justify-center gap-space-xxs min-w-[56px] h-12 text-[#818EA2] hover:text-[#CBD5E1] transition-colors" data-path="flight-corridor-map" href="#">
+<span class="material-symbols-outlined text-[22px]">map</span>
+<span class="font-label-mono-sm text-label-mono-sm tracking-normal">Map</span>
+</a>
+<a class="flex flex-col items-center justify-center gap-space-xxs min-w-[56px] h-12 text-[#818EA2] hover:text-[#CBD5E1] transition-colors" data-path="deployments" href="#">
+<span class="material-symbols-outlined text-[22px]">flight_takeoff</span>
+<span class="font-label-mono-sm text-label-mono-sm tracking-normal">Deployments</span>
+</a>
+<a class="flex flex-col items-center justify-center gap-space-xxs min-w-[56px] h-12 text-[#818EA2] hover:text-[#CBD5E1] transition-colors" data-path="airstrips-catalog" href="#">
+<span class="material-symbols-outlined text-[22px]">connecting_airports</span>
+<span class="font-label-mono-sm text-label-mono-sm tracking-normal">Airstrips</span>
+</a>
+<a class="flex flex-col items-center justify-center gap-space-xxs min-w-[56px] h-12 text-[#818EA2] hover:text-[#CBD5E1] transition-colors" data-path="system-settings" href="#">
+<span class="material-symbols-outlined text-[22px]">tune</span>
+<span class="font-label-mono-sm text-label-mono-sm tracking-normal">Settings</span>
+</a>
+</div>
+</nav>
+</body></html>
