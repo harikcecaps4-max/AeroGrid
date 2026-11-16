@@ -166,7 +166,7 @@ export default function Regions() {
                   style={{
                     padding: '10px 14px',
                     borderRadius: 4,
-                    background: isSelected ? 'var(--surface-2)' : 'transparent',
+                    background: isSelected ? 'var(--surface-selected)' : 'transparent',
                     border: isSelected ? '1px solid var(--accent)' : '1px solid var(--border)',
                     cursor: 'pointer',
                     display: 'flex',
@@ -185,15 +185,16 @@ export default function Regions() {
                           fontSize: 10,
                           padding: '1px 6px',
                           borderRadius: 3,
-                          background: region.type === 'State' ? 'rgba(37, 99, 235, 0.15)' : 'rgba(148, 163, 184, 0.15)',
-                          color: region.type === 'State' ? '#60a5fa' : '#94a3b8',
-                          fontWeight: 500,
+                          background: region.type === 'State' ? 'var(--accent-dim)' : 'var(--surface-raised)',
+                          color: region.type === 'State' ? 'var(--accent)' : 'var(--text-muted)',
+                          border: region.type === 'State' ? '1px solid var(--accent-border)' : '1px solid var(--border)',
+                          fontWeight: 600,
                         }}
                       >
                         {region.type === 'State' ? 'STATE' : 'UT'}
                       </span>
                     </div>
-                    <div style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 2 }}>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
                       Capital: <span style={{ color: 'var(--subheading)' }}>{region.capital}</span>
                     </div>
                   </div>
@@ -223,9 +224,9 @@ export default function Regions() {
                       fontSize: 11,
                       padding: '2px 8px',
                       borderRadius: 4,
-                      background: 'rgba(37, 99, 235, 0.2)',
-                      color: '#93c5fd',
-                      border: '1px solid rgba(37, 99, 235, 0.4)',
+                      background: 'var(--accent-dim)',
+                      color: 'var(--accent)',
+                      border: '1px solid var(--accent-border)',
                       fontWeight: 600,
                     }}
                   >
@@ -235,14 +236,14 @@ export default function Regions() {
                 <div style={{ fontSize: 13, color: 'var(--text)', marginTop: 6 }}>
                   Capital City:{' '}
                   <strong style={{ color: 'var(--heading)' }}>{selectedRegion.capital}</strong>
-                  <span style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--text-2)', marginLeft: 8 }}>
+                  <span style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--text-muted)', marginLeft: 8 }}>
                     [{selectedRegion.capital_coords[1].toFixed(4)}°N, {selectedRegion.capital_coords[0].toFixed(4)}°E]
                   </span>
                 </div>
               </div>
 
               <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: 11, color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
                   Total Key Cities
                 </div>
                 <div style={{ fontSize: 22, fontWeight: 700, fontFamily: 'var(--mono)', color: 'var(--heading)' }}>
@@ -280,7 +281,7 @@ export default function Regions() {
                 <tbody>
                   {filteredCities.map((city, idx) => (
                     <tr key={city.name}>
-                      <td style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--text-2)', width: 40 }}>
+                      <td style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--text-muted)', width: 40 }}>
                         {idx + 1}
                       </td>
                       <td style={{ fontWeight: city.is_capital ? 600 : 400, color: city.is_capital ? 'var(--heading)' : 'var(--text)' }}>
@@ -293,26 +294,26 @@ export default function Regions() {
                               fontSize: 10,
                               padding: '2px 6px',
                               borderRadius: 3,
-                              background: 'rgba(34, 197, 94, 0.15)',
-                              color: '#4ade80',
-                              border: '1px solid rgba(34, 197, 94, 0.3)',
+                              background: 'var(--viable-bg)',
+                              color: 'var(--viable)',
+                              border: '1px solid var(--viable-border)',
                               fontWeight: 600,
                             }}
                           >
                             CAPITAL
                           </span>
                         ) : (
-                          <span style={{ fontSize: 11, color: 'var(--text-2)' }}>Major City</span>
+                          <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Major City</span>
                         )}
                       </td>
-                      <td style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--text-2)' }}>
+                      <td style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--text-muted)' }}>
                         {city.coords[1].toFixed(4)}°N, {city.coords[0].toFixed(4)}°E
                       </td>
                     </tr>
                   ))}
                   {filteredCities.length === 0 && (
                     <tr>
-                      <td colSpan={4} style={{ textAlign: 'center', padding: '24px 0', color: 'var(--text-2)' }}>
+                      <td colSpan={4} style={{ textAlign: 'center', padding: '24px 0', color: 'var(--text-muted)' }}>
                         No cities found matching &quot;{citySearch}&quot;
                       </td>
                     </tr>
