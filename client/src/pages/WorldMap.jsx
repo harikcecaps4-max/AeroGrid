@@ -182,7 +182,7 @@ export default function WorldMap() {
               ? 'World Grid | All Continents'
               : `${selectedRegion} | Regional Sector`}
           </span>
-          <span style={{ opacity: 0.6, fontSize: 11, marginLeft: 4 }}>
+          <span style={{ color: 'var(--text-muted)', fontSize: 11, marginLeft: 4 }}>
             ({filteredStrips.length} pinpoints)
           </span>
         </div>

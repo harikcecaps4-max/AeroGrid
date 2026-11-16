@@ -1414,7 +1414,7 @@ select::placeholder {
 }
 
 .meta-divider {
-  color: var(--border-strong);
+  color: var(--text-muted);
 }
 
 .close-btn {

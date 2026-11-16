@@ -77,16 +77,16 @@
   --accent-tint-hover: #dbe6fd;
   --accent-border: #b9cbf5;
 
-  /* Verdicts: base = pips/fills/borders, -text = AA text on -bg and surfaces */
-  --viable: #1f9d6b;
+  /* Verdicts: base & text tokens (AA text on -bg and surfaces ≥ 4.5:1) */
+  --viable: #146c3b;
   --viable-text: #146c3b;
   --viable-bg: #e8f6f0;
   --viable-border: #9bd3b9;
-  --conditional: #d98e04;
+  --conditional: #7c4a00;
   --conditional-text: #7c4a00;
   --conditional-bg: #fdf3dc;
   --conditional-border: #e6c27a;
-  --not-viable: #c8372d;
+  --not-viable: #a61b1b;
   --not-viable-text: #a61b1b;
   --not-viable-bg: #faeceb;
   --not-viable-border: #e6a8a3;
@@ -156,15 +156,15 @@
   --accent-tint-hover: #173449;
   --accent-border: #1f4a66;
 
-  --viable: #10b981;
+  --viable: #34d399;
   --viable-text: #34d399;
   --viable-bg: #0f2a24;
   --viable-border: #14513f;
-  --conditional: #f59e0b;
+  --conditional: #fbbf24;
   --conditional-text: #fbbf24;
   --conditional-bg: #2d2410;
   --conditional-border: #5c4510;
-  --not-viable: #ef4444;
+  --not-viable: #f87171;
   --not-viable-text: #f87171;
   --not-viable-bg: #301518;
   --not-viable-border: #6b2327;
