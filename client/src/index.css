@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+@import './styles/tokens.css';
 
 :root {
   /* Core 6-Color Avionics & Geospatial Survey Tokens */

@@ -1,0 +1,126 @@
+/**
+ * AeroGrid Design Tokens — Stitch Light Mode ("Tactile Precision / Modern Cartographic")
+ * Source spec: design/stitch/stitch_aerogrid_regional_fleet_planner/aerogrid/DESIGN.md
+ */
+
+:root {
+  /* ── Surface & Paper Layers (Elevation 0–3) ── */
+  --surface: #fcf9f0;
+  --surface-bright: #fcf9f0;
+  --surface-dim: #dddad1;
+  --surface-canvas: #f6f3ea;
+  --surface-container-lowest: #ffffff;
+  --surface-container-low: #f6f3ea;
+  --surface-container: #f1eee5;
+  --surface-container-high: #ebe8df;
+  --surface-container-highest: #e5e2da;
+  --surface-variant: #e5e2da;
+  --surface-card: #ffffff;
+  --surface-radar: #fbf9f2;
+  --surface-radar-card: #fdfcf7;
+
+  /* ── Ink & Typography Colors (WCAG AA on #FFFFFF and #F6F3EA) ── */
+  --text-ink: #14213d;
+  --on-surface: #1c1c17;
+  --on-surface-variant: #424751;
+  --text-slate: #5b6475;
+  --text-muted-aa: #525b6c;
+  --inverse-surface: #31312b;
+  --inverse-on-surface: #f4f1e8;
+
+  /* ── Borders & Cartographic Rules ── */
+  --border-paper: #ddd6c8;
+  --border-paper-strong: #c8bfb0;
+  --border-outline: #727782;
+  --border-outline-variant: #c2c6d3;
+  --border-row: #f0ece1;
+
+  /* ── Primary & Aviation Accent Tokens ── */
+  --chart-blue: #2f6fba;
+  --chart-blue-strong: #0056a0;
+  --chart-blue-hover: #245896;
+  --chart-blue-active: #1c4475;
+  --chart-blue-tint: #ecf1ff;
+  --chart-blue-tint-hover: #dbe6fd;
+  --chart-blue-border: #cdd9fe;
+
+  --aviation-orange: #c04600;
+  --aviation-orange-hover: #983500;
+  --aviation-orange-bright: #e8590c;
+  --aviation-orange-tint: #ffeee9;
+
+  /* ── Operational Verdict & Telemetry Tokens ── */
+  --verdict-viable: #1f9d6b;
+  --verdict-viable-text: #15803d;
+  --verdict-viable-bg: #e8f6f0;
+  --verdict-viable-pill: #dcfce7;
+  --verdict-viable-border: #86efac;
+  --verdict-viable-soft-border: #bbf7d0;
+  --verdict-pip-green: #10b981;
+
+  --verdict-conditional: #d98e04;
+  --verdict-conditional-text: #9a3412;
+  --verdict-conditional-bg: #fdf6e7;
+  --verdict-conditional-pill: #fff7ed;
+  --verdict-conditional-border: #fdba74;
+  --verdict-conditional-soft-border: #fed7aa;
+  --verdict-pip-amber: #f97316;
+
+  --verdict-nonviable: #c8372d;
+  --verdict-nonviable-text: #b91c1c;
+  --verdict-nonviable-bg: #faeceb;
+  --verdict-nonviable-pill: #fef2f2;
+  --verdict-nonviable-border: #fca5a5;
+  --verdict-nonviable-soft-border: #fecaca;
+
+  /* ── Typography Stacks ── */
+  --font-display: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-ui: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* ── Type Scale ── */
+  --type-display-lg: 40px;
+  --type-display-lg-lh: 48px;
+  --type-display-lg-mobile: 32px;
+  --type-display-lg-mobile-lh: 38px;
+  --type-headline-lg: 28px;
+  --type-headline-lg-lh: 36px;
+  --type-headline-lg-mobile: 22px;
+  --type-headline-md: 20px;
+  --type-headline-md-lh: 26px;
+  --type-body-lg: 16px;
+  --type-body-md: 14px;
+  --type-body-sm: 12px;
+  --type-mono-lg: 14px;
+  --type-mono-md: 12px;
+  --type-mono-sm: 10px;
+
+  /* ── Spacing Scale (4px structural rhythm) ── */
+  --space-xxs: 2px;
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+  --space-2xl: 36px;
+  --gutter: 16px;
+  --gutter-lg: 24px;
+  --margin: 16px;
+  --margin-md: 24px;
+  --margin-lg: 40px;
+
+  /* ── Radii ── */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  /* ── Elevation & Depth ── */
+  --shadow-elev-1: 0 1px 3px rgba(20, 33, 61, 0.04), 0 4px 12px rgba(20, 33, 61, 0.02);
+  --shadow-elev-2: 0 4px 16px rgba(20, 33, 61, 0.08), 0 1px 2px rgba(20, 33, 61, 0.04);
+  --shadow-sidebar: 2px 0 12px rgba(20, 33, 61, 0.04);
+  --shadow-topbar: 0 2px 8px rgba(20, 33, 61, 0.04);
+  --shadow-cta-orange: 0 4px 14px rgba(192, 70, 0, 0.28);
+  --focus-ring-blue: 0 0 0 3px rgba(47, 111, 186, 0.18);
+}
