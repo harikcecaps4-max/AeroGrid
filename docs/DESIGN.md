@@ -58,6 +58,16 @@ Computed luminance contrast ratios across Overview light-mode pairs (AA threshol
 | `#5B6475` on `#F6F3EA` (Secondary slate on canvas) | `5.37:1` | AA |
 | `#525B6C` on `#FCF9F0` (Mono header on bright paper) | `6.49:1` | AA |
 | `#0056A0` on `#ECF1FF` (Active Chart Blue pill) | `6.55:1` | AA |
+
+## Dual Theme Tokens & Automated Verification
+
+AeroGrid supports dynamic switching between **Light** and **Dark** themes via `:root[data-theme="light"]` and `:root[data-theme="dark"]`. The active theme is resolved from `localStorage` (defaulting to system `prefers-color-scheme`) and applied prior to initial paint in `index.html` to eliminate FOUC.
+
+Automated verification tools:
+- `npm --prefix client test` runs theme resolution and storage-resilience unit tests.
+- `npm --prefix client run check:contrast` validates all 36 semantic token pairs against WCAG AA (`≥ 4.5:1`).
+- `npm --prefix client run audit:theme` executes a full headless Chrome audit across all pages.
+
 | `#2F6FBA` on `#FFFFFF` (Interactive blue links/icons) | `5.12:1` | AA |
 | `#FFFFFF` on `#C04600` (Aviation Orange primary CTA) | `5.10:1` | AA |
 | `#15803D` on `#DCFCE7` (`VIABLE` / `PASS` badge) | `4.57:1` | AA |
