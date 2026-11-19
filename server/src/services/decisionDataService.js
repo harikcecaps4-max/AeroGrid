@@ -1,14 +1,20 @@
 'use strict';
 
 const config = require('../config/env');
-const { query } = require('../../../functions/aerogrid_api/src/db');
-const fallbackAirstrips = require('../../../functions/aerogrid_api/src/data/airstripsFallback.json');
+const { query } = require('../db');
+const fallbackAirstrips = require('../data/airstripsFallback.json');
 const {
   AIRCRAFT_PROFILES,
   ACCESS_POINTS,
   PLACEHOLDER_AIRSTRIP_SOURCE,
-} = require('../../../db/seed');
+} = require('../../../db/data/seedData');
 const { toFiniteNumber } = require('../decision/gates');
+
+function toNullableBoolean(val) {
+  if (val === null || val === undefined) return null;
+  if (typeof val === 'boolean') return val;
+  return Boolean(val);
+}
 
 const ACCESS_POINTS_BY_AIRSTRIP = ACCESS_POINTS.reduce((acc, ap) => {
   if (!acc.has(ap.airstrip)) acc.set(ap.airstrip, []);
@@ -23,7 +29,8 @@ const ACCESS_POINTS_BY_AIRSTRIP = ACCESS_POINTS.reduce((acc, ap) => {
 }, new Map());
 
 /**
- * Normalizes a database or seed aircraft profile record to numeric JS types.
+ * Normalizes a database or seed aircraft profile record to numeric JS types,
+ * preserving null on needs_charging when unverified.
  *
  * @param {Object} row
  * @param {number} [fallbackId]
@@ -44,7 +51,7 @@ function normalizeAircraftRow(row, fallbackId) {
     payload_kg: toFiniteNumber(row.payload_kg),
     seats: seatsVal !== null ? Math.trunc(seatsVal) : null,
     range_km: toFiniteNumber(row.range_km),
-    needs_charging: Boolean(row.needs_charging),
+    needs_charging: toNullableBoolean(row.needs_charging),
     allowed_surfaces: Array.isArray(row.allowed_surfaces)
       ? row.allowed_surfaces.map((s) => String(s).toLowerCase())
       : [],
@@ -55,7 +62,7 @@ function normalizeAircraftRow(row, fallbackId) {
 
 /**
  * Normalizes an airstrip row from PostGIS or the offline fallback JSON,
- * preserving NULL values on unverified decision fields.
+ * preserving NULL values on unverified utility, political, and decision fields.
  *
  * @param {Object} row
  * @returns {Object}
@@ -65,6 +72,12 @@ function normalizeAirstripRow(row) {
   const accessPoints = Array.isArray(row.access_points)
     ? row.access_points
     : fallbackAccessPoints;
+
+  const rawPolSev = row.political_severity;
+  const politicalSeverity =
+    rawPolSev !== null && rawPolSev !== undefined && String(rawPolSev).trim() !== ''
+      ? String(rawPolSev).trim().toLowerCase()
+      : null;
 
   return {
     id: Number(row.id),
@@ -77,11 +90,11 @@ function normalizeAirstripRow(row) {
     elevation_m: toFiniteNumber(row.elevation_m),
     runway_length_m: toFiniteNumber(row.runway_length_m),
     runway_width_m: toFiniteNumber(row.runway_width_m),
-    night_landing: Boolean(row.night_landing),
-    fuel_available: Boolean(row.fuel_available),
-    charging_available: Boolean(row.charging_available),
-    political_severity: row.political_severity || 'none',
-    disruption_type: row.disruption_type || 'No Disruption',
+    night_landing: toNullableBoolean(row.night_landing),
+    fuel_available: toNullableBoolean(row.fuel_available),
+    charging_available: toNullableBoolean(row.charging_available),
+    political_severity: politicalSeverity,
+    disruption_type: row.disruption_type ?? null,
     political_details: row.political_details || null,
     nearest_airport_code: row.nearest_airport_code || null,
     nearest_airport_name: row.nearest_airport_name || null,
@@ -111,8 +124,8 @@ const AIRSTRIP_DECISION_SQL = `
     a.night_landing,
     a.fuel_available,
     a.charging_available,
-    COALESCE(a.political_severity, 'none') AS political_severity,
-    COALESCE(a.disruption_type, 'No Disruption') AS disruption_type,
+    a.political_severity,
+    a.disruption_type,
     a.political_details,
     a.terrain_risk,
     a.catchment_population,
@@ -152,12 +165,31 @@ const AIRSTRIP_DECISION_SQL = `
   ) ap_agg ON true
 `;
 
+function createDbServiceError(requestId, context, err) {
+  console.error('[AeroGrid DecisionDataService DB Error]:', {
+    requestId: requestId || null,
+    context,
+    message: err ? err.message : 'Database is not configured and ALLOW_FALLBACK is false.',
+  });
+  const serviceErr = new Error(
+    err
+      ? 'Database query failed while loading decision data.'
+      : 'Database is not configured and fallback mode is disabled.'
+  );
+  serviceErr.status = 503;
+  serviceErr.error = 'Service Unavailable';
+  if (err) serviceErr.cause = err;
+  return serviceErr;
+}
+
 /**
  * Lists all aircraft performance profiles from PostgreSQL or the seed fallback.
  *
- * @returns {Promise<Array<Object>>}
+ * @param {{ requestId?: string }} [options]
+ * @returns {Promise<{ aircraft: Array<Object>, source: 'database' | 'fallback' }>}
  */
-async function listAircraftProfiles() {
+async function listAircraftProfiles(options = {}) {
+  const { requestId } = options;
   if (config.database.isConfigured) {
     try {
       const sql = `
@@ -168,94 +200,182 @@ async function listAircraftProfiles() {
         ORDER BY id ASC
       `;
       const result = await query(sql);
-      if (result && result.rows && result.rows.length > 0) {
-        return result.rows.map((row) => normalizeAircraftRow(row));
-      }
-    } catch {
-      // Database unavailable or migration 008 not applied yet; use deterministic seed fallback
+      const rows = (result && result.rows) || [];
+      return {
+        aircraft: rows.map((row) => normalizeAircraftRow(row)),
+        source: 'database',
+      };
+    } catch (err) {
+      throw createDbServiceError(requestId, 'listAircraftProfiles', err);
     }
   }
 
-  return AIRCRAFT_PROFILES.map((row, idx) => normalizeAircraftRow(row, idx + 1));
+  if (!config.allowFallback) {
+    throw createDbServiceError(requestId, 'listAircraftProfiles (fallback disabled)');
+  }
+
+  return {
+    aircraft: AIRCRAFT_PROFILES.map((row, idx) => normalizeAircraftRow(row, idx + 1)),
+    source: 'fallback',
+  };
 }
 
 /**
  * Looks up a single aircraft profile by integer ID.
  *
  * @param {number} aircraftId
- * @returns {Promise<Object|null>}
+ * @param {{ requestId?: string }} [options]
+ * @returns {Promise<{ aircraft: Object|null, source: 'database' | 'fallback' }>}
  */
-async function getAircraftProfileById(aircraftId) {
+async function getAircraftProfileById(aircraftId, options = {}) {
+  const { requestId } = options;
   const id = Number(aircraftId);
-  const profiles = await listAircraftProfiles();
-  return profiles.find((p) => p.id === id) || null;
+
+  if (config.database.isConfigured) {
+    try {
+      const sql = `
+        SELECT id, name, category, takeoff_distance_m, landing_distance_m, min_runway_m,
+               mtow_kg, payload_kg, seats, passengers, range_km, needs_charging,
+               allowed_surfaces, source, notes
+        FROM aircraft_profiles
+        WHERE id = $1
+        LIMIT 1
+      `;
+      const result = await query(sql, [id]);
+      const row = result && result.rows && result.rows[0];
+      return {
+        aircraft: row ? normalizeAircraftRow(row) : null,
+        source: 'database',
+      };
+    } catch (err) {
+      throw createDbServiceError(requestId, 'getAircraftProfileById', err);
+    }
+  }
+
+  if (!config.allowFallback) {
+    throw createDbServiceError(requestId, 'getAircraftProfileById (fallback disabled)');
+  }
+
+  const idx = id - 1;
+  const raw = idx >= 0 && idx < AIRCRAFT_PROFILES.length ? AIRCRAFT_PROFILES[idx] : null;
+  return {
+    aircraft: raw ? normalizeAircraftRow(raw, id) : null,
+    source: 'fallback',
+  };
 }
 
 /**
  * Lists all airstrips with full physical, utility, political, access, and confidence fields.
  *
- * @returns {Promise<Array<Object>>}
+ * @param {{ requestId?: string }} [options]
+ * @returns {Promise<{ airstrips: Array<Object>, source: 'database' | 'fallback' }>}
  */
-async function listAirstripsForDecision() {
+async function listAirstripsForDecision(options = {}) {
+  const { requestId } = options;
   if (config.database.isConfigured) {
     try {
       const result = await query(`${AIRSTRIP_DECISION_SQL} ORDER BY a.id ASC`);
-      if (result && result.rows && result.rows.length > 0) {
-        return result.rows.map(normalizeAirstripRow);
-      }
-    } catch {
-      // Database unavailable or migration 008 not applied yet; use fallback JSON
+      const rows = (result && result.rows) || [];
+      return {
+        airstrips: rows.map(normalizeAirstripRow),
+        source: 'database',
+      };
+    } catch (err) {
+      throw createDbServiceError(requestId, 'listAirstripsForDecision', err);
     }
   }
 
-  return fallbackAirstrips.map(normalizeAirstripRow);
+  if (!config.allowFallback) {
+    throw createDbServiceError(requestId, 'listAirstripsForDecision (fallback disabled)');
+  }
+
+  return {
+    airstrips: fallbackAirstrips.map(normalizeAirstripRow),
+    source: 'fallback',
+  };
 }
 
 /**
  * Retrieves a single airstrip record for decision evaluation by ID.
  *
  * @param {number} airstripId
- * @returns {Promise<Object|null>}
+ * @param {{ requestId?: string }} [options]
+ * @returns {Promise<{ airstrip: Object|null, source: 'database' | 'fallback' }>}
  */
-async function getAirstripForDecisionById(airstripId) {
+async function getAirstripForDecisionById(airstripId, options = {}) {
+  const { requestId } = options;
   const id = Number(airstripId);
   if (config.database.isConfigured) {
     try {
       const result = await query(`${AIRSTRIP_DECISION_SQL} WHERE a.id = $1 LIMIT 1`, [id]);
-      if (result && result.rows && result.rows.length > 0) {
-        return normalizeAirstripRow(result.rows[0]);
-      }
-    } catch {
-      // Fallback lookup below
+      const row = result && result.rows && result.rows[0];
+      return {
+        airstrip: row ? normalizeAirstripRow(row) : null,
+        source: 'database',
+      };
+    } catch (err) {
+      throw createDbServiceError(requestId, 'getAirstripForDecisionById', err);
     }
   }
 
+  if (!config.allowFallback) {
+    throw createDbServiceError(requestId, 'getAirstripForDecisionById (fallback disabled)');
+  }
+
   const found = fallbackAirstrips.find((s) => Number(s.id) === id);
-  return found ? normalizeAirstripRow(found) : null;
+  return {
+    airstrip: found ? normalizeAirstripRow(found) : null,
+    source: 'fallback',
+  };
 }
 
 /**
  * Retrieves multiple airstrips by ID for comparison, reporting any missing IDs.
  *
  * @param {number[]} airstripIds
- * @returns {Promise<{ airstrips: Array<Object>, missingIds: number[] }>}
+ * @param {{ requestId?: string }} [options]
+ * @returns {Promise<{ airstrips: Array<Object>, missingIds: number[], source: 'database' | 'fallback' }>}
  */
-async function getAirstripsForDecisionByIds(airstripIds) {
-  const all = await listAirstripsForDecision();
-  const byId = new Map(all.map((s) => [s.id, s]));
+async function getAirstripsForDecisionByIds(airstripIds, options = {}) {
+  const { requestId } = options;
+  const normalizedIds = airstripIds.map((id) => Number(id));
+
+  let rowsById;
+  let source;
+
+  if (config.database.isConfigured) {
+    try {
+      const result = await query(
+        `${AIRSTRIP_DECISION_SQL} WHERE a.id = ANY($1::int[]) ORDER BY a.id ASC`,
+        [normalizedIds]
+      );
+      const rows = ((result && result.rows) || []).map(normalizeAirstripRow);
+      rowsById = new Map(rows.map((s) => [s.id, s]));
+      source = 'database';
+    } catch (err) {
+      throw createDbServiceError(requestId, 'getAirstripsForDecisionByIds', err);
+    }
+  } else if (config.allowFallback) {
+    const all = fallbackAirstrips.map(normalizeAirstripRow);
+    rowsById = new Map(all.map((s) => [s.id, s]));
+    source = 'fallback';
+  } else {
+    throw createDbServiceError(requestId, 'getAirstripsForDecisionByIds (fallback disabled)');
+  }
+
   const airstrips = [];
   const missingIds = [];
 
-  for (const id of airstripIds) {
-    const strip = byId.get(Number(id));
+  for (const id of normalizedIds) {
+    const strip = rowsById.get(id);
     if (strip) {
       airstrips.push(strip);
     } else {
-      missingIds.push(Number(id));
+      missingIds.push(id);
     }
   }
 
-  return { airstrips, missingIds };
+  return { airstrips, missingIds, source };
 }
 
 module.exports = {

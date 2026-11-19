@@ -2,6 +2,7 @@
 
 const express = require('express');
 const { query } = require('../db');
+const config = require('../../../../server/src/config/env');
 const { calculateFeasibilityScore } = require('../scoring');
 const fallbackAirstrips = require('../data/airstripsFallback.json');
 const {
@@ -12,6 +13,23 @@ const {
 } = require('../decision');
 
 const router = express.Router();
+
+function createAirstripsDbError(requestId, context, err) {
+  console.error('[AeroGrid Airstrips Route DB Error]:', {
+    requestId: requestId || null,
+    context,
+    message: err ? err.message : 'Database is not configured and ALLOW_FALLBACK is false.',
+  });
+  const serviceErr = new Error(
+    err
+      ? 'Database query failed while loading airstrips.'
+      : 'Database is not configured and fallback mode is disabled.'
+  );
+  serviceErr.status = 503;
+  serviceErr.error = 'Service Unavailable';
+  if (err) serviceErr.cause = err;
+  return serviceErr;
+}
 
 /**
  * Validates and loads an optional `?aircraft_id=<id>` query parameter so callers
@@ -37,10 +55,11 @@ async function resolveOptionalAircraftQuery(req, res) {
     return { aircraft: null, handled: true };
   }
 
-  const aircraft = await getAircraftProfileById(parsed);
+  const { aircraft, source } = await getAircraftProfileById(parsed, { requestId: req.id });
   if (!aircraft) {
     res.status(404).json({
       error: `Aircraft profile #${parsed} not found`,
+      data_source: source,
       caveat: CAVEAT_TEXT,
     });
     return { aircraft: null, handled: true };
@@ -131,55 +150,58 @@ router.get('/airstrips', async (req, res, next) => {
 
     const { state, surface, min_score, political_severity, search } = req.query;
     let rows = null;
+    let dataSource = null;
 
-    try {
-      const sql = `
-        SELECT 
-          a.id,
-          a.name,
-          s.name AS state_name,
-          o.name AS ownership_name,
-          f.name AS surface_name,
-          ST_X(a.location) AS longitude,
-          ST_Y(a.location) AS latitude,
-          a.elevation_m,
-          a.runway_length_m,
-          a.runway_width_m,
-          a.night_landing,
-          a.fuel_available,
-          a.charging_available,
-          COALESCE(a.political_severity, 'none') AS political_severity,
-          COALESCE(a.disruption_type, 'No Disruption') AS disruption_type,
-          a.political_details,
-          nearest.code AS nearest_airport_code,
-          nearest.name AS nearest_airport_name,
-          ROUND((nearest.distance_m / 1000.0)::numeric, 1) AS nearest_airport_distance_km
-        FROM airstrips a
-        LEFT JOIN states s ON a.state_id = s.id
-        LEFT JOIN ownership_types o ON a.ownership_id = o.id
-        LEFT JOIN surface_types f ON a.surface_id = f.id
-        LEFT JOIN LATERAL (
+    if (config.database.isConfigured) {
+      try {
+        const sql = `
           SELECT 
-            ap.code,
-            ap.name,
-            ST_Distance(a.location::geography, ap.location::geography) AS distance_m
-          FROM airports ap
-          ORDER BY a.location <-> ap.location
-          LIMIT 1
-        ) nearest ON true
-        ORDER BY a.name ASC;
-      `;
+            a.id,
+            a.name,
+            s.name AS state_name,
+            o.name AS ownership_name,
+            f.name AS surface_name,
+            ST_X(a.location) AS longitude,
+            ST_Y(a.location) AS latitude,
+            a.elevation_m,
+            a.runway_length_m,
+            a.runway_width_m,
+            a.night_landing,
+            a.fuel_available,
+            a.charging_available,
+            COALESCE(a.political_severity, 'none') AS political_severity,
+            COALESCE(a.disruption_type, 'No Disruption') AS disruption_type,
+            a.political_details,
+            nearest.code AS nearest_airport_code,
+            nearest.name AS nearest_airport_name,
+            ROUND((nearest.distance_m / 1000.0)::numeric, 1) AS nearest_airport_distance_km
+          FROM airstrips a
+          LEFT JOIN states s ON a.state_id = s.id
+          LEFT JOIN ownership_types o ON a.ownership_id = o.id
+          LEFT JOIN surface_types f ON a.surface_id = f.id
+          LEFT JOIN LATERAL (
+            SELECT 
+              ap.code,
+              ap.name,
+              ST_Distance(a.location::geography, ap.location::geography) AS distance_m
+            FROM airports ap
+            ORDER BY a.location <-> ap.location
+            LIMIT 1
+          ) nearest ON true
+          ORDER BY a.name ASC;
+        `;
 
-      const result = await query(sql);
-      if (result && result.rows && result.rows.length > 0) {
-        rows = result.rows;
+        const result = await query(sql);
+        rows = (result && result.rows) || [];
+        dataSource = 'database';
+      } catch (err) {
+        return next(createAirstripsDbError(req.id, 'GET /airstrips', err));
       }
-    } catch {
-      // Database not connected or columns not present; fallback gracefully
-    }
-
-    if (!rows || rows.length === 0) {
+    } else if (config.allowFallback) {
       rows = fallbackAirstrips;
+      dataSource = 'fallback';
+    } else {
+      return next(createAirstripsDbError(req.id, 'GET /airstrips (fallback disabled)'));
     }
 
     let features = rows.map((row) =>
@@ -235,6 +257,7 @@ router.get('/airstrips', async (req, res, next) => {
       type: 'FeatureCollection',
       count: features.length,
       features,
+      data_source: dataSource,
       caveat: CAVEAT_TEXT,
     });
   } catch (err) {
@@ -260,59 +283,66 @@ router.get('/airstrips/:id', async (req, res, next) => {
     if (handled) return;
 
     let row = null;
-    try {
-      const sql = `
-        SELECT 
-          a.id,
-          a.name,
-          s.name AS state_name,
-          o.name AS ownership_name,
-          f.name AS surface_name,
-          ST_X(a.location) AS longitude,
-          ST_Y(a.location) AS latitude,
-          a.elevation_m,
-          a.runway_length_m,
-          a.runway_width_m,
-          a.night_landing,
-          a.fuel_available,
-          a.charging_available,
-          COALESCE(a.political_severity, 'none') AS political_severity,
-          COALESCE(a.disruption_type, 'No Disruption') AS disruption_type,
-          a.political_details,
-          nearest.code AS nearest_airport_code,
-          nearest.name AS nearest_airport_name,
-          ROUND((nearest.distance_m / 1000.0)::numeric, 1) AS nearest_airport_distance_km
-        FROM airstrips a
-        LEFT JOIN states s ON a.state_id = s.id
-        LEFT JOIN ownership_types o ON a.ownership_id = o.id
-        LEFT JOIN surface_types f ON a.surface_id = f.id
-        LEFT JOIN LATERAL (
-          SELECT 
-            ap.code,
-            ap.name,
-            ST_Distance(a.location::geography, ap.location::geography) AS distance_m
-          FROM airports ap
-          ORDER BY a.location <-> ap.location
-          LIMIT 1
-        ) nearest ON true
-        WHERE a.id = $1
-        LIMIT 1;
-      `;
-      const result = await query(sql, [id]);
-      if (result && result.rows && result.rows.length > 0) {
-        row = result.rows[0];
-      }
-    } catch {
-      // Fallback lookup
-    }
+    let dataSource = null;
 
-    if (!row) {
-      row = fallbackAirstrips.find((item) => Number(item.id) === id);
+    if (config.database.isConfigured) {
+      try {
+        const sql = `
+          SELECT 
+            a.id,
+            a.name,
+            s.name AS state_name,
+            o.name AS ownership_name,
+            f.name AS surface_name,
+            ST_X(a.location) AS longitude,
+            ST_Y(a.location) AS latitude,
+            a.elevation_m,
+            a.runway_length_m,
+            a.runway_width_m,
+            a.night_landing,
+            a.fuel_available,
+            a.charging_available,
+            COALESCE(a.political_severity, 'none') AS political_severity,
+            COALESCE(a.disruption_type, 'No Disruption') AS disruption_type,
+            a.political_details,
+            nearest.code AS nearest_airport_code,
+            nearest.name AS nearest_airport_name,
+            ROUND((nearest.distance_m / 1000.0)::numeric, 1) AS nearest_airport_distance_km
+          FROM airstrips a
+          LEFT JOIN states s ON a.state_id = s.id
+          LEFT JOIN ownership_types o ON a.ownership_id = o.id
+          LEFT JOIN surface_types f ON a.surface_id = f.id
+          LEFT JOIN LATERAL (
+            SELECT 
+              ap.code,
+              ap.name,
+              ST_Distance(a.location::geography, ap.location::geography) AS distance_m
+            FROM airports ap
+            ORDER BY a.location <-> ap.location
+            LIMIT 1
+          ) nearest ON true
+          WHERE a.id = $1
+          LIMIT 1;
+        `;
+        const result = await query(sql, [id]);
+        if (result && result.rows && result.rows.length > 0) {
+          row = result.rows[0];
+        }
+        dataSource = 'database';
+      } catch (err) {
+        return next(createAirstripsDbError(req.id, 'GET /airstrips/:id', err));
+      }
+    } else if (config.allowFallback) {
+      row = fallbackAirstrips.find((item) => Number(item.id) === id) || null;
+      dataSource = 'fallback';
+    } else {
+      return next(createAirstripsDbError(req.id, 'GET /airstrips/:id (fallback disabled)'));
     }
 
     if (!row) {
       return res.status(404).json({
         error: `Airstrip #${id} not found`,
+        data_source: dataSource,
         caveat: CAVEAT_TEXT,
       });
     }
@@ -320,6 +350,7 @@ router.get('/airstrips/:id', async (req, res, next) => {
     const feature = attachOptionalDecision(rowToFeature(row), row, aircraft);
     return res.status(200).json({
       ...feature,
+      data_source: dataSource,
       caveat: CAVEAT_TEXT,
     });
   } catch (err) {
