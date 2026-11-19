@@ -93,6 +93,7 @@ app.use('/api', geoRoutes);
 app.use('/api', assetRoutes);
 
 // Direct root fallbacks for Catalyst serverless routing
+app.use(authRoutes);
 app.use(decisionRoutes);
 app.use(spatialRoutes);
 app.use(airstripsRoutes);
@@ -120,7 +121,8 @@ app.use((err, req, res, next) => {
   });
 
   res.status(status).json({
-    error: status === 500 ? 'Internal Server Error' : err.message,
+    error: status === 500 ? 'Internal Server Error' : (err.error || err.message),
+    message: err.message,
     requestId: req.id,
     timestamp: new Date().toISOString(),
   });
