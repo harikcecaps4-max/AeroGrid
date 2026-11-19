@@ -2,12 +2,31 @@
 
 const express = require('express');
 const { z } = require('zod');
-const { query } = require('../../../functions/aerogrid_api/src/db');
+const { query } = require('../db');
+const config = require('../config/env');
+const fallbackAirstrips = require('../data/airstripsFallback.json');
 const { validateRequest } = require('../middleware/validate');
 const { authenticateToken, requireRole } = require('../middleware/auth');
 const { logAudit } = require('../services/auditService');
 
 const router = express.Router();
+
+function createAssetDbError(requestId, context, err) {
+  console.error('[AeroGrid Asset Route DB Error]:', {
+    requestId: requestId || null,
+    context,
+    message: err ? err.message : 'Database is not configured and ALLOW_FALLBACK is false.',
+  });
+  const serviceErr = new Error(
+    err
+      ? 'Database query failed while processing asset request.'
+      : 'Database is not configured and fallback mode is disabled.'
+  );
+  serviceErr.status = 503;
+  serviceErr.error = 'Service Unavailable';
+  if (err) serviceErr.cause = err;
+  return serviceErr;
+}
 
 // Fallback in-memory assets store
 let inMemoryAssets = [
@@ -73,8 +92,32 @@ let inMemoryAssets = [
   },
 ];
 
+const ASSET_STATUS_ENUM = [
+  'operational',
+  'maintenance_required',
+  'under_repair',
+  'decommissioned',
+  'planned',
+];
+
+const CONDITION_GRADE_ENUM = ['excellent', 'good', 'fair', 'poor', 'critical'];
+
+const positiveIntParam = (fieldName) =>
+  z.preprocess(
+    (val) => (typeof val === 'string' && /^\d+$/.test(val.trim()) ? Number(val.trim()) : val),
+    z.number({ message: `Invalid ${fieldName}` }).int().positive(`Invalid ${fieldName}`)
+  );
+
+const airstripIdParamSchema = z.object({
+  airstripId: positiveIntParam('airstrip ID'),
+});
+
+const assetIdParamSchema = z.object({
+  id: positiveIntParam('asset ID'),
+});
+
 const assetCreateSchema = z.object({
-  name: z.string().min(2, 'Asset name is required'),
+  name: z.string().trim().min(2, 'Asset name is required'),
   asset_type: z.enum([
     'hangar',
     'fuel_point',
@@ -85,55 +128,77 @@ const assetCreateSchema = z.object({
     'weather_station',
     'security_fence',
   ]),
-  status: z.enum(['operational', 'maintenance_required', 'under_repair', 'decommissioned', 'planned']).default('operational'),
-  condition_grade: z.enum(['excellent', 'good', 'fair', 'poor', 'critical']).default('good'),
+  status: z.enum(ASSET_STATUS_ENUM).default('operational'),
+  condition_grade: z.enum(CONDITION_GRADE_ENUM).default('good'),
   quantity: z.number().int().positive().default(1),
-  capacity_spec: z.string().optional(),
-  notes: z.string().optional(),
+  capacity_spec: z.string().max(255, 'capacity_spec cannot exceed 255 characters').optional(),
+  notes: z.string().max(500, 'Notes cannot exceed 500 characters').optional(),
 });
 
-const assetUpdateSchema = assetCreateSchema.partial();
+const assetStatusPatchSchema = z
+  .object({
+    status: z.enum(ASSET_STATUS_ENUM).optional(),
+    condition_grade: z.enum(CONDITION_GRADE_ENUM).optional(),
+    notes: z.string().max(500, 'Notes cannot exceed 500 characters').optional(),
+  })
+  .refine(
+    (data) =>
+      data.status !== undefined ||
+      data.condition_grade !== undefined ||
+      data.notes !== undefined,
+    {
+      message: 'At least one field (status, condition_grade, notes) is required.',
+    }
+  );
 
 /**
  * GET /api/airstrips/:airstripId/assets
  * Lists all assets linked to an airstrip
  */
-router.get('/airstrips/:airstripId/assets', async (req, res, next) => {
-  try {
-    const airstripId = parseInt(req.params.airstripId, 10);
-    if (isNaN(airstripId)) {
-      return res.status(400).json({ error: 'Invalid airstrip ID' });
-    }
-
-    let rows = null;
+router.get(
+  '/airstrips/:airstripId/assets',
+  authenticateToken,
+  requireRole('viewer'),
+  validateRequest({ params: airstripIdParamSchema }),
+  async (req, res, next) => {
     try {
-      const sql = `
-        SELECT id, airstrip_id, name, asset_type, status, condition_grade, quantity, capacity_spec, notes, created_at, updated_at
-        FROM assets
-        WHERE airstrip_id = $1
-        ORDER BY created_at ASC;
-      `;
-      const result = await query(sql, [airstripId]);
-      if (result && result.rows) {
-        rows = result.rows;
+      const airstripId = Number(req.params.airstripId);
+
+      let rows = null;
+      let dataSource = null;
+
+      if (config.database.isConfigured) {
+        try {
+          const sql = `
+            SELECT id, airstrip_id, name, asset_type, status, condition_grade, quantity, capacity_spec, notes, created_at, updated_at
+            FROM assets
+            WHERE airstrip_id = $1
+            ORDER BY created_at ASC;
+          `;
+          const result = await query(sql, [airstripId]);
+          rows = (result && result.rows) || [];
+          dataSource = 'database';
+        } catch (err) {
+          return next(createAssetDbError(req.id, 'GET /airstrips/:airstripId/assets', err));
+        }
+      } else if (config.allowFallback) {
+        rows = inMemoryAssets.filter((a) => a.airstrip_id === airstripId);
+        dataSource = 'fallback';
+      } else {
+        return next(createAssetDbError(req.id, 'GET /airstrips/:airstripId/assets (fallback disabled)'));
       }
-    } catch {
-      // In-memory fallback
-    }
 
-    if (!rows) {
-      rows = inMemoryAssets.filter((a) => a.airstrip_id === airstripId);
+      return res.status(200).json({
+        airstrip_id: airstripId,
+        count: rows.length,
+        assets: rows,
+        data_source: dataSource,
+      });
+    } catch (err) {
+      next(err);
     }
-
-    return res.status(200).json({
-      airstrip_id: airstripId,
-      count: rows.length,
-      assets: rows,
-    });
-  } catch (err) {
-    next(err);
   }
-});
+);
 
 /**
  * POST /api/airstrips/:airstripId/assets
@@ -143,45 +208,80 @@ router.post(
   '/airstrips/:airstripId/assets',
   authenticateToken,
   requireRole('analyst'),
-  validateRequest({ body: assetCreateSchema }),
+  validateRequest({ params: airstripIdParamSchema, body: assetCreateSchema }),
   async (req, res, next) => {
     try {
-      const airstripId = parseInt(req.params.airstripId, 10);
+      const airstripId = Number(req.params.airstripId);
       const data = req.body;
 
       let createdAsset = null;
-      try {
-        const sql = `
-          INSERT INTO assets (airstrip_id, name, asset_type, status, condition_grade, quantity, capacity_spec, notes)
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-          RETURNING *;
-        `;
-        const result = await query(sql, [
-          airstripId,
-          data.name,
-          data.asset_type,
-          data.status,
-          data.condition_grade,
-          data.quantity,
-          data.capacity_spec || null,
-          data.notes || null,
-        ]);
-        if (result && result.rows && result.rows.length > 0) {
-          createdAsset = result.rows[0];
-        }
-      } catch {
-        // In-memory fallback
-      }
+      let dataSource = null;
 
-      if (!createdAsset) {
+      if (config.database.isConfigured) {
+        try {
+          const stripCheck = await query('SELECT id FROM airstrips WHERE id = $1 LIMIT 1', [airstripId]);
+          if (!stripCheck || !stripCheck.rows || stripCheck.rows.length === 0) {
+            return res.status(404).json({
+              error: 'Not Found',
+              message: `Airstrip #${airstripId} not found.`,
+              data_source: 'database',
+            });
+          }
+
+          const sql = `
+            INSERT INTO assets (airstrip_id, name, asset_type, status, condition_grade, quantity, capacity_spec, notes)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            RETURNING *;
+          `;
+          const result = await query(sql, [
+            airstripId,
+            data.name,
+            data.asset_type,
+            data.status,
+            data.condition_grade,
+            data.quantity,
+            data.capacity_spec || null,
+            data.notes || null,
+          ]);
+          if (result && result.rows && result.rows.length > 0) {
+            createdAsset = result.rows[0];
+            dataSource = 'database';
+          }
+        } catch (err) {
+          return next(createAssetDbError(req.id, 'POST /airstrips/:airstripId/assets', err));
+        }
+
+        if (!createdAsset) {
+          return next(
+            createAssetDbError(
+              req.id,
+              'POST /airstrips/:airstripId/assets',
+              new Error('Asset insert returned no persisted row.')
+            )
+          );
+        }
+      } else if (config.allowFallback) {
+        const stripExists = fallbackAirstrips.some((s) => Number(s.id) === airstripId);
+        if (!stripExists) {
+          return res.status(404).json({
+            error: 'Not Found',
+            message: `Airstrip #${airstripId} not found.`,
+            data_source: 'fallback',
+          });
+        }
+
+        const maxId = inMemoryAssets.reduce((max, a) => Math.max(max, Number(a.id) || 0), 0);
         createdAsset = {
-          id: inMemoryAssets.length + 1,
+          id: maxId + 1,
           airstrip_id: airstripId,
           ...data,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         };
         inMemoryAssets.push(createdAsset);
+        dataSource = 'fallback';
+      } else {
+        return next(createAssetDbError(req.id, 'POST /airstrips/:airstripId/assets (fallback disabled)'));
       }
 
       await logAudit({
@@ -197,6 +297,7 @@ router.post(
       return res.status(201).json({
         message: 'Asset recorded successfully',
         asset: createdAsset,
+        data_source: dataSource,
       });
     } catch (err) {
       next(err);
@@ -212,52 +313,66 @@ router.patch(
   '/assets/:id/status',
   authenticateToken,
   requireRole('analyst'),
+  validateRequest({ params: assetIdParamSchema, body: assetStatusPatchSchema }),
   async (req, res, next) => {
     try {
-      const id = parseInt(req.params.id, 10);
+      const id = Number(req.params.id);
       const { status, condition_grade, notes } = req.body;
 
-      if (!status && !condition_grade && !notes) {
-        return res.status(400).json({ error: 'At least one field (status, condition_grade, notes) required.' });
-      }
-
       let updated = null;
-      try {
-        const sql = `
-          UPDATE assets
-          SET status = COALESCE($1, status),
-              condition_grade = COALESCE($2, condition_grade),
-              notes = COALESCE($3, notes),
-              updated_at = now()
-          WHERE id = $4
-          RETURNING *;
-        `;
-        const result = await query(sql, [status, condition_grade, notes, id]);
-        if (result && result.rows && result.rows.length > 0) {
-          updated = result.rows[0];
-        }
-      } catch {
-        // In-memory fallback
-      }
+      let dataSource = null;
 
-      if (!updated) {
+      if (config.database.isConfigured) {
+        try {
+          const sql = `
+            UPDATE assets
+            SET status = COALESCE($1, status),
+                condition_grade = COALESCE($2, condition_grade),
+                notes = COALESCE($3, notes),
+                updated_at = now()
+            WHERE id = $4
+            RETURNING *;
+          `;
+          const result = await query(sql, [status ?? null, condition_grade ?? null, notes ?? null, id]);
+          if (result && result.rows && result.rows.length > 0) {
+            updated = result.rows[0];
+          }
+          dataSource = 'database';
+        } catch (err) {
+          return next(createAssetDbError(req.id, 'PATCH /assets/:id/status', err));
+        }
+      } else if (config.allowFallback) {
         const item = inMemoryAssets.find((a) => a.id === id);
         if (item) {
-          if (status) item.status = status;
-          if (condition_grade) item.condition_grade = condition_grade;
-          if (notes) item.notes = notes;
+          if (status !== undefined) item.status = status;
+          if (condition_grade !== undefined) item.condition_grade = condition_grade;
+          if (notes !== undefined) item.notes = notes;
           item.updated_at = new Date().toISOString();
           updated = item;
         }
+        dataSource = 'fallback';
+      } else {
+        return next(createAssetDbError(req.id, 'PATCH /assets/:id/status (fallback disabled)'));
       }
 
       if (!updated) {
-        return res.status(404).json({ error: 'Asset not found' });
+        return res.status(404).json({ error: 'Asset not found', data_source: dataSource });
       }
+
+      await logAudit({
+        userId: req.user.id,
+        userEmail: req.user.email,
+        action: 'ASSET_CHANGE',
+        entityType: 'ASSET',
+        entityId: updated.id,
+        changes: { status, condition_grade, notes, updated },
+        ipAddress: req.ip,
+      });
 
       return res.status(200).json({
         message: 'Asset status updated successfully',
         asset: updated,
+        data_source: dataSource,
       });
     } catch (err) {
       next(err);

@@ -1,5 +1,7 @@
 'use strict';
 
+process.env.NODE_ENV = 'test';
+
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
@@ -328,3 +330,100 @@ test('landing-governed aircraft, DB column aliases, zero catchment, custom range
   assert.equal(nullEval.score, 0);
   assert.equal(nullEval.caveat, CAVEAT_TEXT);
 });
+
+test('normalizeAirstripRow and normalizeAircraftRow preserve null utility/political fields and engine treats null as unknown condition', () => {
+  const { normalizeAirstripRow, normalizeAircraftRow } = require('../services/decisionDataService');
+
+  const normStrip = normalizeAirstripRow({
+    id: 50,
+    name: 'Unverified Utility Strip',
+    state_name: 'Karnataka',
+    surface_name: 'asphalt',
+    elevation_m: 100,
+    runway_length_m: 1500,
+    fuel_available: null,
+    charging_available: null,
+    night_landing: null,
+    political_severity: null,
+  });
+
+  assert.equal(normStrip.fuel_available, null);
+  assert.equal(normStrip.charging_available, null);
+  assert.equal(normStrip.night_landing, null);
+  assert.equal(normStrip.political_severity, null);
+
+  const normAircraft = normalizeAircraftRow({
+    id: 10,
+    name: 'Unverified Aircraft',
+    category: 'stol',
+    takeoff_distance_m: 400,
+    landing_distance_m: 350,
+    needs_charging: null,
+    allowed_surfaces: ['asphalt'],
+  });
+  assert.equal(normAircraft.needs_charging, null);
+
+  // Unknown fuel_available (null) emits "charging/fuel availability unverified" and yields viable_with_conditions
+  const unverifiedFuelEval = evaluateAirstrip(VERIFIED_AIRCRAFT, {
+    ...IDEAL_AIRSTRIP,
+    fuel_available: null,
+  });
+  assert.equal(unverifiedFuelEval.verdict, 'viable_with_conditions');
+  assert.ok(
+    unverifiedFuelEval.warnings.some((w) => /charging\/fuel availability unverified/i.test(w)),
+  );
+  assert.ok(
+    !unverifiedFuelEval.warnings.some((w) => /not currently available on-site/i.test(w)),
+  );
+
+  // Unknown charging_available (null) for electric aircraft emits "charging/fuel availability unverified"
+  const unverifiedChargeEval = evaluateAirstrip(
+    { ...VERIFIED_AIRCRAFT, needs_charging: true },
+    { ...IDEAL_AIRSTRIP, charging_available: null },
+  );
+  assert.equal(unverifiedChargeEval.verdict, 'viable_with_conditions');
+  assert.ok(
+    unverifiedChargeEval.warnings.some((w) => /charging\/fuel availability unverified/i.test(w)),
+  );
+});
+
+test('domain config: turf, dirt, and earth are in unpavedSurfaces, every aircraft allowed_surface exists in surface_types, and NULL gate failures surface insufficient data reason', () => {
+  const { SURFACE_TYPES, AIRCRAFT_PROFILES } = require('../../../db/data/seedData');
+
+  for (const unpaved of ['turf', 'dirt', 'earth']) {
+    assert.ok(
+      DECISION_CONFIG.scoring.unpavedSurfaces.includes(unpaved),
+      `Expected ${unpaved} in DECISION_CONFIG.scoring.unpavedSurfaces`,
+    );
+
+    const evalUnpaved = evaluateAirstrip(
+      { ...VERIFIED_AIRCRAFT, allowed_surfaces: ['asphalt', unpaved] },
+      { ...IDEAL_AIRSTRIP, surface: unpaved },
+    );
+    assert.equal(evalUnpaved.verdict, 'viable_with_conditions');
+    assert.ok(evalUnpaved.warnings.some((w) => /unpaved surface/i.test(w)));
+  }
+
+  const surfaceTypeSet = new Set(SURFACE_TYPES.map((s) => s.toLowerCase()));
+  for (const profile of AIRCRAFT_PROFILES) {
+    for (const surface of profile.allowed_surfaces) {
+      assert.ok(
+        surfaceTypeSet.has(surface.toLowerCase()),
+        `Aircraft "${profile.name}" allowed_surface "${surface}" must exist in surface_types seed data`,
+      );
+    }
+  }
+
+  // NULL gate failure produces explicit "Insufficient data to verify gate" reason text
+  const rankedMissingGate = rankAirstrips(
+    VERIFIED_AIRCRAFT,
+    [{ ...IDEAL_AIRSTRIP, id: 77, name: 'Unmeasured Strip', runway_length_m: null }],
+    { filters: { includeNotViable: true } },
+  );
+  assert.equal(rankedMissingGate.results[0].evaluation.verdict, 'not_viable');
+  assert.ok(
+    rankedMissingGate.results[0].reasons.some((r) => /Insufficient data to verify gate/i.test(r)),
+  );
+});
+
+

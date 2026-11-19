@@ -11,10 +11,10 @@ const seedModule = require('./seed');
 
 const MIGRATIONS_DIR = path.join(__dirname, 'migrations');
 
-test('numbered migrations 001 through 008 exist in sequential order without gaps', () => {
+test('numbered migrations 001 through 009 exist in sequential order without gaps', () => {
   const migrations = discoverMigrations(MIGRATIONS_DIR);
   const versions = migrations.map((m) => m.version);
-  assert.deepEqual(versions, ['001', '002', '003', '004', '005', '006', '007', '008']);
+  assert.deepEqual(versions, ['001', '002', '003', '004', '005', '006', '007', '008', '009']);
   for (const m of migrations) {
     assert.ok(m.checksum.length === 64, `Expected SHA-256 checksum for ${m.filename}`);
   }
@@ -95,6 +95,7 @@ test('008_aircraft_and_decision_fields.sql defines aircraft decision columns, al
 test('seed aircraft profiles are explicitly marked as PLACEHOLDER and missing airstrip fields are NULL with source/confidence', () => {
   assert.equal(seedModule.AIRCRAFT_PROFILES.length, 5);
   const validCategories = new Set(['evtol', 'stol', 'light_fixed_wing', 'turboprop']);
+  const surfaceTypeNames = new Set(seedModule.SURFACE_TYPES.map((s) => (typeof s === 'string' ? s : s.name)));
 
   for (const profile of seedModule.AIRCRAFT_PROFILES) {
     assert.equal(profile.source, 'PLACEHOLDER - verify against manufacturer data');
@@ -106,6 +107,12 @@ test('seed aircraft profiles are explicitly marked as PLACEHOLDER and missing ai
     assert.ok(Number.isInteger(profile.seats) && profile.seats >= 0, `Expected integer seats for ${profile.name}`);
     assert.ok(profile.range_km > 0, `Expected positive range_km for ${profile.name}`);
     assert.ok(Array.isArray(profile.allowed_surfaces) && profile.allowed_surfaces.length > 0, `Expected allowed_surfaces for ${profile.name}`);
+    for (const surface of profile.allowed_surfaces) {
+      assert.ok(
+        surfaceTypeNames.has(surface),
+        `Aircraft ${profile.name} allowed_surface '${surface}' does not exist in surface_types (${[...surfaceTypeNames].join(', ')})`
+      );
+    }
   }
 
   for (const strip of seedModule.AIRSTRIPS) {
@@ -115,5 +122,18 @@ test('seed aircraft profiles are explicitly marked as PLACEHOLDER and missing ai
     assert.equal(strip.data_confidence, 'low');
     assert.match(strip.source, /PLACEHOLDER/);
   }
+});
+
+test('009_integrity_and_indexes.sql defines GiST geography indexes, FK indexes, unique lower(email), and CHECK constraints idempotently', () => {
+  const m009 = fs.readFileSync(path.join(MIGRATIONS_DIR, '009_integrity_and_indexes.sql'), 'utf8');
+
+  assert.match(m009, /CREATE\s+INDEX\s+IF\s+NOT\s+EXISTS\s+idx_airstrips_location_geog\s+ON\s+airstrips\s+USING\s+GIST\s*\(\(location::geography\)\)/i);
+  assert.match(m009, /CREATE\s+INDEX\s+IF\s+NOT\s+EXISTS\s+idx_airports_location\s+ON\s+airports\s+USING\s+GIST\s*\(location\)/i);
+  assert.match(m009, /CREATE\s+INDEX\s+IF\s+NOT\s+EXISTS\s+idx_assets_airstrip_id\s+ON\s+assets\s*\(airstrip_id\)/i);
+  assert.match(m009, /CREATE\s+INDEX\s+IF\s+NOT\s+EXISTS\s+idx_airstrip_access_points_airstrip_id\s+ON\s+airstrip_access_points\s*\(airstrip_id\)/i);
+  assert.match(m009, /CREATE\s+UNIQUE\s+INDEX\s+IF\s+NOT\s+EXISTS\s+uq_users_email_lower\s+ON\s+users\s*\(LOWER\(email\)\)/i);
+  assert.match(m009, /chk_assets_status_valid/i);
+  assert.match(m009, /chk_assets_condition_grade_valid/i);
+  assert.match(m009, /chk_users_role_valid/i);
 });
 

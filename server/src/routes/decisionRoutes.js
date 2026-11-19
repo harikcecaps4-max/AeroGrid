@@ -4,6 +4,7 @@ const express = require('express');
 const { CAVEAT_TEXT } = require('../decision/config');
 const { evaluateAirstrip, rankAirstrips, compareAirstrips } = require('../decision/engine');
 const { validateRequest } = require('../middleware/validate');
+const { authenticateToken, requireRole } = require('../middleware/auth');
 const {
   evaluateRequestSchema,
   rankRequestSchema,
@@ -31,12 +32,13 @@ function sendNotFound(res, error, extra = {}) {
  * GET /api/aircraft
  * Lists available aircraft performance profiles for decision evaluation.
  */
-router.get('/aircraft', async (req, res, next) => {
+router.get('/aircraft', authenticateToken, requireRole('viewer'), async (req, res, next) => {
   try {
-    const aircraft = await listAircraftProfiles();
+    const { aircraft, source } = await listAircraftProfiles({ requestId: req.id });
     return res.status(200).json({
       count: aircraft.length,
       aircraft,
+      data_source: source,
       caveat: CAVEAT_TEXT,
     });
   } catch (err) {
@@ -50,27 +52,37 @@ router.get('/aircraft', async (req, res, next) => {
  */
 router.post(
   '/evaluate',
+  authenticateToken,
+  requireRole('viewer'),
   validateRequest({ body: evaluateRequestSchema }),
   async (req, res, next) => {
     try {
       const { aircraftId, airstripId } = req.body;
-      const [aircraft, airstrip] = await Promise.all([
-        getAircraftProfileById(aircraftId),
-        getAirstripForDecisionById(airstripId),
+      const [aircraftRes, airstripRes] = await Promise.all([
+        getAircraftProfileById(aircraftId, { requestId: req.id }),
+        getAirstripForDecisionById(airstripId, { requestId: req.id }),
       ]);
 
+      const { aircraft } = aircraftRes;
+      const { airstrip, source } = airstripRes;
+
       if (!aircraft) {
-        return sendNotFound(res, `Aircraft profile #${aircraftId} not found`);
+        return sendNotFound(res, `Aircraft profile #${aircraftId} not found`, {
+          data_source: aircraftRes.source,
+        });
       }
 
       if (!airstrip) {
-        return sendNotFound(res, `Airstrip #${airstripId} not found`);
+        return sendNotFound(res, `Airstrip #${airstripId} not found`, {
+          data_source: source,
+        });
       }
 
       const evaluation = evaluateAirstrip(aircraft, airstrip);
       return res.status(200).json({
         aircraft,
         airstrip,
+        data_source: source,
         ...evaluation,
       });
     } catch (err) {
@@ -85,21 +97,28 @@ router.post(
  */
 router.post(
   '/rank',
+  authenticateToken,
+  requireRole('viewer'),
   validateRequest({ body: rankRequestSchema }),
   async (req, res, next) => {
     try {
       const { aircraftId, filters } = req.body;
-      const aircraft = await getAircraftProfileById(aircraftId);
+      const { aircraft, source: aircraftSource } = await getAircraftProfileById(aircraftId, {
+        requestId: req.id,
+      });
 
       if (!aircraft) {
-        return sendNotFound(res, `Aircraft profile #${aircraftId} not found`);
+        return sendNotFound(res, `Aircraft profile #${aircraftId} not found`, {
+          data_source: aircraftSource,
+        });
       }
 
-      const airstrips = await listAirstripsForDecision();
+      const { airstrips, source } = await listAirstripsForDecision({ requestId: req.id });
       const ranked = rankAirstrips(aircraft, airstrips, filters);
       return res.status(200).json({
         ...ranked,
         filters,
+        data_source: source,
       });
     } catch (err) {
       next(err);
@@ -113,29 +132,39 @@ router.post(
  */
 router.post(
   '/compare',
+  authenticateToken,
+  requireRole('viewer'),
   validateRequest({ body: compareRequestSchema }),
   async (req, res, next) => {
     try {
       const { aircraftId, airstripIds } = req.body;
-      const [aircraft, { airstrips, missingIds }] = await Promise.all([
-        getAircraftProfileById(aircraftId),
-        getAirstripsForDecisionByIds(airstripIds),
+      const [aircraftRes, stripsRes] = await Promise.all([
+        getAircraftProfileById(aircraftId, { requestId: req.id }),
+        getAirstripsForDecisionByIds(airstripIds, { requestId: req.id }),
       ]);
 
+      const { aircraft } = aircraftRes;
+      const { airstrips, missingIds, source } = stripsRes;
+
       if (!aircraft) {
-        return sendNotFound(res, `Aircraft profile #${aircraftId} not found`);
+        return sendNotFound(res, `Aircraft profile #${aircraftId} not found`, {
+          data_source: aircraftRes.source,
+        });
       }
 
       if (missingIds.length > 0) {
         return sendNotFound(
           res,
           `Airstrip(s) not found: ${missingIds.join(', ')}`,
-          { missingIds },
+          { missingIds, data_source: source },
         );
       }
 
       const comparison = compareAirstrips(aircraft, airstrips);
-      return res.status(200).json(comparison);
+      return res.status(200).json({
+        ...comparison,
+        data_source: source,
+      });
     } catch (err) {
       next(err);
     }

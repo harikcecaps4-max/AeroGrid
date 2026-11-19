@@ -4,7 +4,7 @@
   "private": true,
   "description": "AeroGrid — Regional eVTOL & Micro-Airstrip GIS Decision-Support Platform",
   "scripts": {
-    "dev": "node server/index.js",
+    "dev": "NODE_ENV=development node server/index.js",
     "start": "node server/index.js",
     "migrate": "node db/migrate.js",
     "migrate:dry-run": "node db/migrate.js --dry-run",
@@ -14,7 +14,7 @@
     "test:db": "node --test db/db.test.js",
     "test:decision": "node --test server/src/decision/engine.test.js",
     "test:api": "node --test server/src/routes/decisionRoutes.test.js",
-    "test": "node --test db/db.test.js server/src/decision/engine.test.js server/src/routes/decisionRoutes.test.js"
+    "test": "node --test db/db.test.js server/src/config/env.test.js server/src/utils/geo.test.js server/src/decision/engine.test.js server/src/routes/decisionRoutes.test.js"
   }
 }
 

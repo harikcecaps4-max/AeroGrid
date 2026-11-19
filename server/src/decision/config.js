@@ -63,7 +63,15 @@ const DECISION_CONFIG = Object.freeze({
       low: 45,
       unverified: 20,
     }),
-    unpavedSurfaces: Object.freeze(['gravel', 'grass', 'laterite', 'unpaved']),
+    unpavedSurfaces: Object.freeze([
+      'gravel',
+      'grass',
+      'laterite',
+      'unpaved',
+      'turf',
+      'dirt',
+      'earth',
+    ]),
     // Floor applied when deducting penalties from data_confidence
     minConfidenceScore: 10,
     catchmentBands: Object.freeze([

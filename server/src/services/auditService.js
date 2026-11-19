@@ -1,6 +1,6 @@
 'use strict';
 
-const { query } = require('../../../functions/aerogrid_api/src/db');
+const { query } = require('../db');
 
 /**
  * Audit Logger Service recording operations to PostgreSQL audit_log table

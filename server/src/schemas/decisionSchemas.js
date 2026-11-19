@@ -22,7 +22,9 @@ const evaluateRequestSchema = z.object({
 
 const rankFiltersSchema = z.object({
   state: z.string().trim().min(1).optional(),
-  surface: z.enum(['asphalt', 'concrete', 'gravel', 'grass', 'laterite', 'unpaved']).optional(),
+  surface: z
+    .enum(['asphalt', 'concrete', 'gravel', 'grass', 'laterite', 'unpaved', 'turf', 'dirt', 'earth'])
+    .optional(),
   ownership: z.enum(['private', 'municipal', 'state', 'central', 'defence', 'psu']).optional(),
   minRunwayLengthM: z.number().positive().max(6000).optional(),
   includeNotViable: z.boolean().optional(),

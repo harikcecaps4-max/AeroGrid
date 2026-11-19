@@ -78,7 +78,13 @@ function buildEntryReasons(airstrip, evaluation) {
   const surfaceGate = evaluation.gates.find((g) => g.name === 'surface_compatibility');
 
   if (evaluation.verdict === 'not_viable') {
-    const failed = evaluation.gates.filter((g) => !g.pass).map((g) => g.explanation);
+    const failed = evaluation.gates
+      .filter((g) => !g.pass)
+      .map((g) =>
+        /missing|null/i.test(g.explanation)
+          ? `Insufficient data to verify gate (${g.name}): ${g.explanation}`
+          : g.explanation
+      );
     return failed.length > 0 ? failed : ['Failed hard operational suitability gate.'];
   }
 
@@ -117,22 +123,41 @@ function evaluateAirstrip(aircraft, airstrip, customConfig) {
   let missingUtilities = false;
   let politicalCondition = false;
 
-  if (safeAircraft.needs_charging === true && safeAirstrip.charging_available !== true) {
+  if (safeAircraft.needs_charging === true) {
+    if (safeAirstrip.charging_available === false) {
+      missingUtilities = true;
+      operationalWarnings.push(
+        'Aircraft requires electric charging, which is not currently installed at this airstrip (mobile/pad charger required).'
+      );
+    } else if (safeAirstrip.charging_available === null || safeAirstrip.charging_available === undefined) {
+      missingUtilities = true;
+      operationalWarnings.push(
+        'Charging/fuel availability unverified: airstrip charging_available is NULL (unknown).'
+      );
+    }
+  } else if (safeAircraft.needs_charging === false) {
+    if (safeAirstrip.fuel_available === false) {
+      missingUtilities = true;
+      operationalWarnings.push(
+        'Aviation fuel is not currently available on-site (tankering or mobile fuel bowser required).'
+      );
+    } else if (safeAirstrip.fuel_available === null || safeAirstrip.fuel_available === undefined) {
+      missingUtilities = true;
+      operationalWarnings.push(
+        'Charging/fuel availability unverified: airstrip fuel_available is NULL (unknown).'
+      );
+    }
+  } else {
     missingUtilities = true;
     operationalWarnings.push(
-      'Aircraft requires electric charging, which is not currently installed at this airstrip (mobile/pad charger required).'
-    );
-  } else if (safeAircraft.needs_charging === false && safeAirstrip.fuel_available !== true) {
-    missingUtilities = true;
-    operationalWarnings.push(
-      'Aviation fuel is not currently available on-site (tankering or mobile fuel bowser required).'
+      'Charging/fuel availability unverified: aircraft needs_charging specification is NULL (unknown).'
     );
   }
 
   const politicalSeverity =
-    typeof safeAirstrip.political_severity === 'string'
+    typeof safeAirstrip.political_severity === 'string' && safeAirstrip.political_severity.trim() !== ''
       ? safeAirstrip.political_severity.trim().toLowerCase()
-      : 'none';
+      : null;
   if (politicalSeverity === 'moderate' || politicalSeverity === 'high') {
     politicalCondition = true;
     const disruption = safeAirstrip.disruption_type || 'jurisdictional or regulatory friction';

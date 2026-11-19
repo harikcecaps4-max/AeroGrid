@@ -5,6 +5,8 @@ const { CAVEAT_TEXT } = require('../decision/config');
 /**
  * Validates incoming HTTP requests against a Zod schema.
  * Supports validating body, query, and params.
+ * In Express 5.x, req.query is a getter and cannot be reassigned; parsed query
+ * values are stored on req.validatedQuery.
  */
 function validateRequest({ body: bodySchema, query: querySchema, params: paramsSchema }) {
   return (req, res, next) => {
@@ -13,10 +15,11 @@ function validateRequest({ body: bodySchema, query: querySchema, params: paramsS
         req.body = bodySchema.parse(req.body);
       }
       if (querySchema) {
-        req.query = querySchema.parse(req.query);
+        req.validatedQuery = querySchema.parse(req.query);
       }
       if (paramsSchema) {
-        req.params = paramsSchema.parse(req.params);
+        req.validatedParams = paramsSchema.parse(req.params);
+        req.params = req.validatedParams;
       }
       next();
     } catch (err) {
