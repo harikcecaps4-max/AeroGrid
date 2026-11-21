@@ -11,10 +11,10 @@ const seedModule = require('./seed');
 
 const MIGRATIONS_DIR = path.join(__dirname, 'migrations');
 
-test('numbered migrations 001 through 009 exist in sequential order without gaps', () => {
+test('numbered migrations 001 through 012 exist in sequential order without gaps', () => {
   const migrations = discoverMigrations(MIGRATIONS_DIR);
   const versions = migrations.map((m) => m.version);
-  assert.deepEqual(versions, ['001', '002', '003', '004', '005', '006', '007', '008', '009']);
+  assert.deepEqual(versions, ['001', '002', '003', '004', '005', '006', '007', '008', '009', '010', '011', '012']);
   for (const m of migrations) {
     assert.ok(m.checksum.length === 64, `Expected SHA-256 checksum for ${m.filename}`);
   }
@@ -75,21 +75,23 @@ test('CLI migrate.js --dry-run and seed.js --dry-run execute cleanly with exit c
   assert.match(seedOut, /AeroGrid Seed Data Validation \(DRY-RUN\)/i);
 });
 
-test('008_aircraft_and_decision_fields.sql defines aircraft decision columns, allowed_surfaces, and nullable airstrip confidence fields', () => {
-  const m008 = fs.readFileSync(path.join(MIGRATIONS_DIR, '008_aircraft_and_decision_fields.sql'), 'utf8');
-
-  for (const col of ['takeoff_distance_m', 'landing_distance_m', 'mtow_kg', 'seats', 'allowed_surfaces', 'source', 'notes']) {
+test('restored 008-012 migrations define runways, capability views, provenance, and production hardening', () => {
+  const read = (f) => fs.readFileSync(path.join(MIGRATIONS_DIR, f), 'utf8');
+  const m008 = read('008_normalize_core.sql');
+  assert.match(m008, /CREATE\s+TABLE\s+IF\s+NOT\s+EXISTS\s+runways/i);
+  assert.match(m008, /uq_runways_one_primary/i);
+  assert.match(m008, /v_airstrip_primary_runway/i);
+  assert.match(m008, /v_airstrip_capabilities/i);
+  for (const col of ['needs_paved', 'energy_type', 'spec_status', 'cruise_speed_kmh']) {
     assert.match(m008, new RegExp(`\\b${col}\\b`, 'i'), `Expected aircraft_profiles column ${col} in 008`);
   }
-  assert.match(m008, /chk_aircraft_category_valid/i);
-  assert.match(m008, /'evtol',\s*'stol',\s*'light_fixed_wing',\s*'turboprop'/i);
-
-  for (const col of ['terrain_risk', 'catchment_population', 'last_mile_access_km', 'data_confidence', 'source', 'verified_at']) {
-    assert.match(m008, new RegExp(`\\b${col}\\b`, 'i'), `Expected airstrips column ${col} in 008`);
-  }
-  assert.match(m008, /chk_airstrip_terrain_risk/i);
-  assert.match(m008, /chk_airstrip_data_confidence/i);
-  assert.match(m008, /PLACEHOLDER - verify against manufacturer data/);
+  const m009 = read('009_integrity_and_audit.sql');
+  assert.match(m009, /chk_users_password_is_bcrypt/i);
+  assert.match(m009, /chk_users_email_format/i);
+  assert.match(m009, /fn_audit_row_hash/i);
+  assert.match(read('010_provenance_and_decisions.sql'), /chk_airstrips_data_status/i);
+  assert.match(read('011_organizations_and_requests.sql'), /organizations/i);
+  assert.match(read('012_neon_production_hardening.sql'), /idx_airstrips_location_geog/i);
 });
 
 test('seed aircraft profiles are explicitly marked as PLACEHOLDER and missing airstrip fields are NULL with source/confidence', () => {
@@ -123,17 +125,3 @@ test('seed aircraft profiles are explicitly marked as PLACEHOLDER and missing ai
     assert.match(strip.source, /PLACEHOLDER/);
   }
 });
-
-test('009_integrity_and_indexes.sql defines GiST geography indexes, FK indexes, unique lower(email), and CHECK constraints idempotently', () => {
-  const m009 = fs.readFileSync(path.join(MIGRATIONS_DIR, '009_integrity_and_indexes.sql'), 'utf8');
-
-  assert.match(m009, /CREATE\s+INDEX\s+IF\s+NOT\s+EXISTS\s+idx_airstrips_location_geog\s+ON\s+airstrips\s+USING\s+GIST\s*\(\(location::geography\)\)/i);
-  assert.match(m009, /CREATE\s+INDEX\s+IF\s+NOT\s+EXISTS\s+idx_airports_location\s+ON\s+airports\s+USING\s+GIST\s*\(location\)/i);
-  assert.match(m009, /CREATE\s+INDEX\s+IF\s+NOT\s+EXISTS\s+idx_assets_airstrip_id\s+ON\s+assets\s*\(airstrip_id\)/i);
-  assert.match(m009, /CREATE\s+INDEX\s+IF\s+NOT\s+EXISTS\s+idx_airstrip_access_points_airstrip_id\s+ON\s+airstrip_access_points\s*\(airstrip_id\)/i);
-  assert.match(m009, /CREATE\s+UNIQUE\s+INDEX\s+IF\s+NOT\s+EXISTS\s+uq_users_email_lower\s+ON\s+users\s*\(LOWER\(email\)\)/i);
-  assert.match(m009, /chk_assets_status_valid/i);
-  assert.match(m009, /chk_assets_condition_grade_valid/i);
-  assert.match(m009, /chk_users_role_valid/i);
-});
-

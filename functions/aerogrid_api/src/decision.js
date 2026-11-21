@@ -27,6 +27,7 @@ const {
   listAirstripsForDecision,
   getAirstripForDecisionById,
   normalizeAirstripRow,
+  AIRSTRIP_DECISION_SQL,
 } = require('../../../server/src/services/decisionDataService');
 
 module.exports = {
@@ -41,4 +42,5 @@ module.exports = {
   listAirstripsForDecision,
   getAirstripForDecisionById,
   normalizeAirstripRow,
+  AIRSTRIP_DECISION_SQL,
 };

@@ -10,6 +10,7 @@ const {
   evaluateAirstrip,
   getAircraftProfileById,
   normalizeAirstripRow,
+  AIRSTRIP_DECISION_SQL,
 } = require('../decision');
 
 const router = express.Router();
@@ -154,42 +155,8 @@ router.get('/airstrips', async (req, res, next) => {
 
     if (config.database.isConfigured) {
       try {
-        const sql = `
-          SELECT 
-            a.id,
-            a.name,
-            s.name AS state_name,
-            o.name AS ownership_name,
-            f.name AS surface_name,
-            ST_X(a.location) AS longitude,
-            ST_Y(a.location) AS latitude,
-            a.elevation_m,
-            a.runway_length_m,
-            a.runway_width_m,
-            a.night_landing,
-            a.fuel_available,
-            a.charging_available,
-            COALESCE(a.political_severity, 'none') AS political_severity,
-            COALESCE(a.disruption_type, 'No Disruption') AS disruption_type,
-            a.political_details,
-            nearest.code AS nearest_airport_code,
-            nearest.name AS nearest_airport_name,
-            ROUND((nearest.distance_m / 1000.0)::numeric, 1) AS nearest_airport_distance_km
-          FROM airstrips a
-          LEFT JOIN states s ON a.state_id = s.id
-          LEFT JOIN ownership_types o ON a.ownership_id = o.id
-          LEFT JOIN surface_types f ON a.surface_id = f.id
-          LEFT JOIN LATERAL (
-            SELECT 
-              ap.code,
-              ap.name,
-              ST_Distance(a.location::geography, ap.location::geography) AS distance_m
-            FROM airports ap
-            ORDER BY a.location <-> ap.location
-            LIMIT 1
-          ) nearest ON true
-          ORDER BY a.name ASC;
-        `;
+        // Shared live-schema query (primary runway, capabilities view, data_status confidence)
+        const sql = `${AIRSTRIP_DECISION_SQL} ORDER BY a.name ASC`;
 
         const result = await query(sql);
         rows = (result && result.rows) || [];
@@ -287,43 +254,8 @@ router.get('/airstrips/:id', async (req, res, next) => {
 
     if (config.database.isConfigured) {
       try {
-        const sql = `
-          SELECT 
-            a.id,
-            a.name,
-            s.name AS state_name,
-            o.name AS ownership_name,
-            f.name AS surface_name,
-            ST_X(a.location) AS longitude,
-            ST_Y(a.location) AS latitude,
-            a.elevation_m,
-            a.runway_length_m,
-            a.runway_width_m,
-            a.night_landing,
-            a.fuel_available,
-            a.charging_available,
-            COALESCE(a.political_severity, 'none') AS political_severity,
-            COALESCE(a.disruption_type, 'No Disruption') AS disruption_type,
-            a.political_details,
-            nearest.code AS nearest_airport_code,
-            nearest.name AS nearest_airport_name,
-            ROUND((nearest.distance_m / 1000.0)::numeric, 1) AS nearest_airport_distance_km
-          FROM airstrips a
-          LEFT JOIN states s ON a.state_id = s.id
-          LEFT JOIN ownership_types o ON a.ownership_id = o.id
-          LEFT JOIN surface_types f ON a.surface_id = f.id
-          LEFT JOIN LATERAL (
-            SELECT 
-              ap.code,
-              ap.name,
-              ST_Distance(a.location::geography, ap.location::geography) AS distance_m
-            FROM airports ap
-            ORDER BY a.location <-> ap.location
-            LIMIT 1
-          ) nearest ON true
-          WHERE a.id = $1
-          LIMIT 1;
-        `;
+        // Shared live-schema query (primary runway, capabilities view, data_status confidence)
+        const sql = `${AIRSTRIP_DECISION_SQL} WHERE a.id = $1 LIMIT 1`;
         const result = await query(sql, [id]);
         if (result && result.rows && result.rows.length > 0) {
           row = result.rows[0];

@@ -426,4 +426,68 @@ test('domain config: turf, dirt, and earth are in unpavedSurfaces, every aircraf
   );
 });
 
+test('live Neon schema mapping: SQL uses primary runway/capabilities views and normalizes aircraft min_runway_m, needs_paved, energy_type, cruise_speed_kmh', () => {
+  const {
+    AIRSTRIP_DECISION_SQL,
+    AIRCRAFT_SQL,
+    normalizeAircraftRow,
+    normalizeAirstripRow,
+  } = require('../services/decisionDataService');
+
+  assert.match(AIRSTRIP_DECISION_SQL, /v_airstrip_primary_runway/);
+  assert.match(AIRSTRIP_DECISION_SQL, /v_airstrip_capabilities/);
+  assert.match(AIRSTRIP_DECISION_SQL, /\ba\.data_status\b/);
+  assert.match(AIRCRAFT_SQL, /\bp\.needs_paved\b/);
+  assert.match(AIRCRAFT_SQL, /\bp\.energy_type\b/);
+  assert.match(AIRCRAFT_SQL, /\bp\.cruise_speed_kmh\b/);
+  assert.match(AIRCRAFT_SQL, /\bp\.spec_status\b/);
+
+  const normAc = normalizeAircraftRow({
+    id: 6,
+    name: 'Electra EL-2 eSTOL',
+    category: 'STOL',
+    min_runway_m: '95',
+    range_km: '800',
+    payload_kg: '900',
+    passengers: 9,
+    needs_charging: true,
+    cruise_speed_kmh: '320',
+    needs_paved: null,
+    energy_type: 'electric',
+    spec_status: 'placeholder',
+    allowed_surfaces: ['asphalt', 'concrete'],
+  });
+  assert.equal(normAc.takeoff_distance_m, 95);
+  assert.equal(normAc.landing_distance_m, 95);
+  assert.equal(normAc.seats, 9);
+  assert.equal(normAc.mtow_kg, null);
+  assert.equal(normAc.needs_paved, null);
+  assert.equal(normAc.energy_type, 'electric');
+  assert.equal(normAc.cruise_speed_kmh, 320);
+  assert.equal(normAc.spec_status, 'placeholder');
+
+  const normStrip = normalizeAirstripRow({
+    id: 1,
+    name: 'Bidar Airstrip',
+    state_name: 'Karnataka',
+    surface_name: 'asphalt',
+    runway_length_m: '2400',
+    elevation_m: '650',
+    fuel_available: true,
+    charging_available: false,
+    night_landing: true,
+    political_severity: 'none',
+    terrain_risk: null,
+    catchment_population: null,
+    last_mile_access_km: null,
+    data_confidence: 'unverified',
+    data_status: 'synthetic',
+  });
+  assert.equal(normStrip.terrain_risk, null);
+  assert.equal(normStrip.catchment_population, null);
+  assert.equal(normStrip.last_mile_access_km, null);
+  assert.equal(normStrip.data_confidence, 'unverified');
+  assert.equal(normStrip.data_status, 'synthetic');
+});
+
 

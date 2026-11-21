@@ -170,7 +170,8 @@ router.get(
       if (config.database.isConfigured) {
         try {
           const sql = `
-            SELECT id, airstrip_id, name, asset_type, status, condition_grade, quantity, capacity_spec, notes, created_at, updated_at
+            SELECT id, airstrip_id, name, asset_type, status, condition_grade, quantity, capacity_spec, notes,
+                   installed_on, last_inspected_on, next_inspection_due, created_at, updated_at
             FROM assets
             WHERE airstrip_id = $1
             ORDER BY created_at ASC;
