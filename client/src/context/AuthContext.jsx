@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
+import { configureApiAuth, login as apiLogin, register as apiRegister } from '../api'
 
 const AuthContext = createContext(null)
 
@@ -8,13 +9,22 @@ const DEMO_USERS = [
   { id: 3, email: 'viewer@aerogrid.dev', role: 'viewer', name: 'Sector Observer', station: 'OBS-READONLY' },
 ]
 
+function buildUserSession(apiUser) {
+  const matchedDemo = DEMO_USERS.find((u) => u.email === apiUser.email)
+  return {
+    ...apiUser,
+    name: matchedDemo?.name || apiUser.name || (apiUser.email ? apiUser.email.split('@')[0] : 'Operator'),
+    station: matchedDemo?.station || 'REMOTE-GIS',
+  }
+}
+
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(() => {
     try {
       const saved = localStorage.getItem('aerogrid_user')
-      return saved ? JSON.parse(saved) : DEMO_USERS[0]
+      return saved ? JSON.parse(saved) : null
     } catch {
-      return DEMO_USERS[0]
+      return null
     }
   })
 
@@ -25,6 +35,27 @@ export function AuthProvider({ children }) {
       return null
     }
   })
+
+  const tokenRef = useRef(token)
+  tokenRef.current = token
+
+  const logout = useCallback(() => {
+    setCurrentUser(null)
+    setToken(null)
+    try {
+      localStorage.removeItem('aerogrid_user')
+      localStorage.removeItem('aerogrid_token')
+    } catch {
+      // ignore storage errors
+    }
+  }, [])
+
+  useEffect(() => {
+    configureApiAuth({
+      getToken: () => tokenRef.current,
+      onUnauthorized: logout,
+    })
+  }, [logout])
 
   useEffect(() => {
     try {
@@ -53,56 +84,49 @@ export function AuthProvider({ children }) {
   function switchRole(roleName) {
     const match = DEMO_USERS.find((u) => u.role === roleName) || DEMO_USERS[0]
     setCurrentUser(match)
+    setToken(null)
   }
 
-  async function loginWithCredentials(email, password, fallbackRole = 'analyst') {
+  async function loginWithCredentials(email, password) {
     const normalizedEmail = (email || '').trim().toLowerCase()
     try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: normalizedEmail, password }),
-      })
-      if (res.ok) {
-        const data = await res.json()
-        if (data?.user) {
-          const matchedDemo = DEMO_USERS.find((u) => u.email === data.user.email)
-          const userSession = {
-            ...data.user,
-            name: matchedDemo?.name || data.user.email.split('@')[0],
-            station: matchedDemo?.station || 'REMOTE-GIS',
-          }
-          setCurrentUser(userSession)
-          setToken(data.token || null)
-          return { ok: true, mode: 'api', user: userSession }
-        }
+      const data = await apiLogin({ email: normalizedEmail, password })
+      if (!data?.user || !data?.token) {
+        return { ok: false, error: 'Invalid authentication response from server.' }
       }
-    } catch {
-      // Fallback to local workstation session when offline
+      const userSession = buildUserSession(data.user)
+      setCurrentUser(userSession)
+      setToken(data.token)
+      return { ok: true, mode: 'api', user: userSession, token: data.token }
+    } catch (err) {
+      return {
+        ok: false,
+        error: err?.message || 'Sign-in failed.',
+        status: err?.status || 0,
+        isUnavailable: Boolean(err?.isUnavailable),
+      }
     }
-
-    const demoMatch = DEMO_USERS.find((u) => u.email === normalizedEmail)
-    if (demoMatch) {
-      setCurrentUser(demoMatch)
-      setToken(null)
-      return { ok: true, mode: 'local', user: demoMatch }
-    }
-
-    const customUser = {
-      id: Date.now(),
-      email: normalizedEmail || `${fallbackRole}@aerogrid.dev`,
-      role: fallbackRole,
-      name: (normalizedEmail.split('@')[0] || fallbackRole).replace(/[^a-zA-Z0-9_-]/g, ' '),
-      station: 'LOCAL-WORKSTATION',
-    }
-    setCurrentUser(customUser)
-    setToken(null)
-    return { ok: true, mode: 'local', user: customUser }
   }
 
-  function logout() {
-    setCurrentUser(null)
-    setToken(null)
+  async function registerWithCredentials(email, password) {
+    const normalizedEmail = (email || '').trim().toLowerCase()
+    try {
+      const data = await apiRegister({ email: normalizedEmail, password })
+      if (!data?.user || !data?.token) {
+        return { ok: false, error: 'Invalid registration response from server.' }
+      }
+      const userSession = buildUserSession(data.user)
+      setCurrentUser(userSession)
+      setToken(data.token)
+      return { ok: true, mode: 'api', user: userSession, token: data.token }
+    } catch (err) {
+      return {
+        ok: false,
+        error: err?.message || 'Registration failed.',
+        status: err?.status || 0,
+        isUnavailable: Boolean(err?.isUnavailable),
+      }
+    }
   }
 
   return (
@@ -110,9 +134,10 @@ export function AuthProvider({ children }) {
       value={{
         currentUser,
         token,
-        isAuthenticated: Boolean(currentUser),
+        isAuthenticated: Boolean(currentUser && token),
         switchRole,
         loginWithCredentials,
+        registerWithCredentials,
         logout,
         availableUsers: DEMO_USERS,
       }}

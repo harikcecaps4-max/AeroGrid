@@ -1,14 +1,77 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate, useOutletContext } from 'react-router-dom'
 import StatCard from '../components/StatCard'
-import { MOCK_AIRSTRIPS } from '../data/mockData'
-import {
-  SECTOR_FILTERS,
-  RADAR_TELEMETRY_SAMPLE,
-  AIRFRAME_PRESETS,
-  classifyVerdict,
-  deriveAuditCardModel,
-} from '../data/overviewSampleData'
+import DataSourceBadge from '../components/DataSourceBadge'
+import { useAuth } from '../context/AuthContext'
+import { listAirstrips, listAircraft, rankAirstrips, useApi } from '../api'
+
+const SECTOR_FILTERS = [
+  { id: 'all', label: 'All India', sectorCode: 'SEC-IN-ALL', sectorName: 'National Regional Network', lat: '20.5937°N', lon: '78.9629°E', corridorTitle: 'NATIONAL REGIONAL SECTOR OVERVIEW', states: null },
+  { id: 'south', label: 'South (KA/TN/TG)', dotColor: 'var(--accent)', sectorCode: 'SEC-SOUTH-01', sectorName: 'Peninsular Corridor', lat: '13.0760°N', lon: '77.5997°E', corridorTitle: 'PENINSULAR REGIONAL CORRIDOR', states: ['Karnataka', 'Tamil Nadu', 'Telangana', 'Andhra Pradesh', 'Kerala'] },
+  { id: 'west', label: 'West (MH/GJ)', sectorCode: 'SEC-WEST-02', sectorName: 'Western Industrial Corridor', lat: '18.5204°N', lon: '73.8567°E', corridorTitle: 'WESTERN INDUSTRIAL CORRIDOR', states: ['Maharashtra', 'Gujarat', 'Goa'] },
+  { id: 'north', label: 'North (DL/HR/UP/RJ)', sectorCode: 'SEC-NORTH-03', sectorName: 'Northern Regional Ring', lat: '28.5562°N', lon: '77.1000°E', corridorTitle: 'NORTHERN REGIONAL CORRIDOR', states: ['Delhi', 'Haryana', 'Uttar Pradesh', 'Rajasthan', 'Punjab', 'Uttarakhand'] },
+]
+
+function mapVerdictKey(feature, rankedEntry) {
+  if (rankedEntry?.evaluation?.verdict) {
+    const v = rankedEntry.evaluation.verdict
+    if (v === 'viable') return 'viable'
+    if (v === 'viable_with_conditions') return 'conditional'
+    return 'nonviable'
+  }
+  const p = feature?.properties || {}
+  const score = p.feasibility?.score ?? 0
+  const polSeverity = (p.political_influence?.severity || 'none').toLowerCase()
+  if (score >= 75 && polSeverity !== 'high') return 'viable'
+  if (score >= 55) return 'conditional'
+  return 'nonviable'
+}
+
+function mapConfidence(dataStatus, dataConfidence) {
+  const status = (dataStatus || '').toLowerCase()
+  if (status === 'field_verified' || dataConfidence === 'high') {
+    return { label: 'FIELD VERIFIED', kind: 'field' }
+  }
+  if (status === 'desk_verified' || dataConfidence === 'medium') {
+    return { label: 'DESK VERIFIED', kind: 'desk' }
+  }
+  return { label: 'UNVERIFIED / SYNTHETIC', kind: 'synthetic' }
+}
+
+function buildAuditCardModel(feature, rankedEntry) {
+  const p = feature?.properties || {}
+  const coords = feature?.geometry?.coordinates || [0, 0]
+  const lon = Number(coords[0] ?? 0).toFixed(4)
+  const lat = Number(coords[1] ?? 0).toFixed(4)
+  const verdict = mapVerdictKey(feature, rankedEntry)
+  const score = rankedEntry?.evaluation?.score ?? p.feasibility?.score ?? 0
+  const surface = p.surface || 'unknown'
+  const surfaceTitle = surface.charAt(0).toUpperCase() + surface.slice(1)
+  const conf = mapConfidence(p.data_status, p.data_confidence)
+  const reasons = rankedEntry?.reasons || p.feasibility?.reasons || []
+  const warnings = rankedEntry?.evaluation?.warnings || []
+
+  return {
+    id: p.id,
+    icao: `ID-${String(p.id ?? 0).padStart(2, '0')}`,
+    name: p.name || 'Unnamed Strip',
+    state: p.state || 'Unknown',
+    locationText: `${p.state || 'India'} • ${lat}°N, ${lon}°E`,
+    verdict,
+    score,
+    confidence: conf.label,
+    confidenceKind: conf.kind,
+    runwayPrimary: `${p.runway_length_m ? `${Number(p.runway_length_m).toLocaleString()}m` : 'N/A'} • ${surfaceTitle}`,
+    runwaySecondary: p.runway_width_m ? `Width ${p.runway_width_m}m • Elev ${p.elevation_m ?? '--'}m` : `Elev ${p.elevation_m ?? '--'}m`,
+    metric2Label: 'UTILITIES',
+    metric2Value: p.charging_available ? 'EV Charge' : p.fuel_available ? 'Fuel Only' : 'Unverified / None',
+    metric2Sub: p.night_landing ? 'Night Lighting' : 'Day VFR',
+    metric3Label: 'NEAREST HUB',
+    metric3Value: p.nearest_airport?.code || 'N/A',
+    metric3Sub: Number.isFinite(p.nearest_airport?.distance_km) ? `${p.nearest_airport.distance_km} km` : 'Distance N/A',
+    assessment: warnings[0] || reasons[0] || `Feasibility score ${score}/100 across runway, surface, utilities, and hub distance.`,
+  }
+}
 
 function VerdictBadge({ verdict }) {
   const map = {
@@ -23,25 +86,6 @@ function VerdictBadge({ verdict }) {
 function ConfidenceTag({ label, kind }) {
   return (
     <span className={`stitch-confidence-tag stitch-conf-${kind}`}>
-      {kind === 'field' && (
-        <svg width="11" height="11" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-          <path d="M10 2.5l2.2 1.8 2.8-.2.8 2.7 2.2 1.7-1.2 2.5.4 2.8-2.6 1-1.3 2.5-2.8-.3-2.5 1.3-1-2.6-2.8-.4.4-2.8-1.2-2.5 2.2-1.7.8-2.7 2.8.2z" />
-          <polyline points="7 10.2 9.2 12.4 13.4 8.2" />
-        </svg>
-      )}
-      {kind === 'desk' && (
-        <svg width="11" height="11" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.9" aria-hidden="true">
-          <rect x="2.5" y="3.5" width="15" height="10" rx="1.5" />
-          <line x1="7" y1="16.5" x2="13" y2="16.5" strokeLinecap="round" />
-          <line x1="10" y1="13.5" x2="10" y2="16.5" />
-        </svg>
-      )}
-      {kind === 'synthetic' && (
-        <svg width="11" height="11" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.9" aria-hidden="true">
-          <circle cx="10" cy="10" r="6.5" />
-          <circle cx="10" cy="10" r="2" />
-        </svg>
-      )}
       <span>{label}</span>
     </span>
   )
@@ -65,15 +109,13 @@ function AuditCardSkeleton() {
 
 export default function Dashboard() {
   const navigate = useNavigate()
+  const { token } = useAuth()
   const outletCtx = useOutletContext() || {}
   const globalSearch = outletCtx.globalSearch || ''
   const setGlobalSearch = outletCtx.setGlobalSearch
 
-  const [airstrips, setAirstrips] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [syncError, setSyncError] = useState(false)
   const [activeSectorId, setActiveSectorId] = useState('all')
-  const [activeAirframeId, setActiveAirframeId] = useState(AIRFRAME_PRESETS[0].id)
+  const [activeAircraftId, setActiveAircraftId] = useState(null)
   const [verdictFilter, setVerdictFilter] = useState('all')
   const [sortMode, setSortMode] = useState('balanced')
   const [showFilterBar, setShowFilterBar] = useState(false)
@@ -81,39 +123,59 @@ export default function Dashboard() {
   const [radarZoom, setRadarZoom] = useState(1)
   const [showRadarGrid, setShowRadarGrid] = useState(true)
 
-  async function loadRegistry(signal) {
-    setLoading(true)
-    setSyncError(false)
-    try {
-      const res = await fetch('/api/airstrips', { signal })
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      const json = await res.json()
-      const features = json.features ?? json
-      setAirstrips(Array.isArray(features) && features.length > 0 ? features : MOCK_AIRSTRIPS)
-    } catch (err) {
-      if (err.name !== 'AbortError') {
-        setAirstrips(MOCK_AIRSTRIPS)
-        setSyncError(true)
-      }
-    } finally {
-      setLoading(false)
-    }
-  }
+  const airstripsQuery = useApi((signal) => listAirstrips({}, { signal }), [])
+  const aircraftQuery = useApi((signal) => listAircraft({ signal }), [token], { enabled: Boolean(token) })
+
+  const aircraftList = useMemo(() => aircraftQuery.data?.aircraft || [], [aircraftQuery.data])
 
   useEffect(() => {
-    const controller = new AbortController()
-    loadRegistry(controller.signal)
-    return () => controller.abort()
-  }, [])
+    if (aircraftList.length > 0 && !activeAircraftId) {
+      setActiveAircraftId(aircraftList[0].id)
+    }
+  }, [aircraftList, activeAircraftId])
+
+  const rankQuery = useApi(
+    (signal) =>
+      rankAirstrips(
+        { aircraftId: activeAircraftId, filters: { includeNotViable: true } },
+        { signal }
+      ),
+    [activeAircraftId, token],
+    { enabled: Boolean(token && activeAircraftId) }
+  )
+
+  const airstrips = useMemo(() => {
+    const features = airstripsQuery.data?.features
+    return Array.isArray(features) ? features : []
+  }, [airstripsQuery.data])
+
+  const dataSource = airstripsQuery.isUnavailable
+    ? 'unavailable'
+    : airstripsQuery.data?.data_source || null
+
+  const caveatText =
+    rankQuery.data?.caveat ||
+    airstripsQuery.data?.caveat ||
+    'Decision-support estimate. Verify with a site survey before committing.'
+
+  const rankedById = useMemo(() => {
+    const map = new Map()
+    const results = rankQuery.data?.results || []
+    for (const r of results) {
+      const id = r?.airstrip?.id
+      if (id !== undefined && id !== null) map.set(Number(id), r)
+    }
+    return map
+  }, [rankQuery.data])
 
   const activeSector = useMemo(
     () => SECTOR_FILTERS.find((s) => s.id === activeSectorId) || SECTOR_FILTERS[0],
     [activeSectorId]
   )
 
-  const activeAirframe = useMemo(
-    () => AIRFRAME_PRESETS.find((a) => a.id === activeAirframeId) || AIRFRAME_PRESETS[0],
-    [activeAirframeId]
+  const activeAircraft = useMemo(
+    () => aircraftList.find((a) => a.id === activeAircraftId) || null,
+    [aircraftList, activeAircraftId]
   )
 
   const sectorStrips = useMemo(() => {
@@ -122,14 +184,13 @@ export default function Dashboard() {
   }, [airstrips, activeSector])
 
   const kpiStats = useMemo(() => {
-    const base = sectorStrips
-    const total = base.length
+    const total = sectorStrips.length
     let viable = 0
     let conditional = 0
     let nonviable = 0
 
-    for (const f of base) {
-      const v = classifyVerdict(f)
+    for (const f of sectorStrips) {
+      const v = mapVerdictKey(f, rankedById.get(Number(f.properties?.id)))
       if (v === 'viable') viable += 1
       else if (v === 'conditional') conditional += 1
       else nonviable += 1
@@ -138,9 +199,12 @@ export default function Dashboard() {
     const viablePct = total > 0 ? ((viable / total) * 100).toFixed(1) : '0.0'
     const nonviablePct = total > 0 ? ((nonviable / total) * 100).toFixed(1) : '0.0'
     return { total, viable, conditional, nonviable, viablePct, nonviablePct }
-  }, [sectorStrips])
+  }, [sectorStrips, rankedById])
 
-  const enrichedAudits = useMemo(() => sectorStrips.map(deriveAuditCardModel), [sectorStrips])
+  const enrichedAudits = useMemo(
+    () => sectorStrips.map((f) => buildAuditCardModel(f, rankedById.get(Number(f.properties?.id)))),
+    [sectorStrips, rankedById]
+  )
 
   const filteredAudits = useMemo(() => {
     const q = globalSearch.trim().toLowerCase()
@@ -159,12 +223,11 @@ export default function Dashboard() {
       list = [...list].sort((a, b) => b.score - a.score)
     } else if (sortMode === 'runway_desc') {
       list = [...list].sort((a, b) => {
-        const ra = parseInt((a.runwayPrimary.split('•')[1] || '0').replace(/\D/g, ''), 10)
-        const rb = parseInt((b.runwayPrimary.split('•')[1] || '0').replace(/\D/g, ''), 10)
+        const ra = parseInt((a.runwayPrimary.split('•')[0] || '0').replace(/\D/g, ''), 10)
+        const rb = parseInt((b.runwayPrimary.split('•')[0] || '0').replace(/\D/g, ''), 10)
         return rb - ra
       })
     } else {
-      // 'balanced': highlight highest-confidence representative strips across verdicts first
       const firstViable = list.find((x) => x.verdict === 'viable')
       const firstConditional = list.find((x) => x.verdict === 'conditional')
       const firstNonViable = list.find((x) => x.verdict === 'nonviable')
@@ -181,8 +244,10 @@ export default function Dashboard() {
     [filteredAudits, showAllAudits]
   )
 
+  const topNodes = useMemo(() => filteredAudits.slice(0, 3), [filteredAudits])
+
   function handleExportCsv() {
-    const header = ['ID', 'ICAO', 'Name', 'State', 'Verdict', 'Score', 'Runway', 'Confidence']
+    const header = ['ID', 'Code', 'Name', 'State', 'Verdict', 'Score', 'Runway', 'Confidence']
     const rows = filteredAudits.map((a) => [
       a.id,
       a.icao,
@@ -218,14 +283,6 @@ export default function Dashboard() {
       <section className="stitch-ribbon" aria-label="Sector Focus Telemetry">
         <div className="stitch-ribbon-left">
           <div className="stitch-focus-pill">
-            <svg width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.9" aria-hidden="true">
-              <circle cx="10" cy="10" r="6" />
-              <circle cx="10" cy="10" r="2" fill="currentColor" />
-              <line x1="10" y1="1.5" x2="10" y2="4" />
-              <line x1="10" y1="16" x2="10" y2="18.5" />
-              <line x1="1.5" y1="10" x2="4" y2="10" />
-              <line x1="16" y1="10" x2="18.5" y2="10" />
-            </svg>
             <span className="stitch-focus-label">SECTOR FOCUS</span>
             <strong className="stitch-focus-code">{activeSector.sectorCode}</strong>
             <span className="stitch-focus-sub">({activeSector.sectorName})</span>
@@ -233,62 +290,44 @@ export default function Dashboard() {
 
           <div className="stitch-datum-pill">
             <span className="stitch-datum-kicker">DATUM</span>
-            <span className="stitch-datum-val">{RADAR_TELEMETRY_SAMPLE.datum}</span>
+            <span className="stitch-datum-val">WGS-84 / EPSG:4326</span>
           </div>
 
           <div className="stitch-coord-strip tabular-num">
             <strong>LAT {activeSector.lat}</strong>
             <span aria-hidden="true">/</span>
             <strong>LON {activeSector.lon}</strong>
-            <span aria-hidden="true">/</span>
-            <span className="stitch-qnh">QNH {activeSector.qnh}</span>
           </div>
         </div>
 
         <div className="stitch-ribbon-right">
-          {syncError ? (
-            <div className="stitch-lock-badge stitch-lock-fallback" role="status">
-              <span className="stitch-pip stitch-pip-conditional" aria-hidden="true" />
-              <span>OFFLINE SAMPLE CACHE</span>
-            </div>
-          ) : (
-            <div className="stitch-lock-badge" role="status">
-              <span className="stitch-pip stitch-pip-green stitch-pulse" aria-hidden="true" />
-              <span>REAL-TIME TELEMETRY LOCK</span>
-            </div>
-          )}
+          <DataSourceBadge source={dataSource} loading={airstripsQuery.loading} />
 
           <button
             type="button"
             className="stitch-recalibrate-btn"
-            onClick={() => loadRegistry()}
-            disabled={loading}
+            onClick={() => {
+              airstripsQuery.refetch()
+              if (token) aircraftQuery.refetch()
+              if (token && activeAircraftId) rankQuery.refetch()
+            }}
+            disabled={airstripsQuery.loading}
           >
-            <svg
-              className={loading ? 'stitch-spin' : ''}
-              width="15"
-              height="15"
-              viewBox="0 0 20 20"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.9"
-              aria-hidden="true"
-            >
-              <path d="M16.5 10a6.5 6.5 0 1 1-1.9-4.6L17 7.8" strokeLinecap="round" strokeLinejoin="round" />
-              <polyline points="17 3.5 17 7.8 12.7 7.8" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            <span>{loading ? 'SYNCHRONIZING...' : 'RECALIBRATE VECTOR'}</span>
+            <span>{airstripsQuery.loading ? 'SYNCHRONIZING...' : 'REFRESH DATA'}</span>
           </button>
         </div>
       </section>
 
-      {/* Error State Banner (with non-blocking fallback cache) */}
-      {syncError && (
+      {/* Error / 503 Unavailable Banner */}
+      {airstripsQuery.error && (
         <div className="stitch-error-banner" role="alert">
           <div className="stitch-error-copy">
-            <strong>API Telemetry Unreachable:</strong> Live backend endpoint `/api/airstrips` did not respond. Displaying verified offline registry cache so decision-support workflows remain inspectable.
+            <strong>
+              {airstripsQuery.isUnavailable ? 'Database / API Service Unavailable (503):' : 'API Request Failed:'}
+            </strong>{' '}
+            {airstripsQuery.error.message}
           </div>
-          <button type="button" className="stitch-retry-btn" onClick={() => loadRegistry()}>
+          <button type="button" className="stitch-retry-btn" onClick={() => airstripsQuery.refetch()}>
             Retry Sync
           </button>
         </div>
@@ -298,69 +337,56 @@ export default function Dashboard() {
       <section className="stitch-kpi-grid" aria-label="Sector Readiness KPIs">
         <StatCard
           variant="neutral"
-          loading={loading}
+          loading={airstripsQuery.loading}
           label="EVALUATED REGIONAL STRIPS"
-          subtitle="Peninsular Air Corridor"
+          subtitle={activeSector.sectorName}
           value={kpiStats.total}
-          deltaText="+8 audited"
-          deltaPrefixIcon={
-            <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
-              <line x1="10" y1="15" x2="10" y2="5" strokeLinecap="round" />
-              <polyline points="6 9 10 5 14 9" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          }
-          icon={
-            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8">
-              <rect x="3" y="3" width="14" height="14" rx="2" />
-              <polyline points="6.5 10.2 9 12.6 13.8 7.6" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          }
-          footerLeft="DGCA & AAI Register"
-          footerRight="98.2% Trust Index"
+          deltaText={`${airstrips.length} indexed total`}
+          footerLeft="PostGIS Registry"
+          footerRight={activeAircraft ? activeAircraft.name : 'Feasibility Index'}
         />
 
         <StatCard
           variant="viable"
-          loading={loading}
-          label="VIABLE VERTIPADS"
-          subtitle="350kW+ MCS Electrified"
+          loading={airstripsQuery.loading}
+          label="VIABLE STRIPS"
+          subtitle="Clear of Hard-Gate Failures"
           badgeText="PASS"
           value={kpiStats.viable}
-          deltaText={`${kpiStats.viablePct}% of total`}
-          footerLeft="Paved Asphalt >750m"
-          footerRight="Immediate Dispatch"
+          deltaText={`${kpiStats.viablePct}% of sector`}
+          footerLeft="Runway & Surface Cleared"
+          footerRight="Dispatch Ready"
         />
 
         <StatCard
           variant="conditional"
-          loading={loading}
+          loading={airstripsQuery.loading}
           label="CONDITIONAL NODES"
-          subtitle="Substation & Buffer Bound"
+          subtitle="Warnings or Unverified Fields"
           badgeText="AMBER"
           value={kpiStats.conditional}
-          deltaText="Grid Capped (<150kW)"
-          footerLeft="Requires BESS Buffer"
-          footerRight="CapEx Upgrade Req."
+          deltaText="Site Verification Req."
+          footerLeft="Utilities / Margin Watch"
+          footerRight="Conditional Ops"
         />
 
         <StatCard
           variant="nonviable"
-          loading={loading}
+          loading={airstripsQuery.loading}
           label="NON-VIABLE STRIPS"
-          subtitle="OLS / Terrain Infringed"
+          subtitle="Hard-Gate or Low Score"
           badgeText="REJECT"
           value={kpiStats.nonviable}
           deltaText={`${kpiStats.nonviablePct}% of sector`}
-          footerLeft="Glide Slope Infringement"
-          footerRight="HT Line Breach"
+          footerLeft="Runway / Surface / Risk"
+          footerRight="Not Cleared"
         />
       </section>
 
       {/* 3. Main Workspace Split Deck (12 Columns: 7 Left, 5 Right) */}
       <section className="stitch-workspace-grid">
-        {/* LEFT PANE: Sector Filters + Aeronautical Radar MFD + Vertical Cross Section */}
+        {/* LEFT PANE: Sector Filters + Radar Overview + Elevation Summary */}
         <div className="stitch-left-pane">
-          {/* Sector Filter Bar */}
           <div className="stitch-filter-bar">
             <div className="stitch-sector-pills" role="tablist" aria-label="Sector Region Filters">
               {SECTOR_FILTERS.map((sector) => {
@@ -389,177 +415,104 @@ export default function Dashboard() {
               })}
             </div>
             <div className="stitch-layer-tag">
-              <span>LAYER:</span>
-              <strong>{RADAR_TELEMETRY_SAMPLE.layerTag}</strong>
+              <span>ENGINE:</span>
+              <strong>{activeAircraft ? activeAircraft.category.toUpperCase() : 'BASELINE'}</strong>
             </div>
           </div>
 
-          {/* Aeronautical Radar MFD Card */}
           <article className="stitch-mfd-card">
             <div className="stitch-mfd-header">
               <div className="stitch-mfd-title-group">
-                <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="var(--chart-blue)" strokeWidth="1.9" aria-hidden="true">
-                  <circle cx="10" cy="10" r="7.5" />
-                  <polygon points="13 7 11.2 11.2 7 13 8.8 8.8" fill="var(--chart-blue)" stroke="none" />
-                </svg>
                 <h2 className="stitch-mfd-title">{activeSector.corridorTitle}</h2>
-                <span className="stitch-airspace-badge">{RADAR_TELEMETRY_SAMPLE.airspaceClass}</span>
+                <span className="stitch-airspace-badge">{sectorStrips.length} SITES</span>
               </div>
-
               <div className="stitch-weather-strip tabular-num">
                 <span className="stitch-weather-item">
-                  <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="var(--chart-blue)" strokeWidth="1.8" aria-hidden="true">
-                    <path d="M3 8h9a2.5 2.5 0 1 0-2.5-2.5" strokeLinecap="round" />
-                    <path d="M3 12h12a2.5 2.5 0 1 1-2.5 2.5" strokeLinecap="round" />
-                  </svg>
-                  {RADAR_TELEMETRY_SAMPLE.wind}
+                  {activeAircraft ? `MIN RWY ${activeAircraft.min_runway_m ?? '--'}m` : 'SELECT AIRCRAFT BELOW'}
                 </span>
                 <span className="stitch-weather-item">
-                  <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="var(--text-ink)" strokeWidth="1.8" aria-hidden="true">
-                    <path d="M2 10s3.2-5 8-5 8 5 8 5-3.2 5-8 5-8-5-8-5z" />
-                    <circle cx="10" cy="10" r="2" />
-                  </svg>
-                  {RADAR_TELEMETRY_SAMPLE.visibility}
+                  {activeAircraft ? `RANGE ${activeAircraft.range_km ?? '--'} km` : 'SIGN IN FOR RANKING'}
                 </span>
               </div>
             </div>
 
-            {/* Warm Sectional Radar Canvas */}
             <div className="stitch-radar-canvas">
               {showRadarGrid && <div className="stitch-radar-grid-bg" aria-hidden="true" />}
               <div className="stitch-crosshair-x" aria-hidden="true" />
               <div className="stitch-crosshair-y" aria-hidden="true" />
 
-              {/* Scaled concentric radar geometry */}
-              <div
-                className="stitch-radar-stage"
-                style={{ '--radar-zoom': radarZoom }}
-              >
-                <div className="stitch-ring stitch-ring-10" aria-hidden="true">
-                  <span>10 NM</span>
-                </div>
-                <div className="stitch-ring stitch-ring-20" aria-hidden="true">
-                  <span>20 NM</span>
-                </div>
-                <div className="stitch-ring stitch-ring-30" aria-hidden="true">
-                  <span>30 NM</span>
-                </div>
+              <div className="stitch-radar-stage" style={{ '--radar-zoom': radarZoom }}>
+                <div className="stitch-ring stitch-ring-10" aria-hidden="true"><span>10 NM</span></div>
+                <div className="stitch-ring stitch-ring-20" aria-hidden="true"><span>20 NM</span></div>
+                <div className="stitch-ring stitch-ring-30" aria-hidden="true"><span>30 NM</span></div>
                 <div className="stitch-radar-sweep" aria-hidden="true" />
 
-                <svg className="stitch-radar-vectors" viewBox="0 0 700 520" preserveAspectRatio="none" aria-hidden="true">
-                  <path className="svg-route-primary" d="M 330 220 L 495 370" strokeDasharray="6 4" strokeWidth="2.5" fill="none" />
-                  <path className="svg-route-alert" d="M 330 220 L 215 415" strokeDasharray="4 4" strokeWidth="1.6" fill="none" />
-                  <path className="svg-line-muted" d="M 110 295 Q 350 225 585 325" fill="none" strokeDasharray="2 4" strokeWidth="1.2" />
-                </svg>
+                {topNodes[0] && (
+                  <button
+                    type="button"
+                    className="stitch-radar-node stitch-node-vojk"
+                    onClick={() => navigate(`/map?strip=${topNodes[0].id}`)}
+                  >
+                    <span className="stitch-node-square stitch-node-blue">1</span>
+                    <span className="stitch-node-tag">
+                      <strong>{topNodes[0].name}</strong>
+                      <small>{topNodes[0].runwayPrimary}</small>
+                    </span>
+                  </button>
+                )}
 
-                {/* Node 1: VOJK Jakkur Hub */}
-                <button
-                  type="button"
-                  className="stitch-radar-node stitch-node-vojk"
-                  onClick={() => navigate('/map')}
-                  title="Open VOJK Jakkur Aerodrome on Aeronautical Map"
-                >
-                  <span className="stitch-node-square stitch-node-blue">
-                    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.9" aria-hidden="true">
-                      <path d="M3 14.5h14M5.5 11.5l3-1.8 2.2-4.8 1.5 1.1-.8 3.2 3.8-1.4 1.6 1.1-5.8 3.1-5.5-.5z" />
-                    </svg>
-                  </span>
-                  <span className="stitch-node-tag">
-                    <strong>VOJK <span className="stitch-tag-accent">● HUB</span></strong>
-                    <small>RWY 08/26 • 900m</small>
-                  </span>
-                </button>
+                {topNodes[1] && (
+                  <button
+                    type="button"
+                    className="stitch-radar-node stitch-node-vovk"
+                    onClick={() => navigate(`/map?strip=${topNodes[1].id}`)}
+                  >
+                    <span className="stitch-node-square stitch-node-outline">2</span>
+                    <span className="stitch-node-tag">
+                      <strong>{topNodes[1].name}</strong>
+                      <small>{topNodes[1].runwayPrimary}</small>
+                    </span>
+                  </button>
+                )}
 
-                {/* Active In-Flight Aircraft */}
-                <div className="stitch-radar-node stitch-node-flight">
-                  <span className="stitch-flight-puck" aria-hidden="true">
-                    <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-                      <polygon points="10,2 17,17 10,13.5 3,17" />
-                    </svg>
-                  </span>
-                  <span className="stitch-flight-tag tabular-num">
-                    <strong>{activeAirframe.callsign}</strong>
-                    <small>{activeAirframe.altitudeAgl}</small>
-                  </span>
-                </div>
-
-                {/* Node 2: VOVK Hosur Vertipad */}
-                <button
-                  type="button"
-                  className="stitch-radar-node stitch-node-vovk"
-                  onClick={() => navigate('/map')}
-                  title="Open VOVK Hosur Vertipad on Aeronautical Map"
-                >
-                  <span className="stitch-node-square stitch-node-outline">
-                    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-                      <rect x="4" y="4" width="8.5" height="12" rx="1.2" />
-                      <path d="M12.5 8h2a1.5 1.5 0 0 1 1.5 1.5V14a1 1 0 0 1-2 0v-2" />
-                      <polyline points="8.5 7 7 10.2 9.5 10.2 8 13" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </span>
-                  <span className="stitch-node-tag">
-                    <strong>VOVK <span className="stitch-tag-accent">MCS 480V</span></strong>
-                    <small>RWY 09/27 • 2100m</small>
-                  </span>
-                </button>
-
-                {/* Node 3: MYQ-SECTOR Unpaved Diamond */}
-                <button
-                  type="button"
-                  className="stitch-radar-node stitch-node-myq"
-                  onClick={() => navigate('/map')}
-                  title="Inspect MYQ-SECTOR Unpaved Strip"
-                >
-                  <span className="stitch-node-diamond">
-                    <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2.1" aria-hidden="true">
-                      <polygon points="10,3 18,16 2,16" strokeLinejoin="round" />
-                      <line x1="10" y1="8.5" x2="10" y2="12" strokeLinecap="round" />
-                      <circle cx="10" cy="14" r="0.7" fill="currentColor" />
-                    </svg>
-                  </span>
-                  <span className="stitch-node-tag">
-                    <strong>MYQ-SECTOR</strong>
-                    <small className="stitch-tag-warn">UNPAVED / TURF</small>
-                  </span>
-                </button>
+                {topNodes[2] && (
+                  <button
+                    type="button"
+                    className="stitch-radar-node stitch-node-myq"
+                    onClick={() => navigate(`/map?strip=${topNodes[2].id}`)}
+                  >
+                    <span className="stitch-node-diamond">3</span>
+                    <span className="stitch-node-tag">
+                      <strong>{topNodes[2].name}</strong>
+                      <small>{topNodes[2].runwayPrimary}</small>
+                    </span>
+                  </button>
+                )}
               </div>
 
-              {/* Floating Top-Left HUD Box */}
               <div className="stitch-radar-hud">
                 <div className="stitch-hud-head">
-                  <span>ACTIVE TRACKING</span>
-                  <strong>{activeAirframe.legDistance}</strong>
+                  <span>DECISION ENGINE</span>
+                  <strong>{activeAircraft ? activeAircraft.category.toUpperCase() : 'UNAUTHENTICATED'}</strong>
                 </div>
                 <div className="stitch-hud-speed tabular-num">
-                  <span className="stitch-hud-ktas">{activeAirframe.ktas}</span>
-                  <span className="stitch-hud-unit">KTAS CRUISE</span>
+                  <span className="stitch-hud-ktas">{activeAircraft?.cruise_speed_kmh ?? '--'}</span>
+                  <span className="stitch-hud-unit">KM/H CRUISE</span>
                 </div>
                 <div className="stitch-hud-grid tabular-num">
-                  <div>ALT: <strong>{activeAirframe.altitudeFt}</strong></div>
-                  <div>HDG: <strong className="stitch-blue">{activeAirframe.heading}</strong></div>
-                  <div>ETA: <strong>{activeAirframe.eta}</strong></div>
-                  <div>SOC: <strong className="stitch-green">{activeAirframe.soc}</strong></div>
+                  <div>MIN RWY: <strong>{activeAircraft?.min_runway_m ?? '--'}m</strong></div>
+                  <div>RANGE: <strong>{activeAircraft?.range_km ?? '--'}km</strong></div>
+                  <div>SEATS: <strong>{activeAircraft?.seats ?? '--'}</strong></div>
+                  <div>PAYLOAD: <strong>{activeAircraft?.payload_kg ?? '--'}kg</strong></div>
                 </div>
               </div>
 
-              {/* Bottom-Left Handover Banner */}
-              <div className="stitch-handover-pill">
-                <svg width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="var(--chart-blue)" strokeWidth="1.9" aria-hidden="true">
-                  <path d="M4 7h12l-3-3M16 13H4l3 3" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-                <span>
-                  HANDOVER LINE: <strong>{RADAR_TELEMETRY_SAMPLE.handoverLine}</strong>
-                </span>
-              </div>
-
-              {/* Bottom-Right Zoom & Layer Controls */}
               <div className="stitch-radar-controls">
                 <button
                   type="button"
                   className="stitch-map-ctrl-btn"
                   onClick={() => setRadarZoom((z) => Math.min(1.25, +(z + 0.1).toFixed(2)))}
                   aria-label="Zoom radar in"
-                  title="Zoom in"
                 >
                   +
                 </button>
@@ -568,7 +521,6 @@ export default function Dashboard() {
                   className="stitch-map-ctrl-btn"
                   onClick={() => setRadarZoom((z) => Math.max(0.85, +(z - 0.1).toFixed(2)))}
                   aria-label="Zoom radar out"
-                  title="Zoom out"
                 >
                   -
                 </button>
@@ -577,88 +529,15 @@ export default function Dashboard() {
                   className={`stitch-map-ctrl-btn${showRadarGrid ? ' active' : ''}`}
                   onClick={() => setShowRadarGrid((v) => !v)}
                   aria-label="Toggle sectional grid overlay"
-                  title="Toggle grid overlay"
                 >
-                  <svg width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8">
-                    <polygon points="10 3 17 7 10 11 3 7" />
-                    <polyline points="3 11 10 15 17 11" />
-                    <polyline points="3 14.5 10 18.5 17 14.5" />
-                  </svg>
+                  #
                 </button>
               </div>
             </div>
 
-            {/* Bottom MFD Telemetry Strip */}
             <div className="stitch-mfd-footer tabular-num">
               <div className="stitch-mfd-footer-group">
-                <span>
-                  GEOMETRIC ACCURACY: <strong>{RADAR_TELEMETRY_SAMPLE.geometricAccuracy}</strong>
-                </span>
-                <span>
-                  GRID DENSITY: <strong className="stitch-blue">{RADAR_TELEMETRY_SAMPLE.gridDensity}</strong>
-                </span>
-              </div>
-              <div>
-                CORRIDOR FREQUENCY: <strong>{RADAR_TELEMETRY_SAMPLE.corridorFrequency}</strong>
-              </div>
-            </div>
-          </article>
-
-          {/* Vertical Flight Corridor Cross-Section Card */}
-          <article className="stitch-elevation-card">
-            <div className="stitch-elevation-head">
-              <div className="stitch-elevation-title-wrap">
-                <svg width="17" height="17" viewBox="0 0 20 20" fill="none" stroke="var(--chart-blue)" strokeWidth="1.9" aria-hidden="true">
-                  <path d="M2.5 15L8 7.5l3.5 4.2 3-3.7 3 7H2.5z" strokeLinejoin="round" />
-                </svg>
-                <h3>{RADAR_TELEMETRY_SAMPLE.elevationProfile.title}</h3>
-              </div>
-              <span className="stitch-ceiling-label">{RADAR_TELEMETRY_SAMPLE.elevationProfile.cruiseCeiling}</span>
-            </div>
-
-            <div className="stitch-elevation-chart">
-              <svg className="stitch-elevation-svg" viewBox="0 0 700 92" preserveAspectRatio="none" aria-hidden="true">
-                <defs>
-                  <linearGradient id="terrainGradLight" x1="0" x2="0" y1="0" y2="1">
-                    <stop offset="0%" className="svg-stop-terrain-top" stopOpacity="0.82" />
-                    <stop offset="100%" className="svg-stop-terrain-bottom" stopOpacity="0.38" />
-                  </linearGradient>
-                </defs>
-                <polygon
-                  fill="url(#terrainGradLight)"
-                  points="0,92 0,66 140,58 260,68 380,50 490,62 600,54 700,60 700,92"
-                />
-                <polyline
-                  className="svg-line-muted"
-                  fill="none"
-                  points="0,66 140,58 260,68 380,50 490,62 600,54 700,60"
-                  strokeWidth="1.5"
-                />
-                <polyline
-                  className="svg-route-primary"
-                  fill="none"
-                  points="12,66 74,22 618,22 688,60"
-                  strokeDasharray="5 3"
-                  strokeWidth="2.5"
-                />
-                <polyline
-                  className="svg-route-alert"
-                  fill="none"
-                  opacity="0.7"
-                  points="0,48 140,40 260,50 380,32 490,44 600,36 700,42"
-                  strokeDasharray="2 3"
-                  strokeWidth="1.2"
-                />
-              </svg>
-
-              <div className="stitch-clearance-badge tabular-num">
-                {RADAR_TELEMETRY_SAMPLE.elevationProfile.clearanceLabel}
-              </div>
-              <div className="stitch-dep-label tabular-num">
-                {RADAR_TELEMETRY_SAMPLE.elevationProfile.departureLabel}
-              </div>
-              <div className="stitch-arr-label tabular-num">
-                {RADAR_TELEMETRY_SAMPLE.elevationProfile.arrivalLabel}
+                <span>CAVEAT: <strong>{caveatText}</strong></span>
               </div>
             </div>
           </article>
@@ -673,7 +552,7 @@ export default function Dashboard() {
                 <span className="stitch-pip stitch-pip-green" aria-hidden="true" />
               </div>
               <div className="stitch-audits-sub">
-                REAL-TIME DOSSIER TELEMETRY ({filteredAudits.length} SITES)
+                LIVE REGISTRY TELEMETRY ({filteredAudits.length} SITES)
               </div>
             </div>
 
@@ -686,11 +565,7 @@ export default function Dashboard() {
                 aria-expanded={showFilterBar}
                 title="Filter by verdict"
               >
-                <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8">
-                  <line x1="3" y1="5.5" x2="17" y2="5.5" strokeLinecap="round" />
-                  <line x1="5.5" y1="10" x2="14.5" y2="10" strokeLinecap="round" />
-                  <line x1="8" y1="14.5" x2="12" y2="14.5" strokeLinecap="round" />
-                </svg>
+                Filter
               </button>
               <button
                 type="button"
@@ -703,11 +578,7 @@ export default function Dashboard() {
                 aria-label={`Sort audits (current: ${sortMode})`}
                 title={`Sort order: ${sortMode}`}
               >
-                <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8">
-                  <line x1="4" y1="6" x2="16" y2="6" strokeLinecap="round" />
-                  <line x1="4" y1="10" x2="13" y2="10" strokeLinecap="round" />
-                  <line x1="4" y1="14" x2="9.5" y2="14" strokeLinecap="round" />
-                </svg>
+                Sort
               </button>
             </div>
           </div>
@@ -732,17 +603,25 @@ export default function Dashboard() {
             </div>
           )}
 
-          {loading ? (
+          {airstripsQuery.loading ? (
             <div className="stitch-audit-stack">
               <AuditCardSkeleton />
               <AuditCardSkeleton />
               <AuditCardSkeleton />
             </div>
+          ) : airstripsQuery.error ? (
+            <div className="stitch-empty-card">
+              <div className="stitch-empty-title">Registry Data Unavailable</div>
+              <p className="stitch-empty-desc">{airstripsQuery.error.message}</p>
+              <button type="button" className="stitch-retry-btn" onClick={() => airstripsQuery.refetch()}>
+                Retry
+              </button>
+            </div>
           ) : visibleAudits.length === 0 ? (
             <div className="stitch-empty-card">
               <div className="stitch-empty-title">No Matching Aerodromes in Current Filter</div>
               <p className="stitch-empty-desc">
-                Adjust the global search query, sector region pill, or verdict filter to inspect regional airstrip audits.
+                Adjust the search query, sector pill, or verdict filter to inspect regional airstrips.
               </p>
               <button type="button" className="stitch-retry-btn" onClick={resetAllFilters}>
                 Reset Filters
@@ -752,10 +631,7 @@ export default function Dashboard() {
             <>
               <div className="stitch-audit-stack">
                 {visibleAudits.map((audit) => (
-                  <article
-                    key={audit.id}
-                    className={`stitch-audit-card stitch-audit-${audit.verdict}`}
-                  >
+                  <article key={audit.id} className={`stitch-audit-card stitch-audit-${audit.verdict}`}>
                     <div className="stitch-audit-head">
                       <div>
                         <div className="stitch-audit-name-row">
@@ -773,80 +649,34 @@ export default function Dashboard() {
 
                     <div className="stitch-specs-matrix tabular-num">
                       <div className="stitch-spec-cell">
-                        <span className="stitch-spec-k">{'RUNWAY'}</span>
+                        <span className="stitch-spec-k">RUNWAY</span>
                         <strong className="stitch-spec-v">{audit.runwayPrimary}</strong>
                         <span className="stitch-spec-sub">{audit.runwaySecondary}</span>
                       </div>
                       <div className="stitch-spec-cell">
                         <span className="stitch-spec-k">{audit.metric2Label}</span>
-                        <strong
-                          className={`stitch-spec-v ${
-                            audit.verdict === 'viable'
-                              ? 'stitch-blue'
-                              : audit.verdict === 'conditional'
-                                ? 'stitch-amber'
-                                : 'stitch-red'
-                          }`}
-                        >
-                          {audit.metric2Value}
-                        </strong>
+                        <strong className="stitch-spec-v">{audit.metric2Value}</strong>
                         <span className="stitch-spec-sub">{audit.metric2Sub}</span>
                       </div>
                       <div className="stitch-spec-cell">
                         <span className="stitch-spec-k">{audit.metric3Label}</span>
                         <strong className="stitch-spec-v">{audit.metric3Value}</strong>
-                        <span
-                          className={`stitch-spec-sub ${
-                            audit.verdict === 'viable'
-                              ? 'stitch-green'
-                              : audit.verdict === 'nonviable'
-                                ? 'stitch-red'
-                                : ''
-                          }`}
-                        >
-                          {audit.metric3Sub}
-                        </span>
+                        <span className="stitch-spec-sub">{audit.metric3Sub}</span>
                       </div>
                     </div>
 
                     <div className={`stitch-assessment-line stitch-assess-${audit.verdict}`}>
-                      {audit.verdict === 'viable' && (
-                        <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                          <circle cx="10" cy="10" r="7.5" />
-                          <polyline points="6.8 10.3 9 12.5 13.4 7.8" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                      )}
-                      {audit.verdict === 'conditional' && (
-                        <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                          <circle cx="10" cy="10" r="7.5" />
-                          <line x1="10" y1="9" x2="10" y2="13.5" strokeLinecap="round" />
-                          <circle cx="10" cy="6.6" r="0.8" fill="currentColor" />
-                        </svg>
-                      )}
-                      {audit.verdict === 'nonviable' && (
-                        <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                          <circle cx="10" cy="10" r="7.5" />
-                          <line x1="7.5" y1="7.5" x2="12.5" y2="12.5" strokeLinecap="round" />
-                          <line x1="12.5" y1="7.5" x2="7.5" y2="12.5" strokeLinecap="round" />
-                        </svg>
-                      )}
                       <span>{audit.assessment}</span>
                     </div>
 
                     <div className="stitch-audit-footer">
-                      <span className="stitch-audit-caveat">
-                        Decision-support estimate. Verify with a site survey before committing.
-                      </span>
+                      <span className="stitch-audit-caveat">{caveatText}</span>
                       <button
                         type="button"
                         className="stitch-dossier-btn"
                         onClick={() => navigate(`/map?strip=${audit.id}`)}
                       >
                         <span>View Dossier</span>
-                        <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                          <line x1="4" y1="10" x2="15.5" y2="10" strokeLinecap="round" />
-                          <polyline points="11 5.5 15.8 10 11 14.5" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
                       </button>
                     </div>
                   </article>
@@ -869,66 +699,54 @@ export default function Dashboard() {
         </div>
       </section>
 
-      {/* 4. Bottom Mission Corridoring & Dispatch Console */}
-      <section className="stitch-console-banner" aria-label="Mission Corridoring Console">
+      {/* 4. Bottom Aircraft Profile & Export Console */}
+      <section className="stitch-console-banner" aria-label="Aircraft Evaluation Console">
         <div className="stitch-console-left">
-          <div className="stitch-corridor-block">
-            <div className="stitch-corridor-icon" aria-hidden="true">
-              <svg width="24" height="24" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8">
-                <path d="M2.5 14.5h15" strokeLinecap="round" />
-                <path d="M4.5 11.5l3.2-2.2 2.4-4.8 1.6 1.2-1 3.6 3.8-1.4 2 1.2-6.2 3.3-5.8-.9z" />
-              </svg>
-            </div>
-            <div>
-              <div className="stitch-console-kicker">MISSION CORRIDORING</div>
-              <div className="stitch-corridor-route">
-                <strong>{RADAR_TELEMETRY_SAMPLE.missionCorridor.origin}</strong>
-                <span className="stitch-blue" aria-hidden="true">➔</span>
-                <strong>{RADAR_TELEMETRY_SAMPLE.missionCorridor.destination}</strong>
-              </div>
-              <div className="stitch-corridor-meta">{RADAR_TELEMETRY_SAMPLE.missionCorridor.sectorMeta}</div>
-            </div>
-          </div>
-
           <div className="stitch-airframe-block">
-            <div className="stitch-console-kicker">ACTIVE AIRFRAME SIMULATION</div>
-            <div className="stitch-airframe-tabs" role="tablist" aria-label="Active Airframe">
-              {AIRFRAME_PRESETS.map((airframe) => {
-                const isSelected = airframe.id === activeAirframeId
-                return (
-                  <button
-                    key={airframe.id}
-                    type="button"
-                    role="tab"
-                    aria-selected={isSelected}
-                    className={`stitch-airframe-tab${isSelected ? ' active' : ''}`}
-                    onClick={() => setActiveAirframeId(airframe.id)}
-                  >
-                    {isSelected && <span className="stitch-pill-dot" style={{ backgroundColor: 'var(--accent)' }} aria-hidden="true" />}
-                    <span>{airframe.label}</span>
-                  </button>
-                )
-              })}
-            </div>
+            <div className="stitch-console-kicker">ACTIVE AIRCRAFT EVALUATION</div>
+            {!token ? (
+              <div className="stitch-corridor-meta">
+                Sign in to load live aircraft profiles and run decision-engine rankings.{' '}
+                <button type="button" className="inline-action-btn" onClick={() => navigate('/login')}>
+                  Sign In
+                </button>
+              </div>
+            ) : aircraftQuery.loading ? (
+              <div className="stitch-corridor-meta">Loading aircraft profiles...</div>
+            ) : aircraftQuery.error ? (
+              <div className="stitch-corridor-meta">{aircraftQuery.error.message}</div>
+            ) : aircraftList.length === 0 ? (
+              <div className="stitch-corridor-meta">No aircraft profiles returned by API.</div>
+            ) : (
+              <div className="stitch-airframe-tabs" role="tablist" aria-label="Active Airframe">
+                {aircraftList.map((ac) => {
+                  const isSelected = ac.id === activeAircraftId
+                  return (
+                    <button
+                      key={ac.id}
+                      type="button"
+                      role="tab"
+                      aria-selected={isSelected}
+                      className={`stitch-airframe-tab${isSelected ? ' active' : ''}`}
+                      onClick={() => setActiveAircraftId(ac.id)}
+                    >
+                      {isSelected && <span className="stitch-pill-dot" style={{ backgroundColor: 'var(--accent)' }} aria-hidden="true" />}
+                      <span>{ac.name}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
           </div>
         </div>
 
         <div className="stitch-console-actions">
-          <button type="button" className="stitch-export-btn" onClick={handleExportCsv}>
-            <svg width="17" height="17" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-              <circle cx="10" cy="10" r="7.5" />
-              <line x1="10" y1="6.5" x2="10" y2="12.5" strokeLinecap="round" />
-              <polyline points="7.5 10.5 10 13 12.5 10.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            <span>Export Sectional Dossier (PDF/CSV)</span>
+          <button type="button" className="stitch-export-btn" onClick={handleExportCsv} disabled={filteredAudits.length === 0}>
+            <span>Export Sectional Dossier (CSV)</span>
           </button>
 
           <button type="button" className="stitch-primary-cta" onClick={() => navigate('/map')}>
-            <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.9" aria-hidden="true">
-              <path d="M12.5 3.5c2.2 0 4 1.8 4 4 0 3.2-3.5 6.8-6.8 6.8-.9 0-1.8-.3-2.5-.8l-3.4.8.8-3.4c-.5-.7-.8-1.6-.8-2.5 0-3.3 3.6-6.9 6.7-4.9z" />
-              <circle cx="12" cy="8" r="1.2" fill="currentColor" />
-            </svg>
-            <span>Simulate Fleet Route &amp; Vertical Profile →</span>
+            <span>Open Sector Feasibility Map →</span>
           </button>
         </div>
       </section>

@@ -1,37 +1,69 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { getHealth } from '../api'
+import DataSourceBadge from '../components/DataSourceBadge'
 
 export default function Login() {
-  const { currentUser, loginWithCredentials, switchRole, availableUsers } = useAuth()
+  const { currentUser, loginWithCredentials, registerWithCredentials, switchRole, availableUsers } = useAuth()
   const navigate = useNavigate()
 
-  const [email, setEmail] = useState(currentUser?.email || 'analyst@aerogrid.dev')
-  const [password, setPassword] = useState('aerogrid-ops')
-  const [rolePreset, setRolePreset] = useState(currentUser?.role || 'analyst')
+  const [mode, setMode] = useState('login') // 'login' | 'register'
+  const [email, setEmail] = useState(currentUser?.email || '')
+  const [password, setPassword] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [statusMsg, setStatusMsg] = useState('')
-  const [apiState, setApiState] = useState('checking')
+  const [health, setHealth] = useState({ state: 'checking', dataSource: null, database: null })
 
   useEffect(() => {
     const controller = new AbortController()
-    fetch('/api/health', { signal: controller.signal })
-      .then((res) => setApiState(res.ok ? 'online' : 'offline'))
-      .catch(() => setApiState('offline'))
+    getHealth({ signal: controller.signal })
+      .then((res) => {
+        setHealth({
+          state: 'online',
+          dataSource: res?.data_source || null,
+          database: res?.database || null,
+        })
+      })
+      .catch((err) => {
+        if (err?.name === 'AbortError') return
+        setHealth({
+          state: err?.isUnavailable ? 'unavailable' : 'offline',
+          dataSource: 'unavailable',
+          database: 'unavailable',
+        })
+      })
     return () => controller.abort()
   }, [])
 
   async function handleSubmit(e) {
     e.preventDefault()
     if (!email.trim()) {
-      setStatusMsg('Operator identifier email is required.')
+      setStatusMsg('Operator email is required.')
       return
     }
+    if (mode === 'register' && password.length < 8) {
+      setStatusMsg('Password must be at least 8 characters to register.')
+      return
+    }
+    if (mode === 'login' && password.length < 6) {
+      setStatusMsg('Password must be at least 6 characters.')
+      return
+    }
+
     setSubmitting(true)
     setStatusMsg('')
     try {
-      await loginWithCredentials(email, password, rolePreset)
-      navigate('/map')
+      const result =
+        mode === 'register'
+          ? await registerWithCredentials(email, password)
+          : await loginWithCredentials(email, password)
+
+      if (result.ok) {
+        navigate('/map')
+      } else {
+        setStatusMsg(result.error || 'Authentication failed.')
+      }
     } finally {
       setSubmitting(false)
     }
@@ -72,22 +104,13 @@ export default function Login() {
               <span className="login-spec-val">WGS-84 / EPSG:4326 (PostGIS GiST)</span>
             </div>
             <div className="login-spec-row">
-              <span className="login-spec-key">Indexed Sectors</span>
-              <span className="login-spec-val">25 Indian Micro-Airstrips | 10 Hub Airports</span>
-            </div>
-            <div className="login-spec-row">
               <span className="login-spec-key">Scoring Model</span>
               <span className="login-spec-val">100-pt Runway, Surface, Utilities &amp; Political Risk</span>
             </div>
             <div className="login-spec-row">
               <span className="login-spec-key">Telemetry Link</span>
               <span className="login-spec-val">
-                <span className={`ops-dot ${apiState === 'online' ? 'dot-ok' : apiState === 'offline' ? 'dot-warn' : 'dot-idle'}`} />
-                {apiState === 'online'
-                  ? 'API Connected (Live PostGIS)'
-                  : apiState === 'offline'
-                  ? 'Local Sector Cache Active'
-                  : 'Probing Endpoint...'}
+                <DataSourceBadge source={health.dataSource} loading={health.state === 'checking'} />
               </span>
             </div>
           </div>
@@ -106,8 +129,35 @@ export default function Login() {
         {/* Right: Operator Authentication Console */}
         <section className="login-console" aria-label="Operator Sign-In Form">
           <div className="login-console-header">
-            <h2 className="login-console-title">Operator Authentication</h2>
-            <span className="clearance-pill">RBAC TERMINAL</span>
+            <h2 className="login-console-title">
+              {mode === 'login' ? 'Operator Sign In' : 'Register Viewer Account'}
+            </h2>
+            <div className="segmented-group" role="tablist" aria-label="Authentication Mode">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={mode === 'login'}
+                className={`seg-btn${mode === 'login' ? ' active' : ''}`}
+                onClick={() => {
+                  setMode('login')
+                  setStatusMsg('')
+                }}
+              >
+                Sign In
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={mode === 'register'}
+                className={`seg-btn${mode === 'register' ? ' active' : ''}`}
+                onClick={() => {
+                  setMode('register')
+                  setStatusMsg('')
+                }}
+              >
+                Register
+              </button>
+            </div>
           </div>
 
           <form onSubmit={handleSubmit} className="login-form">
@@ -126,30 +176,19 @@ export default function Login() {
             </div>
 
             <div className="field-group">
-              <label htmlFor="ops-password" className="field-label">Access Passkey</label>
+              <label htmlFor="ops-password" className="field-label">
+                {mode === 'register' ? 'Password (min 8 characters)' : 'Access Passkey'}
+              </label>
               <input
                 id="ops-password"
                 type="password"
                 className="ops-input"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter workstation passkey"
-                autoComplete="current-password"
+                placeholder={mode === 'register' ? 'Choose a strong password' : 'Enter workstation passkey'}
+                autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
+                required
               />
-            </div>
-
-            <div className="field-group">
-              <label htmlFor="ops-role" className="field-label">Fallback Clearance Level</label>
-              <select
-                id="ops-role"
-                className="ops-input"
-                value={rolePreset}
-                onChange={(e) => setRolePreset(e.target.value)}
-              >
-                <option value="admin">Admin — Full Registry, Political Risk &amp; Asset Control</option>
-                <option value="analyst">Analyst — Route Evaluation &amp; Asset Logging</option>
-                <option value="viewer">Viewer — Read-Only Sector Inspection</option>
-              </select>
             </div>
 
             {statusMsg && (
@@ -159,12 +198,18 @@ export default function Login() {
             )}
 
             <button type="submit" className="btn btn-primary login-submit-btn" disabled={submitting}>
-              {submitting ? 'Authenticating Session...' : 'Open Sector Workstation'}
+              {submitting
+                ? mode === 'register'
+                  ? 'Creating Account...'
+                  : 'Authenticating Session...'
+                : mode === 'register'
+                ? 'Create Viewer Account'
+                : 'Sign In to Workstation'}
             </button>
           </form>
 
           <div className="login-presets">
-            <div className="login-presets-title">Quick Clearance Switch</div>
+            <div className="login-presets-title">Demo mode (local preview without JWT)</div>
             <div className="login-presets-grid">
               {availableUsers.map((u) => (
                 <button
@@ -185,4 +230,3 @@ export default function Login() {
     </div>
   )
 }
-

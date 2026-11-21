@@ -131,6 +131,10 @@ function rowToFeature(row) {
       },
       political_influence: scoring.political_risk,
       feasibility: scoring,
+      access_points: Array.isArray(row.access_points) ? row.access_points : [],
+      data_status: row.data_status ?? null,
+      data_confidence: row.data_confidence ?? null,
+      source: row.source ?? null,
     },
   };
 }

@@ -779,5 +779,33 @@ test('validation: Express 5 req.validatedQuery on spatialRoutes and Zod validati
   assert.equal(validPatch.json.asset.condition_grade, 'fair');
 });
 
+test('GET /api/health requires no auth, returns expected contract, and returns 503 without leaking details when DB is configured but unreachable', async () => {
+  // 1. Without DATABASE_URL (not_configured) -> 200, no auth required
+  const res = await requestJson('/api/health', { auth: false });
+  assert.equal(res.status, 200);
+  assert.equal(res.json.status, 'ok');
+  assert.equal(res.json.database, 'not_configured');
+  assert.equal(res.json.data_source, 'fallback');
+  assert.ok(!Number.isNaN(Date.parse(res.json.time)));
+  assert.equal(Object.keys(res.json).sort().join(','), 'data_source,database,status,time');
+
+  // 2. With DATABASE_URL configured but pool unavailable/query failing -> 503 and no leaked details
+  const prevDbUrl = process.env.DATABASE_URL;
+  process.env.DATABASE_URL = 'postgresql://secret-user:secret-pass@127.0.0.1:1/secret-db';
+  try {
+    const resUnavail = await requestJson('/api/health', { auth: false });
+    assert.equal(resUnavail.status, 503);
+    assert.equal(resUnavail.json.status, 'unavailable');
+    assert.equal(resUnavail.json.database, 'unavailable');
+    assert.equal(resUnavail.json.data_source, 'unavailable');
+    assert.ok(!Number.isNaN(Date.parse(resUnavail.json.time)));
+    const serialized = JSON.stringify(resUnavail.json);
+    assert.ok(!/secret-user|secret-pass|secret-db|DATABASE_URL|error/i.test(serialized));
+  } finally {
+    if (prevDbUrl === undefined) delete process.env.DATABASE_URL;
+    else process.env.DATABASE_URL = prevDbUrl;
+  }
+});
+
 
 
