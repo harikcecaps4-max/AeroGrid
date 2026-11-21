@@ -57,6 +57,10 @@ function normalizeAircraftRow(row, fallbackId) {
       : [],
     source: row.source || 'PLACEHOLDER - verify against manufacturer data',
     notes: row.notes || null,
+    needs_paved: toNullableBoolean(row.needs_paved),
+    energy_type: row.energy_type ?? null,
+    cruise_speed_kmh: toFiniteNumber(row.cruise_speed_kmh),
+    spec_status: row.spec_status ?? null,
   };
 }
 
@@ -105,34 +109,56 @@ function normalizeAirstripRow(row) {
     data_confidence: row.data_confidence ?? 'low',
     source: row.source ?? PLACEHOLDER_AIRSTRIP_SOURCE,
     verified_at: row.verified_at ?? null,
+    data_status: row.data_status ?? null,
     access_points: accessPoints,
   };
 }
 
+/**
+ * Airstrip decision query against the live Neon schema (migrations 001-012).
+ *
+ * Schema mapping (see summary in PR):
+ *  - runway length/width/surface come from the primary runway (v_airstrip_primary_runway),
+ *    falling back to the legacy airstrips columns when no primary runway exists.
+ *  - fuel/charging/night: TRUE if declared OR an operational asset proves it
+ *    (v_airstrip_capabilities); otherwise the declared value, so NULL stays NULL (unknown).
+ *  - data_confidence is derived from airstrips.data_status:
+ *      field_verified -> high, desk_verified -> medium, synthetic -> unverified.
+ *  - terrain_risk, catchment_population, last_mile_access_km and verified_at have no
+ *    column in the live schema and are returned as NULL (unknown).
+ */
 const AIRSTRIP_DECISION_SQL = `
   SELECT
     a.id,
     a.name,
     s.name AS state_name,
     o.name AS ownership_name,
-    f.name AS surface_name,
+    COALESCE(rf.name, f.name) AS surface_name,
     ST_X(a.location) AS longitude,
     ST_Y(a.location) AS latitude,
     a.elevation_m,
-    a.runway_length_m,
-    a.runway_width_m,
-    a.night_landing,
-    a.fuel_available,
-    a.charging_available,
+    COALESCE(pr.length_m, a.runway_length_m) AS runway_length_m,
+    COALESCE(pr.width_m, a.runway_width_m) AS runway_width_m,
+    CASE WHEN cap.lighting_from_assets THEN TRUE ELSE a.night_landing END AS night_landing,
+    CASE WHEN cap.fuel_from_assets THEN TRUE ELSE a.fuel_available END AS fuel_available,
+    CASE WHEN cap.charging_from_assets THEN TRUE ELSE a.charging_available END AS charging_available,
     a.political_severity,
     a.disruption_type,
     a.political_details,
-    a.terrain_risk,
-    a.catchment_population,
-    a.last_mile_access_km,
-    a.data_confidence,
-    a.source,
-    a.verified_at,
+    NULL::text AS terrain_risk,
+    NULL::int AS catchment_population,
+    NULL::numeric AS last_mile_access_km,
+    CASE a.data_status
+      WHEN 'field_verified' THEN 'high'
+      WHEN 'desk_verified' THEN 'medium'
+      ELSE 'unverified'
+    END AS data_confidence,
+    CASE a.data_status
+      WHEN 'synthetic' THEN 'PLACEHOLDER - synthetic airstrip record (data_status=synthetic)'
+      ELSE 'data_status=' || a.data_status
+    END AS source,
+    a.data_status,
+    NULL::date AS verified_at,
     nearest.code AS nearest_airport_code,
     nearest.name AS nearest_airport_name,
     ROUND((nearest.distance_m / 1000.0)::numeric, 1) AS nearest_airport_distance_km,
@@ -141,6 +167,9 @@ const AIRSTRIP_DECISION_SQL = `
   LEFT JOIN states s ON a.state_id = s.id
   LEFT JOIN ownership_types o ON a.ownership_id = o.id
   LEFT JOIN surface_types f ON a.surface_id = f.id
+  LEFT JOIN v_airstrip_primary_runway pr ON pr.airstrip_id = a.id
+  LEFT JOIN surface_types rf ON pr.surface_id = rf.id
+  LEFT JOIN v_airstrip_capabilities cap ON cap.airstrip_id = a.id
   LEFT JOIN LATERAL (
     SELECT
       ap.code,
@@ -163,6 +192,59 @@ const AIRSTRIP_DECISION_SQL = `
     FROM airstrip_access_points acc
     WHERE acc.airstrip_id = a.id
   ) ap_agg ON true
+`;
+
+/**
+ * Aircraft query mapping the live aircraft_profiles columns onto the engine contract:
+ *  - takeoff_distance_m / landing_distance_m default to min_runway_m (no separate columns).
+ *  - seats = passengers; mtow_kg has no column -> NULL.
+ *  - allowed_surfaces: needs_paved = FALSE -> every surface in surface_types;
+ *    needs_paved = TRUE or NULL -> paved only (asphalt, concrete). NULL is treated
+ *    conservatively as paved-only and flagged in notes.
+ *  - needs_charging: column value; if NULL, inferred from energy_type
+ *    (electric -> TRUE, jet_a1/avgas -> FALSE, hybrid_electric/NULL -> NULL unknown).
+ *  - source: spec_source, else a PLACEHOLDER marker carrying spec_status.
+ */
+const AIRCRAFT_SQL = `
+  SELECT
+    p.id,
+    p.name,
+    p.category,
+    p.min_runway_m AS takeoff_distance_m,
+    p.min_runway_m AS landing_distance_m,
+    p.min_runway_m,
+    NULL::numeric AS mtow_kg,
+    p.payload_kg,
+    p.passengers AS seats,
+    p.passengers,
+    p.range_km,
+    COALESCE(
+      p.needs_charging,
+      CASE p.energy_type
+        WHEN 'electric' THEN TRUE
+        WHEN 'jet_a1' THEN FALSE
+        WHEN 'avgas' THEN FALSE
+      END
+    ) AS needs_charging,
+    CASE
+      WHEN p.needs_paved IS FALSE THEN (SELECT array_agg(st.name ORDER BY st.id) FROM surface_types st)
+      ELSE ARRAY['asphalt', 'concrete']::text[]
+    END AS allowed_surfaces,
+    p.needs_paved,
+    p.energy_type,
+    p.cruise_speed_kmh,
+    p.spec_status,
+    COALESCE(
+      NULLIF(btrim(p.spec_source), ''),
+      CASE WHEN p.spec_status = 'placeholder'
+        THEN 'PLACEHOLDER - verify against manufacturer data'
+        ELSE 'spec_status=' || p.spec_status
+      END
+    ) AS source,
+    CASE WHEN p.needs_paved IS NULL
+      THEN 'allowed_surfaces assumed paved-only: needs_paved is unknown (NULL).'
+    END AS notes
+  FROM aircraft_profiles p
 `;
 
 function createDbServiceError(requestId, context, err) {
@@ -192,14 +274,7 @@ async function listAircraftProfiles(options = {}) {
   const { requestId } = options;
   if (config.database.isConfigured) {
     try {
-      const sql = `
-        SELECT id, name, category, takeoff_distance_m, landing_distance_m, min_runway_m,
-               mtow_kg, payload_kg, seats, passengers, range_km, needs_charging,
-               allowed_surfaces, source, notes
-        FROM aircraft_profiles
-        ORDER BY id ASC
-      `;
-      const result = await query(sql);
+      const result = await query(`${AIRCRAFT_SQL} ORDER BY p.id ASC`);
       const rows = (result && result.rows) || [];
       return {
         aircraft: rows.map((row) => normalizeAircraftRow(row)),
@@ -233,15 +308,7 @@ async function getAircraftProfileById(aircraftId, options = {}) {
 
   if (config.database.isConfigured) {
     try {
-      const sql = `
-        SELECT id, name, category, takeoff_distance_m, landing_distance_m, min_runway_m,
-               mtow_kg, payload_kg, seats, passengers, range_km, needs_charging,
-               allowed_surfaces, source, notes
-        FROM aircraft_profiles
-        WHERE id = $1
-        LIMIT 1
-      `;
-      const result = await query(sql, [id]);
+      const result = await query(`${AIRCRAFT_SQL} WHERE p.id = $1 LIMIT 1`, [id]);
       const row = result && result.rows && result.rows[0];
       return {
         aircraft: row ? normalizeAircraftRow(row) : null,
@@ -379,6 +446,8 @@ async function getAirstripsForDecisionByIds(airstripIds, options = {}) {
 }
 
 module.exports = {
+  AIRSTRIP_DECISION_SQL,
+  AIRCRAFT_SQL,
   normalizeAircraftRow,
   normalizeAirstripRow,
   listAircraftProfiles,

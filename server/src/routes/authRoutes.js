@@ -132,7 +132,7 @@ router.post(
 
       if (config.database.isConfigured) {
         try {
-          const sql = 'SELECT id, email, password_hash, role FROM users WHERE LOWER(email) = $1 LIMIT 1';
+          const sql = 'SELECT id, email, password_hash, role, is_active FROM users WHERE LOWER(email) = $1 LIMIT 1';
           const result = await query(sql, [normalizedEmail]);
           if (result && result.rows && result.rows.length > 0) {
             user = result.rows[0];
@@ -146,7 +146,8 @@ router.post(
         return next(createDbUnavailableError(req.id, 'POST /auth/login (fallback disabled)'));
       }
 
-      if (!user) {
+      // users.is_active (migration 009) disables accounts without deleting them
+      if (!user || user.is_active === false) {
         return res.status(401).json({
           error: 'Authentication Failed',
           message: 'Invalid email or password.',

@@ -136,12 +136,15 @@ function validateMigrationSet(migrations) {
     { name: 'CHECK: lat/lng SRID 4326 bounds', pattern: /ST_Y\([^)]+\)\s+BETWEEN\s+-90\s+AND\s+90/i },
     { name: 'CHECK: surface type enum', pattern: /chk_surface_type_valid/i },
     { name: 'CHECK: ownership type enum', pattern: /chk_ownership_type_valid/i },
-    { name: 'Column: aircraft_profiles.takeoff_distance_m', pattern: /takeoff_distance_m/i },
-    { name: 'Column: aircraft_profiles.landing_distance_m', pattern: /landing_distance_m/i },
-    { name: 'Column: aircraft_profiles.allowed_surfaces', pattern: /allowed_surfaces/i },
-    { name: 'CHECK: aircraft category enum', pattern: /chk_aircraft_category_valid/i },
-    { name: 'Column: airstrips.terrain_risk', pattern: /terrain_risk/i },
-    { name: 'Column: airstrips.data_confidence', pattern: /data_confidence/i },
+    { name: 'Table: runways', pattern: /CREATE\s+TABLE(?:\s+IF\s+NOT\s+EXISTS)?\s+runways\b/i },
+    { name: 'View: v_airstrip_primary_runway', pattern: /VIEW\s+v_airstrip_primary_runway\b/i },
+    { name: 'View: v_airstrip_capabilities', pattern: /VIEW\s+v_airstrip_capabilities\b/i },
+    { name: 'Column: aircraft_profiles.needs_paved', pattern: /needs_paved/i },
+    { name: 'Column: aircraft_profiles.energy_type', pattern: /energy_type/i },
+    { name: 'CHECK: aircraft spec_status enum', pattern: /chk_aircraft_spec_status/i },
+    { name: 'CHECK: airstrips data_status enum', pattern: /chk_airstrips_data_status/i },
+    { name: 'CHECK: users password is bcrypt', pattern: /chk_users_password_is_bcrypt/i },
+    { name: 'GiST geography index on airstrips', pattern: /idx_airstrips_location_geog/i },
   ];
 
   const failures = checks.filter((c) => !c.pattern.test(combinedSql)).map((c) => c.name);
