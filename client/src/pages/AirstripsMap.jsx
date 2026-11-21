@@ -1,19 +1,22 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { useSearchParams } from 'react-router-dom'
-import { MapContainer, TileLayer, Marker, CircleMarker, Popup, useMap } from 'react-leaflet'
+import { useSearchParams, useNavigate } from 'react-router-dom'
+import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet.markercluster'
 import 'leaflet.markercluster/dist/MarkerCluster.css'
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
-import {
-  MOCK_AIRSTRIPS,
-  getAirstripAccessPoints,
-  getAirstripNearbyAirports,
-  getDefaultAssetsForAirstrip,
-} from '../data/mockData'
 import { ALL_CAPITALS } from '../data/indiaGeo'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../theme/ThemeContext'
+import DataSourceBadge from '../components/DataSourceBadge'
+import {
+  listAirstrips,
+  listAircraft,
+  evaluateAirstrip,
+  listAirstripAssets,
+  createAirstripAsset,
+  useApi,
+} from '../api'
 
 const TILE_LAYERS = {
   dark: {
@@ -162,7 +165,7 @@ function ClusteredAirstrips({ airstrips, selectedAirstrip, onSelectAirstrip }) {
       const popupContent = document.createElement('div')
       popupContent.innerHTML = `
         <div class="popup-name">${prop.name}</div>
-        <div class="popup-row"><span>Jurisdiction</span><span>${prop.state}</span></div>
+        <div class="popup-row"><span>Jurisdiction</span><span>${prop.state || 'Unknown'}</span></div>
         <div class="popup-row"><span>Runway</span><span class="tabular-num">${prop.runway_length_m}m ${prop.surface}</span></div>
         <div class="popup-row"><span>Feasibility</span><strong class="tabular-num tier-text-${getTierKey(score)}">${score}/100 (${getTierLabel(score)})</strong></div>
         <div class="popup-click-hint">Open Flight-Data Readout in right bay</div>
@@ -182,13 +185,12 @@ function ClusteredAirstrips({ airstrips, selectedAirstrip, onSelectAirstrip }) {
 export default function AirstripsMap() {
   const { currentUser, token } = useAuth()
   const { theme } = useTheme()
+  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const searchInputRef = useRef(null)
 
-  const [airstrips, setAirstrips] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [dataSource, setDataSource] = useState('checking') // 'live' | 'cache' | 'checking'
   const [selectedAirstrip, setSelectedAirstrip] = useState(null)
+  const [selectedAircraftId, setSelectedAircraftId] = useState('')
   const [manualBasemap, setManualBasemap] = useState(null)
   const basemap = manualBasemap || (theme === 'dark' ? 'dark' : 'light')
   const [showCapitals, setShowCapitals] = useState(false)
@@ -202,10 +204,9 @@ export default function AirstripsMap() {
     political: 'all',
   })
 
-  // Assets state per selected airstrip
-  const [assets, setAssets] = useState([])
-  const [assetsLoading, setAssetsLoading] = useState(false)
   const [showAssetForm, setShowAssetForm] = useState(false)
+  const [assetSubmitError, setAssetSubmitError] = useState('')
+  const [assetSubmitting, setAssetSubmitting] = useState(false)
   const [assetForm, setAssetForm] = useState({
     name: '',
     asset_type: 'charging_station',
@@ -214,38 +215,53 @@ export default function AirstripsMap() {
     capacity_spec: '',
   })
 
-  const canModifyAssets = currentUser?.role === 'admin' || currentUser?.role === 'analyst'
+  const canModifyAssets = Boolean(token) && (currentUser?.role === 'admin' || currentUser?.role === 'analyst')
 
-  async function loadAirstrips(signal) {
-    setLoading(true)
-    try {
-      const res = await fetch('/api/airstrips', { signal })
-      if (!res.ok) throw new Error('API unavailable')
-      const json = await res.json()
-      const features = json.features ?? json
-      if (Array.isArray(features) && features.length > 0) {
-        setAirstrips(features)
-        setDataSource('live')
-      } else {
-        setAirstrips(MOCK_AIRSTRIPS)
-        setDataSource('cache')
-      }
-    } catch (err) {
-      if (err.name === 'AbortError') return
-      setAirstrips(MOCK_AIRSTRIPS)
-      setDataSource('cache')
-    } finally {
-      setLoading(false)
-    }
-  }
+  const airstripsQuery = useApi((signal) => listAirstrips({}, { signal }), [])
+  const aircraftQuery = useApi((signal) => listAircraft({ signal }), [token], { enabled: Boolean(token) })
+
+  const airstrips = useMemo(() => {
+    const features = airstripsQuery.data?.features
+    return Array.isArray(features) ? features : []
+  }, [airstripsQuery.data])
+
+  const aircraftList = useMemo(() => aircraftQuery.data?.aircraft || [], [aircraftQuery.data])
 
   useEffect(() => {
-    const controller = new AbortController()
-    loadAirstrips(controller.signal)
-    return () => controller.abort()
-  }, [])
+    if (aircraftList.length > 0 && !selectedAircraftId) {
+      setSelectedAircraftId(String(aircraftList[0].id))
+    }
+  }, [aircraftList, selectedAircraftId])
 
-  // Pre-select airstrip from ?strip=<id> URL param when arriving from Overview
+  const dataSource = airstripsQuery.isUnavailable
+    ? 'unavailable'
+    : airstripsQuery.data?.data_source || null
+
+  const selectedStripId = selectedAirstrip?.properties?.id || null
+
+  const assetsQuery = useApi(
+    (signal) => listAirstripAssets(selectedStripId, { signal }),
+    [selectedStripId, token],
+    { enabled: Boolean(selectedStripId && token) }
+  )
+
+  const evaluationQuery = useApi(
+    (signal) =>
+      evaluateAirstrip(
+        { aircraftId: Number(selectedAircraftId), airstripId: Number(selectedStripId) },
+        { signal }
+      ),
+    [selectedStripId, selectedAircraftId, token],
+    { enabled: Boolean(selectedStripId && selectedAircraftId && token) }
+  )
+
+  const assets = useMemo(() => assetsQuery.data?.assets || [], [assetsQuery.data])
+  const caveatText =
+    evaluationQuery.data?.caveat ||
+    airstripsQuery.data?.caveat ||
+    'Decision-support estimate. Verify with a site survey before committing.'
+
+  // Pre-select airstrip from ?strip=<id> URL param
   useEffect(() => {
     const stripParam = searchParams.get('strip')
     if (!stripParam || airstrips.length === 0) return
@@ -270,36 +286,6 @@ export default function AirstripsMap() {
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [selectedAirstrip, setSearchParams])
-
-  // Fetch on-site assets when selected airstrip changes
-  useEffect(() => {
-    if (!selectedAirstrip?.properties?.id) {
-      setAssets([])
-      setShowAssetForm(false)
-      return
-    }
-    const prop = selectedAirstrip.properties
-    const fallbackAssets = getDefaultAssetsForAirstrip(prop)
-    const controller = new AbortController()
-    setAssetsLoading(true)
-    setShowAssetForm(false)
-
-    fetch(`/api/airstrips/${prop.id}/assets`, { signal: controller.signal })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((json) => {
-        if (json?.assets && json.assets.length > 0) {
-          setAssets(json.assets)
-        } else {
-          setAssets(fallbackAssets)
-        }
-      })
-      .catch((err) => {
-        if (err.name !== 'AbortError') setAssets(fallbackAssets)
-      })
-      .finally(() => setAssetsLoading(false))
-
-    return () => controller.abort()
-  }, [selectedAirstrip])
 
   const filtered = useMemo(() => {
     const q = filters.query.trim().toLowerCase()
@@ -353,54 +339,33 @@ export default function AirstripsMap() {
 
   function handleSelectAirstrip(feature) {
     setSelectedAirstrip(feature)
+    setShowAssetForm(false)
+    setAssetSubmitError('')
     setSearchParams({ strip: String(feature.properties.id) })
   }
 
   async function handleCreateAsset(e) {
     e.preventDefault()
-    if (!assetForm.name.trim() || !selectedAirstrip) return
-    const stripId = selectedAirstrip.properties.id
-    const payload = {
-      name: assetForm.name.trim(),
-      asset_type: assetForm.asset_type,
-      status: assetForm.status,
-      condition_grade: 'good',
-      quantity: Math.max(1, Number(assetForm.quantity) || 1),
-      capacity_spec: assetForm.capacity_spec.trim() || undefined,
+    if (!assetForm.name.trim() || !selectedStripId) return
+    setAssetSubmitting(true)
+    setAssetSubmitError('')
+    try {
+      await createAirstripAsset(selectedStripId, {
+        name: assetForm.name.trim(),
+        asset_type: assetForm.asset_type,
+        status: assetForm.status,
+        condition_grade: 'good',
+        quantity: Math.max(1, Number(assetForm.quantity) || 1),
+        capacity_spec: assetForm.capacity_spec.trim() || undefined,
+      })
+      setAssetForm({ name: '', asset_type: 'charging_station', status: 'operational', quantity: 1, capacity_spec: '' })
+      setShowAssetForm(false)
+      assetsQuery.refetch()
+    } catch (err) {
+      setAssetSubmitError(err?.message || 'Failed to save asset.')
+    } finally {
+      setAssetSubmitting(false)
     }
-
-    let created = null
-    if (token) {
-      try {
-        const res = await fetch(`/api/airstrips/${stripId}/assets`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(payload),
-        })
-        if (res.ok) {
-          const data = await res.json()
-          created = data.asset
-        }
-      } catch {
-        // Fallback to local session state
-      }
-    }
-
-    if (!created) {
-      created = {
-        id: Date.now(),
-        airstrip_id: stripId,
-        ...payload,
-        capacity_spec: payload.capacity_spec || 'Workstation logged',
-      }
-    }
-
-    setAssets((prev) => [...prev, created])
-    setAssetForm({ name: '', asset_type: 'charging_station', status: 'operational', quantity: 1, capacity_spec: '' })
-    setShowAssetForm(false)
   }
 
   const p = selectedAirstrip?.properties
@@ -408,9 +373,10 @@ export default function AirstripsMap() {
   const activeTile = TILE_LAYERS[basemap] || TILE_LAYERS.dark
   const selectedScore = p?.feasibility?.score ?? 0
   const selectedTier = getTierKey(selectedScore)
-  const accessPoints = useMemo(() => (p ? getAirstripAccessPoints(p) : []), [p])
-  const nearbyAirports = useMemo(() => (p ? getAirstripNearbyAirports(p, coords) : []), [p, coords])
+  const accessPoints = Array.isArray(p?.access_points) ? p.access_points : []
+  const nearestHub = p?.nearest_airport?.code ? p.nearest_airport : null
   const clearances = useMemo(() => (p ? getAircraftClearance(p) : []), [p])
+  const liveEval = evaluationQuery.data
 
   return (
     <div className={`map-page${basemap === 'light' ? ' light-mode-map' : ''}`}>
@@ -419,13 +385,7 @@ export default function AirstripsMap() {
         <div className="map-top-row">
           <div className="map-title-cluster">
             <h1 className="map-console-title">Sector Feasibility Map</h1>
-            <span className={`telemetry-badge ${dataSource === 'live' ? 'telemetry-live' : 'telemetry-cache'}`}>
-              {dataSource === 'live'
-                ? 'Live PostGIS Connected'
-                : dataSource === 'cache'
-                ? `Offline Sector Cache (${airstrips.length} Strips)`
-                : 'Synchronizing Telemetry...'}
-            </span>
+            <DataSourceBadge source={dataSource} loading={airstripsQuery.loading} />
           </div>
 
           <div className="map-search-controls">
@@ -557,7 +517,7 @@ export default function AirstripsMap() {
       {/* Primary Instrument Canvas + Readout Bay */}
       <div className="map-body">
         <div className="map-container">
-          {loading && (
+          {airstripsQuery.loading && (
             <div className="map-state-overlay" role="status" aria-live="polite">
               <div className="map-state-box">
                 <div className="radar-sweep-bar" />
@@ -569,7 +529,21 @@ export default function AirstripsMap() {
             </div>
           )}
 
-          {!loading && filtered.length === 0 && (
+          {!airstripsQuery.loading && airstripsQuery.error && (
+            <div className="map-state-overlay" role="alert">
+              <div className="map-state-box">
+                <div className="map-state-title">
+                  {airstripsQuery.isUnavailable ? 'Database / Service Unavailable (503)' : 'Failed to Load Airstrips'}
+                </div>
+                <div className="map-state-desc">{airstripsQuery.error.message}</div>
+                <button type="button" className="btn btn-primary" onClick={() => airstripsQuery.refetch()}>
+                  Retry Connection
+                </button>
+              </div>
+            </div>
+          )}
+
+          {!airstripsQuery.loading && !airstripsQuery.error && filtered.length === 0 && (
             <div className="map-state-overlay" role="status">
               <div className="map-state-box">
                 <div className="map-state-title">0 Airstrips Match Active Sector Constraints</div>
@@ -621,18 +595,9 @@ export default function AirstripsMap() {
                   >
                     <Popup>
                       <div className="popup-name">{cap.capital}</div>
-                      <div className="popup-row">
-                        <span>Jurisdiction</span>
-                        <span>{cap.state}</span>
-                      </div>
-                      <div className="popup-row">
-                        <span>Type</span>
-                        <span>{cap.type} Capital</span>
-                      </div>
-                      <div className="popup-row">
-                        <span>WGS-84</span>
-                        <span className="tabular-num">{lat.toFixed(3)}N, {lng.toFixed(3)}E</span>
-                      </div>
+                      <div className="popup-row"><span>Jurisdiction</span><span>{cap.state}</span></div>
+                      <div className="popup-row"><span>Type</span><span>{cap.type} Capital</span></div>
+                      <div className="popup-row"><span>WGS-84</span><span className="tabular-num">{lat.toFixed(3)}N, {lng.toFixed(3)}E</span></div>
                     </Popup>
                   </CircleMarker>
                 )
@@ -647,16 +612,9 @@ export default function AirstripsMap() {
         >
           {!selectedAirstrip ? (
             <div className="empty-detail">
-              <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.25" className="empty-reticle" aria-hidden="true">
-                <circle cx="12" cy="12" r="9" />
-                <line x1="12" y1="2" x2="12" y2="7" />
-                <line x1="12" y1="17" x2="12" y2="22" />
-                <line x1="2" y1="12" x2="7" y2="12" />
-                <line x1="17" y1="12" x2="22" y2="12" />
-              </svg>
               <div className="empty-detail-title">No Target Selected</div>
               <div className="empty-detail-desc">
-                Select any paved runway strip or unpaved survey beacon on the map to inspect runway geometry, last-mile ground access, commercial hubs, on-site assets, and political stability.
+                Select any paved runway strip or unpaved survey beacon on the map to inspect runway geometry, last-mile ground access, commercial hub distance, on-site assets, and aircraft evaluation.
               </div>
               <div className="empty-legend-box">
                 <div className="legend-row">
@@ -698,14 +656,11 @@ export default function AirstripsMap() {
                   }}
                   aria-label="Close airstrip readout panel"
                 >
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.75">
-                    <line x1="3.5" y1="3.5" x2="12.5" y2="12.5" />
-                    <line x1="12.5" y1="3.5" x2="3.5" y2="12.5" />
-                  </svg>
+                  ×
                 </button>
               </div>
 
-              {/* 2. Immediate Feasibility Verdict & Aircraft Clearances */}
+              {/* 2. Immediate Feasibility Verdict & Live Aircraft Decision Evaluation */}
               <section className="readout-section verdict-section">
                 <div className="verdict-top-row">
                   <div className="verdict-score-cluster">
@@ -728,7 +683,55 @@ export default function AirstripsMap() {
                   </div>
                 </div>
 
-                {/* Aircraft Class Clearance Matrix */}
+                {/* Live Aircraft Evaluation via POST /api/evaluate */}
+                <div className="field-group" style={{ marginTop: '10px' }}>
+                  <label htmlFor="map-aircraft-select" className="field-label">
+                    Aircraft Decision Evaluation
+                  </label>
+                  {!token ? (
+                    <div className="asset-empty-note">
+                      Sign in to run aircraft suitability evaluation.{' '}
+                      <button type="button" className="inline-action-btn" onClick={() => navigate('/login')}>
+                        Sign In
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <select
+                        id="map-aircraft-select"
+                        className="ops-input"
+                        value={selectedAircraftId}
+                        onChange={(e) => setSelectedAircraftId(e.target.value)}
+                        disabled={aircraftQuery.loading || aircraftList.length === 0}
+                      >
+                        {aircraftList.map((ac) => (
+                          <option key={ac.id} value={String(ac.id)}>
+                            {ac.name} ({ac.category})
+                          </option>
+                        ))}
+                      </select>
+                      {evaluationQuery.loading && (
+                        <div className="asset-empty-note">Running decision engine...</div>
+                      )}
+                      {evaluationQuery.error && (
+                        <div className="login-error" role="alert">{evaluationQuery.error.message}</div>
+                      )}
+                      {liveEval && !evaluationQuery.loading && (
+                        <div className="asset-empty-note" style={{ marginTop: '6px' }}>
+                          <strong>Verdict:</strong> {String(liveEval.verdict || '').replace(/_/g, ' ').toUpperCase()} ({liveEval.score}/100)
+                          {liveEval.warnings?.length > 0 && (
+                            <ul className="reasons-list" style={{ marginTop: '4px' }}>
+                              {liveEval.warnings.slice(0, 3).map((w, i) => (
+                                <li key={i}>{w}</li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+
                 <div className="clearance-matrix">
                   {clearances.map((c) => (
                     <div key={c.label} className={`clearance-cell ${c.cleared ? 'cell-cleared' : 'cell-restricted'}`}>
@@ -739,59 +742,28 @@ export default function AirstripsMap() {
                   ))}
                 </div>
 
-                {/* 4-Factor Score Breakdown */}
-                {p.feasibility?.breakdown && (
-                  <div className="breakdown-grid">
-                    {[
-                      ['Runway', p.feasibility.breakdown.runway, 25],
-                      ['Surface', p.feasibility.breakdown.surface, 20],
-                      ['Utilities', p.feasibility.breakdown.utilities, 30],
-                      ['Hub Link', p.feasibility.breakdown.connectivity, 25],
-                    ].map(([label, val, max]) => (
-                      <div key={label} className="breakdown-cell">
-                        <div className="breakdown-cell-head">
-                          <span>{label}</span>
-                          <span className="tabular-num">{val ?? 0}/{max}</span>
-                        </div>
-                        <div className="breakdown-track">
-                          <div
-                            className="breakdown-fill"
-                            style={{ width: `${Math.min(100, Math.round(((val || 0) / max) * 100))}%` }}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                <div className="stitch-audit-caveat" style={{ marginTop: '8px' }}>
+                  {caveatText}
+                </div>
               </section>
 
               {/* 3. Runway Strip Schematic & Utilities */}
               <section className="readout-section">
                 <h3 className="readout-section-title">Runway Geometry &amp; Ground Utilities</h3>
-                <div className="runway-schematic-box" aria-label={`Runway ${p.runway_length_m} meters by ${p.runway_width_m} meters`}>
-                  <svg viewBox="0 0 360 48" width="100%" height="48">
-                    <rect x="4" y="6" width="352" height="36" fill="var(--surface-raised)" stroke="var(--border)" strokeWidth="1" />
-                    <line x1="12" y1="12" x2="12" y2="36" stroke="var(--text-muted)" strokeWidth="2" />
-                    <line x1="348" y1="12" x2="348" y2="36" stroke="var(--text-muted)" strokeWidth="2" />
-                    <text x="20" y="28" fill="var(--text-muted)" fontSize="10" fontWeight="600">09</text>
-                    <line x1="42" y1="24" x2="112" y2="24" stroke="var(--accent)" strokeWidth="1.5" strokeDasharray="6 5" />
-                    <rect x="118" y="13" width="124" height="22" fill="var(--surface)" stroke="var(--border)" strokeWidth="1" />
-                    <text x="180" y="28" textAnchor="middle" fill="var(--text)" fontSize="11" fontWeight="600">
-                      {p.runway_length_m?.toLocaleString()}m x {p.runway_width_m || 25}m
-                    </text>
-                    <line x1="248" y1="24" x2="318" y2="24" stroke="var(--accent)" strokeWidth="1.5" strokeDasharray="6 5" />
-                    <text x="340" y="28" textAnchor="end" fill="var(--text-muted)" fontSize="10" fontWeight="600">27</text>
-                  </svg>
-                </div>
-
                 <div className="spec-kv-grid">
+                  <div className="spec-kv">
+                    <span className="spec-k">Runway</span>
+                    <span className="spec-v tabular-num">
+                      {p.runway_length_m?.toLocaleString()}m × {p.runway_width_m || '--'}m
+                    </span>
+                  </div>
                   <div className="spec-kv">
                     <span className="spec-k">Surface</span>
                     <span className="spec-v capitalize">{p.surface}</span>
                   </div>
                   <div className="spec-kv">
                     <span className="spec-k">Elevation</span>
-                    <span className="spec-v tabular-num">{p.elevation_m}m ASL</span>
+                    <span className="spec-v tabular-num">{p.elevation_m ?? '--'}m ASL</span>
                   </div>
                   <div className="spec-kv">
                     <span className="spec-k">Night Lights</span>
@@ -810,10 +782,6 @@ export default function AirstripsMap() {
                     <span className={`spec-v ${p.charging_available ? 'val-ok' : 'val-muted'}`}>
                       {p.charging_available ? 'DC Ready' : 'Not Installed'}
                     </span>
-                  </div>
-                  <div className="spec-kv">
-                    <span className="spec-k">Ownership</span>
-                    <span className="spec-v capitalize">{p.ownership}</span>
                   </div>
                 </div>
               </section>
@@ -845,42 +813,46 @@ export default function AirstripsMap() {
                   <h3 className="readout-section-title">Last-Mile Access Points</h3>
                   <span className="section-count tabular-num">{accessPoints.length} Links</span>
                 </div>
-                <div className="readout-list">
-                  {accessPoints.map((ap, i) => (
-                    <div key={`${ap.name}-${i}`} className="readout-list-row">
-                      <div className="readout-list-main">
-                        <span className="access-type-tag">{ap.access_type.replace('_', ' ')}</span>
-                        <span className="readout-list-name">{ap.name}</span>
+                {accessPoints.length === 0 ? (
+                  <div className="asset-empty-note">No verified last-mile access points recorded.</div>
+                ) : (
+                  <div className="readout-list">
+                    {accessPoints.map((ap, i) => (
+                      <div key={`${ap.name}-${i}`} className="readout-list-row">
+                        <div className="readout-list-main">
+                          <span className="access-type-tag">{String(ap.access_type || '').replace('_', ' ')}</span>
+                          <span className="readout-list-name">{ap.name}</span>
+                        </div>
+                        <div className="readout-list-metrics tabular-num">
+                          <span>{ap.distance_km} km</span>
+                          {ap.drive_time_mins != null && <span className="metric-sub">{ap.drive_time_mins} min</span>}
+                        </div>
                       </div>
-                      <div className="readout-list-metrics tabular-num">
-                        <span>{ap.distance_km} km</span>
-                        <span className="metric-sub">{ap.drive_time_mins} min</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </section>
 
-              {/* 6. Nearby Commercial Hub Airports */}
+              {/* 6. Nearest Commercial Hub Airport */}
               <section className="readout-section">
                 <div className="readout-section-head">
-                  <h3 className="readout-section-title">Nearby Hub Airports</h3>
-                  <span className="section-count tabular-num">{nearbyAirports.length} Hubs</span>
+                  <h3 className="readout-section-title">Nearest Hub Airport</h3>
                 </div>
-                <div className="readout-list">
-                  {nearbyAirports.map((hub) => (
-                    <div key={hub.code} className="readout-list-row">
+                {!nearestHub ? (
+                  <div className="asset-empty-note">Nearest commercial hub distance not recorded.</div>
+                ) : (
+                  <div className="readout-list">
+                    <div className="readout-list-row">
                       <div className="readout-list-main">
-                        <span className={`iata-badge${hub.is_nearest ? ' iata-primary' : ''}`}>{hub.code}</span>
-                        <span className="readout-list-name">{hub.name}</span>
+                        <span className="iata-badge iata-primary">{nearestHub.code}</span>
+                        <span className="readout-list-name">{nearestHub.name}</span>
                       </div>
                       <div className="readout-list-metrics tabular-num">
-                        <span>{hub.distance_km} km</span>
-                        <span className="metric-sub">~{hub.evtol_mins}m eVTOL</span>
+                        <span>{nearestHub.distance_km} km</span>
                       </div>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                )}
               </section>
 
               {/* 7. On-Site Assets Inventory */}
@@ -896,7 +868,7 @@ export default function AirstripsMap() {
                       {showAssetForm ? 'Cancel' : '+ Log Asset'}
                     </button>
                   ) : (
-                    <span className="readonly-note">Viewer Read-Only</span>
+                    <span className="readonly-note">{token ? 'Viewer Read-Only' : 'Sign In Required'}</span>
                   )}
                 </div>
 
@@ -939,18 +911,21 @@ export default function AirstripsMap() {
                       value={assetForm.capacity_spec}
                       onChange={(e) => setAssetForm((f) => ({ ...f, capacity_spec: e.target.value }))}
                     />
-                    <button type="submit" className="btn btn-primary">
-                      Save Asset Record
+                    {assetSubmitError && <div className="login-error" role="alert">{assetSubmitError}</div>}
+                    <button type="submit" className="btn btn-primary" disabled={assetSubmitting}>
+                      {assetSubmitting ? 'Saving...' : 'Save Asset Record'}
                     </button>
                   </form>
                 )}
 
-                {assetsLoading ? (
+                {!token ? (
+                  <div className="asset-empty-note">Sign in to view on-site infrastructure assets.</div>
+                ) : assetsQuery.loading ? (
                   <div className="asset-empty-note">Retrieving airstrip asset manifest...</div>
+                ) : assetsQuery.error ? (
+                  <div className="login-error" role="alert">{assetsQuery.error.message}</div>
                 ) : assets.length === 0 ? (
-                  <div className="asset-empty-note">
-                    No dedicated ground assets logged for this airstrip.
-                  </div>
+                  <div className="asset-empty-note">No dedicated ground assets logged for this airstrip.</div>
                 ) : (
                   <div className="readout-list">
                     {assets.map((asset) => (
@@ -994,9 +969,7 @@ export default function AirstripsMap() {
       <footer className="map-telemetry-bar">
         <div className="telemetry-left">
           <span className="datum-chip">WGS-84 / EPSG:4326</span>
-          <span className="tabular-num">
-            {filtered.length}/{airstrips.length} Airstrips
-          </span>
+          <span className="tabular-num">{filtered.length}/{airstrips.length} Airstrips</span>
           <span className="meta-divider">|</span>
           <span className="tabular-num">Avg Runway {avgFilteredRunway}m</span>
           {selectedAirstrip && (
@@ -1010,21 +983,11 @@ export default function AirstripsMap() {
         </div>
 
         <div className="telemetry-legend">
-          <span className="legend-item">
-            <span className="legend-dot dot-high" /> High (70+)
-          </span>
-          <span className="legend-item">
-            <span className="legend-dot dot-moderate" /> Moderate (40-69)
-          </span>
-          <span className="legend-item">
-            <span className="legend-dot dot-low" /> Low (&lt;40)
-          </span>
-          <span className="legend-item">
-            <span className="legend-sample-strip" /> Paved
-          </span>
-          <span className="legend-item">
-            <span className="legend-sample-diamond" /> Unpaved
-          </span>
+          <span className="legend-item"><span className="legend-dot dot-high" /> High (70+)</span>
+          <span className="legend-item"><span className="legend-dot dot-moderate" /> Moderate (40-69)</span>
+          <span className="legend-item"><span className="legend-dot dot-low" /> Low (&lt;40)</span>
+          <span className="legend-item"><span className="legend-sample-strip" /> Paved</span>
+          <span className="legend-item"><span className="legend-sample-diamond" /> Unpaved</span>
         </div>
       </footer>
     </div>

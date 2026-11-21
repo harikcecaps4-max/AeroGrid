@@ -2,60 +2,56 @@
 
 const express = require('express');
 const { query } = require('../db');
+const config = require('../../../../server/src/config/env');
 
 const router = express.Router();
 
+const HEALTH_QUERY_TIMEOUT_MS = 2000;
+
+function queryWithTimeout(sql, timeoutMs) {
+  let timer;
+  return Promise.race([
+    query(sql).finally(() => clearTimeout(timer)),
+    new Promise((_, reject) => {
+      timer = setTimeout(() => reject(new Error('Health check timed out')), timeoutMs);
+      if (typeof timer.unref === 'function') timer.unref();
+    }),
+  ]);
+}
+
 /**
- * GET /health or /api/health
- * Comprehensive operational health probe: checks database status, system uptime, and memory usage.
+ * GET /health or /api/health (unauthenticated)
+ * Returns { status, database, data_source, time } without exposing connection details.
+ * Returns 503 if the database is configured but unreachable.
  */
 router.get(['/health', '/api/health'], async (req, res) => {
-  const startTime = Date.now();
-  let dbStatus = 'unreachable';
-  let dbLatencyMs = null;
-  let dbError = null;
+  const time = new Date().toISOString();
 
-  try {
-    const dbPingStart = Date.now();
-    const result = await query('SELECT 1 AS ok, current_database() as db_name, version() as version');
-    dbLatencyMs = Date.now() - dbPingStart;
-
-    if (result && result.rows && result.rows.length > 0) {
-      dbStatus = 'connected';
-    }
-  } catch (err) {
-    dbStatus = 'disconnected';
-    dbError = err.message;
+  if (!config.database.isConfigured) {
+    return res.status(200).json({
+      status: 'ok',
+      database: 'not_configured',
+      data_source: config.allowFallback ? 'fallback' : 'none',
+      time,
+    });
   }
 
-  const memoryUsage = process.memoryUsage();
-  const isHealthy = dbStatus === 'connected' || !process.env.DATABASE_URL;
-
-  const payload = {
-    status: isHealthy ? 'healthy' : 'degraded',
-    service: 'aerogrid_api',
-    version: '1.2.0',
-    timestamp: new Date().toISOString(),
-    uptime_seconds: Math.floor(process.uptime()),
-    database: {
-      status: dbStatus,
-      latency_ms: dbLatencyMs,
-      ...(dbError ? { error: dbError } : {}),
-      mode: process.env.DATABASE_URL ? 'postgresql_postgis' : 'in_memory_fallback',
-    },
-    system: {
-      node_version: process.version,
-      platform: process.platform,
-      memory: {
-        rss_mb: Math.round((memoryUsage.rss / 1024 / 1024) * 10) / 10,
-        heap_used_mb: Math.round((memoryUsage.heapUsed / 1024 / 1024) * 10) / 10,
-      },
-    },
-    duration_ms: Date.now() - startTime,
-  };
-
-  const statusCode = isHealthy ? 200 : 503;
-  return res.status(statusCode).json(payload);
+  try {
+    await queryWithTimeout('SELECT 1', HEALTH_QUERY_TIMEOUT_MS);
+    return res.status(200).json({
+      status: 'ok',
+      database: 'connected',
+      data_source: 'database',
+      time,
+    });
+  } catch {
+    return res.status(503).json({
+      status: 'unavailable',
+      database: 'unavailable',
+      data_source: 'unavailable',
+      time,
+    });
+  }
 });
 
 module.exports = router;
