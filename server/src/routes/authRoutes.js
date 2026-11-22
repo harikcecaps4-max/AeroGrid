@@ -5,6 +5,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const rateLimit = require('express-rate-limit');
 const { z } = require('zod');
+const { OAuth2Client } = require('google-auth-library');
 const { query } = require('../db');
 const config = require('../config/env');
 const { validateRequest } = require('../middleware/validate');
@@ -97,6 +98,32 @@ const registerSchema = z.object({
   name: z.string().trim().min(2, 'Name must be at least 2 characters').optional(),
 });
 
+const googleLoginSchema = z.object({
+  idToken: z.string().min(10, 'Google ID token is required'),
+});
+
+let oauthClientCache = { clientId: null, client: null };
+let customGoogleVerifier = null;
+
+async function verifyGoogleIdToken(idToken, audience) {
+  if (typeof customGoogleVerifier === 'function') {
+    return customGoogleVerifier({ idToken, audience });
+  }
+  if (!oauthClientCache.client || oauthClientCache.clientId !== audience) {
+    oauthClientCache = { clientId: audience, client: new OAuth2Client(audience) };
+  }
+  const ticket = await oauthClientCache.client.verifyIdToken({ idToken, audience });
+  return ticket ? ticket.getPayload() : null;
+}
+
+function resolveGoogleUserRole(normalizedEmail, existingRole = null) {
+  if (config.auth.adminEmails.includes(normalizedEmail)) return 'admin';
+  if (config.auth.analystEmails.includes(normalizedEmail)) {
+    return existingRole === 'admin' ? 'admin' : 'analyst';
+  }
+  return existingRole || 'viewer';
+}
+
 const userIdParamSchema = z.object({
   id: z.coerce.number().int().positive('User ID must be a positive integer'),
 });
@@ -146,8 +173,9 @@ router.post(
         return next(createDbUnavailableError(req.id, 'POST /auth/login (fallback disabled)'));
       }
 
-      // users.is_active (migration 009) disables accounts without deleting them
-      if (!user || user.is_active === false) {
+      // users.is_active (migration 009) disables accounts without deleting them;
+      // Google-only accounts have password_hash = NULL and cannot log in via password.
+      if (!user || user.is_active === false || !user.password_hash) {
         return res.status(401).json({
           error: 'Authentication Failed',
           message: 'Invalid email or password.',
@@ -303,6 +331,176 @@ router.post(
 );
 
 /**
+ * POST /api/auth/google
+ * Verifies a Google ID token via OAuth2Client.verifyIdToken, finds or creates the user,
+ * applies env-allowlisted role upgrades only, and issues the existing HS256 JWT.
+ */
+router.post(
+  '/auth/google',
+  authRateLimiter,
+  validateRequest({ body: googleLoginSchema }),
+  async (req, res, next) => {
+    try {
+      const clientId = config.google.clientId;
+      if (!clientId) {
+        return res.status(503).json({
+          error: 'Service Unavailable',
+          message: 'Google sign-in is not configured on this server.',
+        });
+      }
+
+      const { idToken } = req.body;
+      let payload = null;
+      try {
+        payload = await verifyGoogleIdToken(idToken, clientId);
+      } catch {
+        return res.status(401).json({
+          error: 'Authentication Failed',
+          message: 'Invalid or expired Google ID token.',
+        });
+      }
+
+      if (!payload || !payload.email || !payload.sub) {
+        return res.status(401).json({
+          error: 'Authentication Failed',
+          message: 'Invalid Google ID token payload.',
+        });
+      }
+
+      if (payload.aud && payload.aud !== clientId) {
+        return res.status(401).json({
+          error: 'Authentication Failed',
+          message: 'Google ID token audience mismatch.',
+        });
+      }
+
+      if (payload.email_verified !== true) {
+        return res.status(401).json({
+          error: 'Authentication Failed',
+          message: 'Google account email address is not verified.',
+        });
+      }
+
+      const normalizedEmail = String(payload.email).trim().toLowerCase();
+      const googleSub = String(payload.sub);
+      const displayName =
+        typeof payload.name === 'string' && payload.name.trim()
+          ? payload.name.trim()
+          : normalizedEmail.split('@')[0];
+
+      let user = null;
+
+      if (config.database.isConfigured) {
+        try {
+          const existingRes = await query(
+            'SELECT id, email, role, is_active, google_sub FROM users WHERE google_sub = $1 OR LOWER(email) = $2 LIMIT 1',
+            [googleSub, normalizedEmail]
+          );
+          const existing = existingRes && existingRes.rows && existingRes.rows[0];
+
+          if (existing) {
+            if (existing.is_active === false) {
+              return res.status(401).json({
+                error: 'Authentication Failed',
+                message: 'Account is disabled.',
+              });
+            }
+            const nextRole = resolveGoogleUserRole(normalizedEmail, existing.role);
+            if (existing.google_sub !== googleSub || existing.role !== nextRole) {
+              const upd = await query(
+                'UPDATE users SET google_sub = COALESCE(google_sub, $1), role = $2, last_login_at = now() WHERE id = $3 RETURNING id, email, role',
+                [googleSub, nextRole, existing.id]
+              );
+              user = upd.rows[0];
+            } else {
+              await query('UPDATE users SET last_login_at = now() WHERE id = $1', [existing.id]);
+              user = existing;
+            }
+          } else {
+            const role = resolveGoogleUserRole(normalizedEmail, 'viewer');
+            const ins = await query(
+              `INSERT INTO users (email, password_hash, role, google_sub, last_login_at)
+               VALUES ($1, NULL, $2, $3, now())
+               RETURNING id, email, role`,
+              [normalizedEmail, role, googleSub]
+            );
+            user = ins.rows[0];
+          }
+        } catch (dbErr) {
+          return next(createDbUnavailableError(req.id, 'POST /auth/google', dbErr));
+        }
+      } else if (!config.isProd && config.allowFallback) {
+        const existing = inMemoryUsers.find(
+          (u) => (u.google_sub && u.google_sub === googleSub) || u.email.toLowerCase() === normalizedEmail
+        );
+        if (existing) {
+          if (existing.is_active === false) {
+            return res.status(401).json({
+              error: 'Authentication Failed',
+              message: 'Account is disabled.',
+            });
+          }
+          existing.google_sub = existing.google_sub || googleSub;
+          existing.role = resolveGoogleUserRole(normalizedEmail, existing.role);
+          existing.name = existing.name || displayName;
+          user = existing;
+        } else {
+          const maxId = inMemoryUsers.reduce((max, u) => Math.max(max, Number(u.id) || 0), 0);
+          user = {
+            id: maxId + 1,
+            email: normalizedEmail,
+            password_hash: null,
+            google_sub: googleSub,
+            role: resolveGoogleUserRole(normalizedEmail, 'viewer'),
+            name: displayName,
+          };
+          inMemoryUsers.push(user);
+        }
+      } else {
+        return next(createDbUnavailableError(req.id, 'POST /auth/google (fallback disabled)'));
+      }
+
+      const normalizedUserEmail = user.email.trim().toLowerCase();
+      const token = jwt.sign(
+        {
+          id: user.id,
+          email: normalizedUserEmail,
+          role: user.role || 'viewer',
+          name: user.name || displayName,
+        },
+        config.jwt.secret,
+        {
+          algorithm: 'HS256',
+          expiresIn: config.jwt.expiresIn,
+        }
+      );
+
+      await logAudit({
+        userId: user.id,
+        userEmail: normalizedUserEmail,
+        action: 'LOGIN_GOOGLE',
+        entityType: 'USER',
+        entityId: user.id,
+        ipAddress: req.ip,
+      });
+
+      return res.status(200).json({
+        message: 'Authentication successful',
+        token,
+        user: {
+          id: user.id,
+          email: normalizedUserEmail,
+          role: user.role || 'viewer',
+          name: user.name || displayName,
+        },
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+/**
  * PATCH /api/users/:id/role
  * Admin-only endpoint to update a user's RBAC role with audit logging.
  */
@@ -372,6 +570,12 @@ router.patch(
 
 router.initInMemoryUsers = initInMemoryUsers;
 router.getInMemoryUsers = () => inMemoryUsers;
+router.setGoogleVerifier = (fn) => {
+  customGoogleVerifier = fn;
+};
+router.resetGoogleVerifier = () => {
+  customGoogleVerifier = null;
+};
 
 module.exports = router;
 

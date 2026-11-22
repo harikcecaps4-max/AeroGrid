@@ -24,9 +24,23 @@ function validateProductionEnv(env = process.env) {
         `unless NODE_ENV is explicitly 'test' or 'development' (got NODE_ENV=${env.NODE_ENV === undefined ? '<unset>' : `'${env.NODE_ENV}'`}).`
     );
   }
+  if (!env.GOOGLE_CLIENT_ID || typeof env.GOOGLE_CLIENT_ID !== 'string' || !env.GOOGLE_CLIENT_ID.trim()) {
+    throw new Error(
+      '[AeroGrid Config Error]: GOOGLE_CLIENT_ID is required ' +
+        `unless NODE_ENV is explicitly 'test' or 'development' (got NODE_ENV=${env.NODE_ENV === undefined ? '<unset>' : `'${env.NODE_ENV}'`}).`
+    );
+  }
   if (!env.DATABASE_URL) {
     console.warn('[AeroGrid Config Warning]: DATABASE_URL is not set.');
   }
+}
+
+function parseEmailList(raw) {
+  if (!raw || typeof raw !== 'string') return [];
+  return raw
+    .split(',')
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
 }
 
 validateProductionEnv(process.env);
@@ -68,6 +82,21 @@ const config = {
     },
     get expiresIn() {
       return process.env.JWT_EXPIRES_IN || '24h';
+    },
+  },
+
+  google: {
+    get clientId() {
+      return (process.env.GOOGLE_CLIENT_ID || '').trim();
+    },
+  },
+
+  auth: {
+    get adminEmails() {
+      return parseEmailList(process.env.ADMIN_EMAILS);
+    },
+    get analystEmails() {
+      return parseEmailList(process.env.ANALYST_EMAILS);
     },
   },
 

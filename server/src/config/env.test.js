@@ -10,6 +10,7 @@ const { validateProductionEnv, isRelaxedEnv } = require('./env');
 
 const ENV_PATH = path.join(__dirname, 'env.js');
 const VALID_SECRET = 'env-test-only-secret-that-is-at-least-32-chars';
+const VALID_GOOGLE_CLIENT_ID = '1234567890-testclient.apps.googleusercontent.com';
 
 /** Loads env.js in a clean child process so module-load (startup) behaviour is tested for real. */
 function loadInChild(envVars) {
@@ -27,9 +28,15 @@ test('production without JWT_SECRET throws at startup', () => {
   assert.match(res.stderr, /JWT_SECRET is required/);
 });
 
-test('production with short JWT_SECRET throws; with valid secret starts', () => {
-  assert.notEqual(loadInChild({ NODE_ENV: 'production', JWT_SECRET: 'short' }).status, 0);
-  assert.equal(loadInChild({ NODE_ENV: 'production', JWT_SECRET: VALID_SECRET }).status, 0);
+test('production with short JWT_SECRET or missing GOOGLE_CLIENT_ID throws; with both valid starts', () => {
+  assert.notEqual(loadInChild({ NODE_ENV: 'production', JWT_SECRET: 'short', GOOGLE_CLIENT_ID: VALID_GOOGLE_CLIENT_ID }).status, 0);
+  const missingGoogle = loadInChild({ NODE_ENV: 'production', JWT_SECRET: VALID_SECRET });
+  assert.notEqual(missingGoogle.status, 0);
+  assert.match(missingGoogle.stderr, /GOOGLE_CLIENT_ID is required/);
+  assert.equal(
+    loadInChild({ NODE_ENV: 'production', JWT_SECRET: VALID_SECRET, GOOGLE_CLIENT_ID: VALID_GOOGLE_CLIENT_ID }).status,
+    0
+  );
 });
 
 test('unset NODE_ENV without JWT_SECRET throws at startup', () => {
@@ -54,8 +61,11 @@ test('NODE_ENV=test and NODE_ENV=development start without JWT_SECRET', () => {
 test('validateProductionEnv and isRelaxedEnv unit behaviour; no hardcoded secret fallback', () => {
   assert.throws(() => validateProductionEnv({}), /JWT_SECRET is required/);
   assert.throws(() => validateProductionEnv({ NODE_ENV: 'production' }), /JWT_SECRET is required/);
+  assert.throws(() => validateProductionEnv({ NODE_ENV: 'production', JWT_SECRET: VALID_SECRET }), /GOOGLE_CLIENT_ID is required/);
   assert.doesNotThrow(() => validateProductionEnv({ NODE_ENV: 'test' }));
-  assert.doesNotThrow(() => validateProductionEnv({ NODE_ENV: 'production', JWT_SECRET: VALID_SECRET }));
+  assert.doesNotThrow(() =>
+    validateProductionEnv({ NODE_ENV: 'production', JWT_SECRET: VALID_SECRET, GOOGLE_CLIENT_ID: VALID_GOOGLE_CLIENT_ID })
+  );
   assert.equal(isRelaxedEnv({ NODE_ENV: 'test' }), true);
   assert.equal(isRelaxedEnv({ NODE_ENV: 'development' }), true);
   assert.equal(isRelaxedEnv({}), false);

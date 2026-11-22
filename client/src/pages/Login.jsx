@@ -1,37 +1,46 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { GoogleLogin } from '@react-oauth/google'
 import { useAuth } from '../context/AuthContext'
 import { getHealth } from '../api'
 import DataSourceBadge from '../components/DataSourceBadge'
 
+const GOOGLE_CLIENT_ID = (import.meta.env.VITE_GOOGLE_CLIENT_ID || '').trim()
+const DEMO_ENABLED = import.meta.env.DEV && import.meta.env.VITE_ENABLE_DEMO === 'true'
+
+function routeForRole(role) {
+  if (role === 'admin') return '/'
+  if (role === 'analyst') return '/map'
+  return '/'
+}
+
 export default function Login() {
-  const { currentUser, loginWithCredentials, registerWithCredentials, switchRole, availableUsers } = useAuth()
+  const {
+    currentUser,
+    loginWithCredentials,
+    registerWithCredentials,
+    loginWithGoogleCredential,
+    switchRole,
+    availableUsers,
+  } = useAuth()
   const navigate = useNavigate()
 
-  const [mode, setMode] = useState('login') // 'login' | 'register'
+  const [mode, setMode] = useState('login')
   const [email, setEmail] = useState(currentUser?.email || '')
   const [password, setPassword] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [statusMsg, setStatusMsg] = useState('')
-  const [health, setHealth] = useState({ state: 'checking', dataSource: null, database: null })
+  const [health, setHealth] = useState({ state: 'checking', dataSource: null })
 
   useEffect(() => {
     const controller = new AbortController()
     getHealth({ signal: controller.signal })
       .then((res) => {
-        setHealth({
-          state: 'online',
-          dataSource: res?.data_source || null,
-          database: res?.database || null,
-        })
+        setHealth({ state: 'online', dataSource: res?.data_source || null })
       })
       .catch((err) => {
         if (err?.name === 'AbortError') return
-        setHealth({
-          state: err?.isUnavailable ? 'unavailable' : 'offline',
-          dataSource: 'unavailable',
-          database: 'unavailable',
-        })
+        setHealth({ state: err?.isUnavailable ? 'unavailable' : 'offline', dataSource: 'unavailable' })
       })
     return () => controller.abort()
   }, [])
@@ -60,7 +69,7 @@ export default function Login() {
           : await loginWithCredentials(email, password)
 
       if (result.ok) {
-        navigate('/map')
+        navigate(routeForRole(result.user?.role))
       } else {
         setStatusMsg(result.error || 'Authentication failed.')
       }
@@ -69,9 +78,24 @@ export default function Login() {
     }
   }
 
+  async function handleGoogleSuccess(credentialResponse) {
+    setSubmitting(true)
+    setStatusMsg('')
+    try {
+      const result = await loginWithGoogleCredential(credentialResponse?.credential)
+      if (result.ok) {
+        navigate(routeForRole(result.user?.role))
+      } else {
+        setStatusMsg(result.error || 'Google sign-in failed.')
+      }
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   function handlePresetLaunch(user) {
     switchRole(user.role)
-    navigate('/map')
+    navigate(routeForRole(user.role))
   }
 
   return (
@@ -160,6 +184,20 @@ export default function Login() {
             </div>
           </div>
 
+          {GOOGLE_CLIENT_ID && (
+            <div style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={() => setStatusMsg('Google sign-in was cancelled or failed.')}
+                useOneTap={false}
+                width="100%"
+              />
+              <div style={{ textAlign: 'center', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                or continue with operator email
+              </div>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="login-form">
             <div className="field-group">
               <label htmlFor="ops-email" className="field-label">Operator Email</label>
@@ -208,23 +246,25 @@ export default function Login() {
             </button>
           </form>
 
-          <div className="login-presets">
-            <div className="login-presets-title">Demo mode (local preview without JWT)</div>
-            <div className="login-presets-grid">
-              {availableUsers.map((u) => (
-                <button
-                  key={u.role}
-                  type="button"
-                  className={`preset-btn${currentUser?.role === u.role ? ' preset-active' : ''}`}
-                  onClick={() => handlePresetLaunch(u)}
-                >
-                  <span className="preset-role">{u.role.toUpperCase()}</span>
-                  <span className="preset-name">{u.name}</span>
-                  <span className="preset-station">{u.station}</span>
-                </button>
-              ))}
+          {DEMO_ENABLED && (
+            <div className="login-presets">
+              <div className="login-presets-title">Demo mode (local dev preview)</div>
+              <div className="login-presets-grid">
+                {availableUsers.map((u) => (
+                  <button
+                    key={u.role}
+                    type="button"
+                    className={`preset-btn${currentUser?.role === u.role ? ' preset-active' : ''}`}
+                    onClick={() => handlePresetLaunch(u)}
+                  >
+                    <span className="preset-role">{u.role.toUpperCase()}</span>
+                    <span className="preset-name">{u.name}</span>
+                    <span className="preset-station">{u.station}</span>
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </section>
       </div>
     </div>
