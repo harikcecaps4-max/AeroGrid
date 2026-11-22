@@ -73,8 +73,10 @@ const NAV_ITEMS = [
   },
 ]
 
+const DEMO_ENABLED = import.meta.env.DEV && import.meta.env.VITE_ENABLE_DEMO === 'true'
+
 export default function Sidebar({ open = false, onClose }) {
-  const { currentUser, switchRole } = useAuth()
+  const { currentUser, switchRole, logout, isAuthenticated } = useAuth()
   const activeRole = currentUser?.role || 'viewer'
 
   return (
@@ -148,24 +150,42 @@ export default function Sidebar({ open = false, onClose }) {
             <span className="stitch-ops-name">{currentUser?.name || 'Unauthenticated'}</span>
             <span className={`stitch-role-pill stitch-role-${activeRole}`}>{activeRole.toUpperCase()}</span>
           </div>
-          <div className="stitch-demo-label">Demo mode</div>
-          <div className="stitch-role-switcher" role="group" aria-label="Demo mode: switch operator role">
-            {['admin', 'analyst', 'viewer'].map((role) => (
-              <button
-                key={role}
-                type="button"
-                className={`stitch-role-btn${activeRole === role ? ' active' : ''}`}
-                aria-pressed={activeRole === role}
-                onClick={() => switchRole(role)}
-              >
-                {role}
-              </button>
-            ))}
-          </div>
+          {DEMO_ENABLED && (
+            <>
+              <div className="stitch-demo-label">Demo mode</div>
+              <div className="stitch-role-switcher" role="group" aria-label="Demo mode: switch operator role">
+                {['admin', 'analyst', 'viewer'].map((role) => (
+                  <button
+                    key={role}
+                    type="button"
+                    className={`stitch-role-btn${activeRole === role ? ' active' : ''}`}
+                    aria-pressed={activeRole === role}
+                    onClick={() => switchRole(role)}
+                  >
+                    {role}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
           <div className="stitch-ops-links">
-            <Link to="/login" className="stitch-ops-link" onClick={onClose}>
-              Operator Terminal
-            </Link>
+            {isAuthenticated ? (
+              <button
+                type="button"
+                className="stitch-ops-link"
+                style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+                onClick={() => {
+                  logout()
+                  if (onClose) onClose()
+                }}
+              >
+                Sign Out
+              </button>
+            ) : (
+              <Link to="/login" className="stitch-ops-link" onClick={onClose}>
+                Operator Sign In
+              </Link>
+            )}
             <span className="stitch-ops-datum">SRID 4326</span>
           </div>
         </div>

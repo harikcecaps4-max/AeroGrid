@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
-import { configureApiAuth, login as apiLogin, register as apiRegister } from '../api'
+import { configureApiAuth, login as apiLogin, register as apiRegister, loginWithGoogle as apiGoogleLogin } from '../api'
 
 const AuthContext = createContext(null)
 
@@ -129,6 +129,29 @@ export function AuthProvider({ children }) {
     }
   }
 
+  async function loginWithGoogleCredential(idToken) {
+    if (!idToken) {
+      return { ok: false, error: 'Google did not return a valid credential.' }
+    }
+    try {
+      const data = await apiGoogleLogin({ idToken })
+      if (!data?.user || !data?.token) {
+        return { ok: false, error: 'Invalid Google sign-in response from server.' }
+      }
+      const userSession = buildUserSession(data.user)
+      setCurrentUser(userSession)
+      setToken(data.token)
+      return { ok: true, mode: 'google', user: userSession, token: data.token }
+    } catch (err) {
+      return {
+        ok: false,
+        error: err?.message || 'Google sign-in failed.',
+        status: err?.status || 0,
+        isUnavailable: Boolean(err?.isUnavailable),
+      }
+    }
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -138,6 +161,7 @@ export function AuthProvider({ children }) {
         switchRole,
         loginWithCredentials,
         registerWithCredentials,
+        loginWithGoogleCredential,
         logout,
         availableUsers: DEMO_USERS,
       }}

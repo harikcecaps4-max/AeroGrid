@@ -11,10 +11,10 @@ const seedModule = require('./seed');
 
 const MIGRATIONS_DIR = path.join(__dirname, 'migrations');
 
-test('numbered migrations 001 through 012 exist in sequential order without gaps', () => {
+test('numbered migrations 001 through 013 exist in sequential order without gaps', () => {
   const migrations = discoverMigrations(MIGRATIONS_DIR);
   const versions = migrations.map((m) => m.version);
-  assert.deepEqual(versions, ['001', '002', '003', '004', '005', '006', '007', '008', '009', '010', '011', '012']);
+  assert.deepEqual(versions, ['001', '002', '003', '004', '005', '006', '007', '008', '009', '010', '011', '012', '013']);
   for (const m of migrations) {
     assert.ok(m.checksum.length === 64, `Expected SHA-256 checksum for ${m.filename}`);
   }
@@ -92,6 +92,15 @@ test('restored 008-012 migrations define runways, capability views, provenance, 
   assert.match(read('010_provenance_and_decisions.sql'), /chk_airstrips_data_status/i);
   assert.match(read('011_organizations_and_requests.sql'), /organizations/i);
   assert.match(read('012_neon_production_hardening.sql'), /idx_airstrips_location_geog/i);
+});
+
+test('013_google_oauth.sql adds unique google_sub, makes password_hash nullable, and allows LOGIN_GOOGLE audit action', () => {
+  const m013 = fs.readFileSync(path.join(MIGRATIONS_DIR, '013_google_oauth.sql'), 'utf8');
+  assert.match(m013, /ADD\s+COLUMN\s+IF\s+NOT\s+EXISTS\s+google_sub\s+TEXT/i);
+  assert.match(m013, /CREATE\s+UNIQUE\s+INDEX\s+IF\s+NOT\s+EXISTS\s+uq_users_google_sub/i);
+  assert.match(m013, /ALTER\s+COLUMN\s+password_hash\s+DROP\s+NOT\s+NULL/i);
+  assert.match(m013, /password_hash\s+IS\s+NULL/i);
+  assert.match(m013, /'LOGIN_GOOGLE'/);
 });
 
 test('seed aircraft profiles are explicitly marked as PLACEHOLDER and missing airstrip fields are NULL with source/confidence', () => {

@@ -1,5 +1,5 @@
 export { API_BASE, ApiError, apiRequest, configureApiAuth } from './client'
-export { login, register } from './auth'
+export { login, register, loginWithGoogle } from './auth'
 export { listAirstrips, getAirstripById, findAirstripsInRadius } from './airstrips'
 export { listAircraft } from './aircraft'
 export { evaluateAirstrip, rankAirstrips, compareAirstrips } from './decision'

@@ -448,6 +448,7 @@ test('auth security: production JWT_SECRET validation, requireRole fail-closed s
     config.validateProductionEnv({
       NODE_ENV: 'production',
       JWT_SECRET: 'a-valid-32-character-minimum-production-secret',
+      GOOGLE_CLIENT_ID: '1234567890-test.apps.googleusercontent.com',
     }),
   );
 
@@ -804,6 +805,118 @@ test('GET /api/health requires no auth, returns expected contract, and returns 5
   } finally {
     if (prevDbUrl === undefined) delete process.env.DATABASE_URL;
     else process.env.DATABASE_URL = prevDbUrl;
+  }
+});
+
+test('POST /api/auth/google verifies ID token (valid, wrong audience, unverified email, new viewer, allowlisted admin)', async () => {
+  const prevGoogleId = process.env.GOOGLE_CLIENT_ID;
+  const prevAdmins = process.env.ADMIN_EMAILS;
+  const prevAnalysts = process.env.ANALYST_EMAILS;
+
+  const TEST_CLIENT_ID = '1111111111-aerogrid.apps.googleusercontent.com';
+  process.env.GOOGLE_CLIENT_ID = TEST_CLIENT_ID;
+  process.env.ADMIN_EMAILS = 'ops.chief@aerogrid.test';
+  process.env.ANALYST_EMAILS = 'planner@aerogrid.test';
+
+  try {
+    // 1. Wrong audience -> 401
+    authRoutes.setGoogleVerifier(async ({ audience }) => {
+      assert.equal(audience, TEST_CLIENT_ID);
+      return {
+        sub: 'google-sub-wrong-aud',
+        email: 'wrong.aud@aerogrid.test',
+        email_verified: true,
+        aud: 'other-client.apps.googleusercontent.com',
+      };
+    });
+    const wrongAud = await requestJson('/api/auth/google', {
+      method: 'POST',
+      auth: false,
+      body: { idToken: 'mock-wrong-audience-id-token' },
+    });
+    assert.equal(wrongAud.status, 401);
+
+    // 2. Verifier throws (e.g. Google library audience/signature failure) -> 401
+    authRoutes.setGoogleVerifier(async () => {
+      throw new Error('Wrong recipient, payload audience != requiredAudience');
+    });
+    const threwAud = await requestJson('/api/auth/google', {
+      method: 'POST',
+      auth: false,
+      body: { idToken: 'mock-invalid-signature-token' },
+    });
+    assert.equal(threwAud.status, 401);
+
+    // 3. Unverified email -> 401
+    authRoutes.setGoogleVerifier(async () => ({
+      sub: 'google-sub-unverified',
+      email: 'unverified@aerogrid.test',
+      email_verified: false,
+      aud: TEST_CLIENT_ID,
+    }));
+    const unverified = await requestJson('/api/auth/google', {
+      method: 'POST',
+      auth: false,
+      body: { idToken: 'mock-unverified-email-token' },
+    });
+    assert.equal(unverified.status, 401);
+
+    // 4. New user -> created as 'viewer', email normalized, valid HS256 JWT issued
+    authRoutes.setGoogleVerifier(async () => ({
+      sub: 'google-sub-new-viewer',
+      email: '  New.Viewer@AeroGrid.Test ',
+      email_verified: true,
+      name: 'New Viewer',
+      aud: TEST_CLIENT_ID,
+    }));
+    const newUserRes = await requestJson('/api/auth/google', {
+      method: 'POST',
+      auth: false,
+      body: { idToken: 'mock-valid-new-viewer-token', role: 'admin' },
+    });
+    assert.equal(newUserRes.status, 200);
+    assert.equal(newUserRes.json.user.email, 'new.viewer@aerogrid.test');
+    assert.equal(newUserRes.json.user.role, 'viewer');
+    assert.ok(newUserRes.json.token);
+
+    // Verify issued JWT works on viewer-protected route
+    const acRes = await requestJson('/api/aircraft', { token: newUserRes.json.token });
+    assert.equal(acRes.status, 200);
+
+    // 5. Allowlisted admin -> granted 'admin' role from ADMIN_EMAILS env
+    authRoutes.setGoogleVerifier(async () => ({
+      sub: 'google-sub-admin',
+      email: 'OPS.CHIEF@aerogrid.test',
+      email_verified: true,
+      name: 'Ops Chief',
+      aud: TEST_CLIENT_ID,
+    }));
+    const adminRes = await requestJson('/api/auth/google', {
+      method: 'POST',
+      auth: false,
+      body: { idToken: 'mock-valid-admin-id-token' },
+    });
+    assert.equal(adminRes.status, 200);
+    assert.equal(adminRes.json.user.email, 'ops.chief@aerogrid.test');
+    assert.equal(adminRes.json.user.role, 'admin');
+    assert.ok(adminRes.json.token);
+
+    // Verify admin JWT can invoke admin-only PATCH /api/users/:id/role
+    const promoteRes = await requestJson(`/api/users/${newUserRes.json.user.id}/role`, {
+      method: 'PATCH',
+      token: adminRes.json.token,
+      body: { role: 'analyst' },
+    });
+    assert.equal(promoteRes.status, 200);
+    assert.equal(promoteRes.json.user.role, 'analyst');
+  } finally {
+    authRoutes.resetGoogleVerifier();
+    if (prevGoogleId === undefined) delete process.env.GOOGLE_CLIENT_ID;
+    else process.env.GOOGLE_CLIENT_ID = prevGoogleId;
+    if (prevAdmins === undefined) delete process.env.ADMIN_EMAILS;
+    else process.env.ADMIN_EMAILS = prevAdmins;
+    if (prevAnalysts === undefined) delete process.env.ANALYST_EMAILS;
+    else process.env.ANALYST_EMAILS = prevAnalysts;
   }
 });
 
