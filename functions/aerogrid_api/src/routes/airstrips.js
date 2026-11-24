@@ -159,8 +159,8 @@ router.get('/airstrips', async (req, res, next) => {
 
     if (config.database.isConfigured) {
       try {
-        // Shared live-schema query (primary runway, capabilities view, data_status confidence)
-        const sql = `${AIRSTRIP_DECISION_SQL} ORDER BY a.name ASC`;
+        // Shared live-schema query (primary runway, capabilities view, active airstrips only)
+        const sql = `${AIRSTRIP_DECISION_SQL} WHERE a.data_status <> 'archived' ORDER BY a.name ASC`;
 
         const result = await query(sql);
         rows = (result && result.rows) || [];
@@ -258,8 +258,8 @@ router.get('/airstrips/:id', async (req, res, next) => {
 
     if (config.database.isConfigured) {
       try {
-        // Shared live-schema query (primary runway, capabilities view, data_status confidence)
-        const sql = `${AIRSTRIP_DECISION_SQL} WHERE a.id = $1 LIMIT 1`;
+        // Shared live-schema query (primary runway, capabilities view, active airstrips only)
+        const sql = `${AIRSTRIP_DECISION_SQL} WHERE a.id = $1 AND a.data_status <> 'archived' LIMIT 1`;
         const result = await query(sql, [id]);
         if (result && result.rows && result.rows.length > 0) {
           row = result.rows[0];

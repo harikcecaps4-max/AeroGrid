@@ -660,77 +660,91 @@ export default function AirstripsMap() {
                 </button>
               </div>
 
-              {/* 2. Immediate Feasibility Verdict & Live Aircraft Decision Evaluation */}
+              {/* 2. Decision Engine Verdict & Score (single authoritative score) */}
               <section className="readout-section verdict-section">
-                <div className="verdict-top-row">
-                  <div className="verdict-score-cluster">
-                    <span className={`verdict-score tabular-num tier-text-${selectedTier}`}>
-                      {selectedScore}
-                    </span>
-                    <span className="verdict-denom tabular-num">/ 100</span>
-                  </div>
-                  <div className="verdict-status-stack">
-                    <span className={`clearance-tag tag-${selectedTier}`}>
-                      {getTierLabel(selectedScore)}
-                    </span>
-                    <div className="verdict-delta tabular-num">
-                      Base {p.feasibility?.base_score ?? selectedScore} | Political{' '}
-                      {(p.political_influence?.penalty_points || 0) > 0
-                        ? `-${p.political_influence.penalty_points}`
-                        : '0'}{' '}
-                      pts
-                    </div>
-                  </div>
-                </div>
-
-                {/* Live Aircraft Evaluation via POST /api/evaluate */}
-                <div className="field-group" style={{ marginTop: '10px' }}>
+                <div className="field-group" style={{ marginBottom: '10px' }}>
                   <label htmlFor="map-aircraft-select" className="field-label">
-                    Aircraft Decision Evaluation
+                    Aircraft Profile (Decision Engine)
                   </label>
                   {!token ? (
                     <div className="asset-empty-note">
-                      Sign in to run aircraft suitability evaluation.{' '}
+                      Sign in to evaluate this airstrip with the decision engine.{' '}
                       <button type="button" className="inline-action-btn" onClick={() => navigate('/login')}>
                         Sign In
                       </button>
                     </div>
                   ) : (
+                    <select
+                      id="map-aircraft-select"
+                      className="ops-input"
+                      value={selectedAircraftId}
+                      onChange={(e) => setSelectedAircraftId(e.target.value)}
+                      disabled={aircraftQuery.loading || aircraftList.length === 0}
+                    >
+                      {aircraftList.map((ac) => (
+                        <option key={ac.id} value={String(ac.id)}>
+                          {ac.name} ({ac.category})
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+
+                {token && evaluationQuery.loading && (
+                  <div className="asset-empty-note">Running decision engine...</div>
+                )}
+
+                {token && evaluationQuery.error && (
+                  <div className="login-error" role="alert">{evaluationQuery.error.message}</div>
+                )}
+
+                {token && liveEval && !evaluationQuery.loading && (() => {
+                  const evalTier =
+                    liveEval.verdict === 'viable'
+                      ? 'high'
+                      : liveEval.verdict === 'viable_with_conditions'
+                      ? 'moderate'
+                      : 'low'
+                  const verdictLabel =
+                    liveEval.verdict === 'viable'
+                      ? 'VIABLE'
+                      : liveEval.verdict === 'viable_with_conditions'
+                      ? 'VIABLE WITH CONDITIONS'
+                      : 'NOT VIABLE'
+                  return (
                     <>
-                      <select
-                        id="map-aircraft-select"
-                        className="ops-input"
-                        value={selectedAircraftId}
-                        onChange={(e) => setSelectedAircraftId(e.target.value)}
-                        disabled={aircraftQuery.loading || aircraftList.length === 0}
-                      >
-                        {aircraftList.map((ac) => (
-                          <option key={ac.id} value={String(ac.id)}>
-                            {ac.name} ({ac.category})
-                          </option>
-                        ))}
-                      </select>
-                      {evaluationQuery.loading && (
-                        <div className="asset-empty-note">Running decision engine...</div>
-                      )}
-                      {evaluationQuery.error && (
-                        <div className="login-error" role="alert">{evaluationQuery.error.message}</div>
-                      )}
-                      {liveEval && !evaluationQuery.loading && (
-                        <div className="asset-empty-note" style={{ marginTop: '6px' }}>
-                          <strong>Verdict:</strong> {String(liveEval.verdict || '').replace(/_/g, ' ').toUpperCase()} ({liveEval.score}/100)
-                          {liveEval.warnings?.length > 0 && (
-                            <ul className="reasons-list" style={{ marginTop: '4px' }}>
-                              {liveEval.warnings.slice(0, 3).map((w, i) => (
-                                <li key={i}>{w}</li>
-                              ))}
-                            </ul>
-                          )}
+                      <div className="verdict-top-row">
+                        <div className="verdict-score-cluster">
+                          <span className={`verdict-score tabular-num tier-text-${evalTier}`}>
+                            {liveEval.score}
+                          </span>
+                          <span className="verdict-denom tabular-num">/ 100</span>
+                        </div>
+                        <div className="verdict-status-stack">
+                          <span className={`clearance-tag tag-${evalTier}`}>
+                            {verdictLabel}
+                          </span>
+                          <div className="verdict-delta tabular-num">
+                            {liveEval.aircraft?.name || 'Selected Aircraft'}
+                          </div>
+                        </div>
+                      </div>
+
+                      {liveEval.warnings?.length > 0 && (
+                        <div style={{ marginTop: '8px' }}>
+                          <div className="field-label" style={{ marginBottom: '4px' }}>
+                            Warnings &amp; Missing-Data Conditions ({liveEval.warnings.length})
+                          </div>
+                          <ul className="reasons-list">
+                            {liveEval.warnings.map((w, i) => (
+                              <li key={i}>{w}</li>
+                            ))}
+                          </ul>
                         </div>
                       )}
                     </>
-                  )}
-                </div>
+                  )
+                })()}
 
                 <div className="clearance-matrix">
                   {clearances.map((c) => (

@@ -11,10 +11,10 @@ const seedModule = require('./seed');
 
 const MIGRATIONS_DIR = path.join(__dirname, 'migrations');
 
-test('numbered migrations 001 through 013 exist in sequential order without gaps', () => {
+test('numbered migrations 001 through 014 exist in sequential order without gaps', () => {
   const migrations = discoverMigrations(MIGRATIONS_DIR);
   const versions = migrations.map((m) => m.version);
-  assert.deepEqual(versions, ['001', '002', '003', '004', '005', '006', '007', '008', '009', '010', '011', '012', '013']);
+  assert.deepEqual(versions, ['001', '002', '003', '004', '005', '006', '007', '008', '009', '010', '011', '012', '013', '014']);
   for (const m of migrations) {
     assert.ok(m.checksum.length === 64, `Expected SHA-256 checksum for ${m.filename}`);
   }
@@ -101,6 +101,23 @@ test('013_google_oauth.sql adds unique google_sub, makes password_hash nullable,
   assert.match(m013, /ALTER\s+COLUMN\s+password_hash\s+DROP\s+NOT\s+NULL/i);
   assert.match(m013, /password_hash\s+IS\s+NULL/i);
   assert.match(m013, /'LOGIN_GOOGLE'/);
+});
+
+test('014_dedupe_and_enrich.sql archives duplicates without deleting, adds partial unique location index, and enriches with provenance', () => {
+  const m014 = fs.readFileSync(path.join(MIGRATIONS_DIR, '014_dedupe_and_enrich.sql'), 'utf8');
+  assert.match(m014, /'archived'/);
+  assert.equal(/DELETE\s+FROM\s+airstrips/i.test(m014), false, '014 must never hard-delete airstrips');
+  assert.match(m014, /CREATE\s+UNIQUE\s+INDEX\s+IF\s+NOT\s+EXISTS\s+uq_airstrips_active_location/i);
+  assert.match(m014, /WHERE\s+data_status\s*<>\s*'archived'/i);
+  assert.match(m014, /'derived\/estimated'/);
+  assert.match(m014, /'terrain_risk'/);
+  assert.match(m014, /'last_mile_access_km'/);
+  assert.match(m014, /'low'/);
+
+  const dqSql = fs.readFileSync(path.join(__dirname, 'data_quality.sql'), 'utf8');
+  assert.match(dqSql, /duplicate_active_pairs_within_100m/);
+  assert.match(dqSql, /null_terrain_risk/);
+  assert.match(dqSql, /invalid_runway_or_coords/);
 });
 
 test('seed aircraft profiles are explicitly marked as PLACEHOLDER and missing airstrip fields are NULL with source/confidence', () => {

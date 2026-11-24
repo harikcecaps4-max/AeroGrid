@@ -220,7 +220,7 @@ router.post(
 
       if (config.database.isConfigured) {
         try {
-          const stripCheck = await query('SELECT id FROM airstrips WHERE id = $1 LIMIT 1', [airstripId]);
+          const stripCheck = await query("SELECT id FROM airstrips WHERE id = $1 AND data_status <> 'archived' LIMIT 1", [airstripId]);
           if (!stripCheck || !stripCheck.rows || stripCheck.rows.length === 0) {
             return res.status(404).json({
               error: 'Not Found',
