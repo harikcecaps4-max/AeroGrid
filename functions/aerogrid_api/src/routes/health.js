@@ -2,7 +2,7 @@
 
 const express = require('express');
 const { query } = require('../db');
-const config = require('../../../../server/src/config/env');
+const config = require('../config/env');
 
 const router = express.Router();
 
