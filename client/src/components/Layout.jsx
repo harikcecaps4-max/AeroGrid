@@ -7,16 +7,16 @@ import { useTheme } from '../theme/ThemeContext'
 export default function Layout() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [globalSearch, setGlobalSearch] = useState('')
-  const { currentUser } = useAuth()
+  const { currentUser, token } = useAuth()
   const { theme, setTheme } = useTheme()
 
-  const operatorName = currentUser?.name ? currentUser.name.toUpperCase() : 'SQN-LDR V. SHARMA'
-  const operatorRoleLabel =
-    currentUser?.role === 'admin'
-      ? 'CHIEF DISPATCHER'
-      : currentUser?.role === 'analyst'
-        ? 'ROUTE PLANNER'
-        : 'SECTOR OBSERVER'
+  const isSignedIn = Boolean(token && currentUser)
+  const operatorName = isSignedIn
+    ? currentUser.name || currentUser.email || 'Signed In'
+    : 'Not signed in'
+  const operatorRoleLabel = isSignedIn
+    ? String(currentUser.role || 'viewer').toUpperCase()
+    : 'Sign In'
 
   return (
     <div className="stitch-shell">

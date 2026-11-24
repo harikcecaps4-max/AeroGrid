@@ -76,8 +76,9 @@ const NAV_ITEMS = [
 const DEMO_ENABLED = import.meta.env.DEV && import.meta.env.VITE_ENABLE_DEMO === 'true'
 
 export default function Sidebar({ open = false, onClose }) {
-  const { currentUser, switchRole, logout, isAuthenticated } = useAuth()
-  const activeRole = currentUser?.role || 'viewer'
+  const { currentUser, token, switchRole, logout } = useAuth()
+  const isSignedIn = Boolean(token && currentUser)
+  const activeRole = isSignedIn ? (currentUser.role || 'viewer') : null
 
   return (
     <aside
@@ -147,8 +148,14 @@ export default function Sidebar({ open = false, onClose }) {
 
         <div className="stitch-ops-box">
           <div className="stitch-ops-head">
-            <span className="stitch-ops-name">{currentUser?.name || 'Unauthenticated'}</span>
-            <span className={`stitch-role-pill stitch-role-${activeRole}`}>{activeRole.toUpperCase()}</span>
+            <span className="stitch-ops-name">
+              {isSignedIn ? (currentUser.name || currentUser.email) : 'Not signed in'}
+            </span>
+            {isSignedIn && activeRole && (
+              <span className={`stitch-role-pill stitch-role-${activeRole}`}>
+                {activeRole.toUpperCase()}
+              </span>
+            )}
           </div>
           {DEMO_ENABLED && (
             <>
@@ -158,8 +165,8 @@ export default function Sidebar({ open = false, onClose }) {
                   <button
                     key={role}
                     type="button"
-                    className={`stitch-role-btn${activeRole === role ? ' active' : ''}`}
-                    aria-pressed={activeRole === role}
+                    className={`stitch-role-btn${currentUser?.role === role ? ' active' : ''}`}
+                    aria-pressed={currentUser?.role === role}
                     onClick={() => switchRole(role)}
                   >
                     {role}
@@ -169,7 +176,7 @@ export default function Sidebar({ open = false, onClose }) {
             </>
           )}
           <div className="stitch-ops-links">
-            {isAuthenticated ? (
+            {isSignedIn ? (
               <button
                 type="button"
                 className="stitch-ops-link"
@@ -183,7 +190,7 @@ export default function Sidebar({ open = false, onClose }) {
               </button>
             ) : (
               <Link to="/login" className="stitch-ops-link" onClick={onClose}>
-                Operator Sign In
+                Sign In
               </Link>
             )}
             <span className="stitch-ops-datum">SRID 4326</span>

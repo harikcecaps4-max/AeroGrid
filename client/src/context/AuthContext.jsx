@@ -4,17 +4,15 @@ import { configureApiAuth, login as apiLogin, register as apiRegister, loginWith
 const AuthContext = createContext(null)
 
 const DEMO_USERS = [
-  { id: 1, email: 'admin@aerogrid.dev', role: 'admin', name: 'Chief Aviation Ops', station: 'BLR-OPS-01' },
-  { id: 2, email: 'analyst@aerogrid.dev', role: 'analyst', name: 'Fleet Route Planner', station: 'PNQ-GIS-04' },
-  { id: 3, email: 'viewer@aerogrid.dev', role: 'viewer', name: 'Sector Observer', station: 'OBS-READONLY' },
+  { id: 1, email: 'admin@aerogrid.dev', role: 'admin', name: 'Demo Admin', station: 'DEV-LOCAL' },
+  { id: 2, email: 'analyst@aerogrid.dev', role: 'analyst', name: 'Demo Analyst', station: 'DEV-LOCAL' },
+  { id: 3, email: 'viewer@aerogrid.dev', role: 'viewer', name: 'Demo Viewer', station: 'DEV-LOCAL' },
 ]
 
 function buildUserSession(apiUser) {
-  const matchedDemo = DEMO_USERS.find((u) => u.email === apiUser.email)
   return {
     ...apiUser,
-    name: matchedDemo?.name || apiUser.name || (apiUser.email ? apiUser.email.split('@')[0] : 'Operator'),
-    station: matchedDemo?.station || 'REMOTE-GIS',
+    name: apiUser.name || (apiUser.email ? apiUser.email.split('@')[0] : 'User'),
   }
 }
 
