@@ -145,9 +145,9 @@ const AIRSTRIP_DECISION_SQL = `
     a.political_severity,
     a.disruption_type,
     a.political_details,
-    NULL::text AS terrain_risk,
-    NULL::int AS catchment_population,
-    NULL::numeric AS last_mile_access_km,
+    a.terrain_risk,
+    a.catchment_population,
+    a.last_mile_access_km,
     CASE a.data_status
       WHEN 'field_verified' THEN 'high'
       WHEN 'desk_verified' THEN 'medium'
@@ -158,7 +158,7 @@ const AIRSTRIP_DECISION_SQL = `
       ELSE 'data_status=' || a.data_status
     END AS source,
     a.data_status,
-    NULL::date AS verified_at,
+    a.verified_at,
     nearest.code AS nearest_airport_code,
     nearest.name AS nearest_airport_name,
     ROUND((nearest.distance_m / 1000.0)::numeric, 1) AS nearest_airport_distance_km,
@@ -341,7 +341,7 @@ async function listAirstripsForDecision(options = {}) {
   const { requestId } = options;
   if (config.database.isConfigured) {
     try {
-      const result = await query(`${AIRSTRIP_DECISION_SQL} ORDER BY a.id ASC`);
+      const result = await query(`${AIRSTRIP_DECISION_SQL} WHERE a.data_status <> 'archived' ORDER BY a.id ASC`);
       const rows = (result && result.rows) || [];
       return {
         airstrips: rows.map(normalizeAirstripRow),
@@ -357,7 +357,7 @@ async function listAirstripsForDecision(options = {}) {
   }
 
   return {
-    airstrips: fallbackAirstrips.map(normalizeAirstripRow),
+    airstrips: fallbackAirstrips.filter((s) => s.data_status !== 'archived').map(normalizeAirstripRow),
     source: 'fallback',
   };
 }
@@ -374,7 +374,7 @@ async function getAirstripForDecisionById(airstripId, options = {}) {
   const id = Number(airstripId);
   if (config.database.isConfigured) {
     try {
-      const result = await query(`${AIRSTRIP_DECISION_SQL} WHERE a.id = $1 LIMIT 1`, [id]);
+      const result = await query(`${AIRSTRIP_DECISION_SQL} WHERE a.id = $1 AND a.data_status <> 'archived' LIMIT 1`, [id]);
       const row = result && result.rows && result.rows[0];
       return {
         airstrip: row ? normalizeAirstripRow(row) : null,
@@ -389,7 +389,7 @@ async function getAirstripForDecisionById(airstripId, options = {}) {
     throw createDbServiceError(requestId, 'getAirstripForDecisionById (fallback disabled)');
   }
 
-  const found = fallbackAirstrips.find((s) => Number(s.id) === id);
+  const found = fallbackAirstrips.find((s) => Number(s.id) === id && s.data_status !== 'archived');
   return {
     airstrip: found ? normalizeAirstripRow(found) : null,
     source: 'fallback',
@@ -413,7 +413,7 @@ async function getAirstripsForDecisionByIds(airstripIds, options = {}) {
   if (config.database.isConfigured) {
     try {
       const result = await query(
-        `${AIRSTRIP_DECISION_SQL} WHERE a.id = ANY($1::int[]) ORDER BY a.id ASC`,
+        `${AIRSTRIP_DECISION_SQL} WHERE a.id = ANY($1::int[]) AND a.data_status <> 'archived' ORDER BY a.id ASC`,
         [normalizedIds]
       );
       const rows = ((result && result.rows) || []).map(normalizeAirstripRow);
@@ -423,7 +423,7 @@ async function getAirstripsForDecisionByIds(airstripIds, options = {}) {
       throw createDbServiceError(requestId, 'getAirstripsForDecisionByIds', err);
     }
   } else if (config.allowFallback) {
-    const all = fallbackAirstrips.map(normalizeAirstripRow);
+    const all = fallbackAirstrips.filter((s) => s.data_status !== 'archived').map(normalizeAirstripRow);
     rowsById = new Map(all.map((s) => [s.id, s]));
     source = 'fallback';
   } else {

@@ -94,7 +94,8 @@ router.get(
             FROM airstrips a
             LEFT JOIN states s ON a.state_id = s.id
             LEFT JOIN surface_types f ON a.surface_id = f.id
-            WHERE ST_DWithin(a.location::geography, ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography, $3)
+            WHERE a.data_status <> 'archived'
+              AND ST_DWithin(a.location::geography, ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography, $3)
             ORDER BY distance_km ASC;
           `;
           const dbResult = await query(sql, [lng, lat, radiusMeters]);
