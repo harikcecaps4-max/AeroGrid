@@ -2,11 +2,25 @@
 
 const { query } = require('../db');
 
+const REDACTED_KEYS = new Set(['_token', 'token', 'access_token', 'idToken', 'password', 'password_hash']);
+
+function sanitizeChanges(value) {
+  if (!value || typeof value !== 'object') return value;
+  if (Array.isArray(value)) return value.map(sanitizeChanges);
+  const out = {};
+  for (const [k, v] of Object.entries(value)) {
+    if (REDACTED_KEYS.has(k)) continue;
+    out[k] = sanitizeChanges(v);
+  }
+  return out;
+}
+
 /**
  * Audit Logger Service recording operations to PostgreSQL audit_log table
- * with graceful in-memory fallback.
+ * with graceful in-memory fallback. Never persists or logs auth tokens.
  */
 async function logAudit({ userId, userEmail, action, entityType, entityId, changes, ipAddress }) {
+  const safeChanges = changes ? sanitizeChanges(changes) : null;
   try {
     const sql = `
       INSERT INTO audit_log (user_id, user_email, action, entity_type, entity_id, changes, ip_address)
@@ -19,7 +33,7 @@ async function logAudit({ userId, userEmail, action, entityType, entityId, chang
       action,
       entityType,
       entityId || null,
-      changes ? JSON.stringify(changes) : null,
+      safeChanges ? JSON.stringify(safeChanges) : null,
       ipAddress || null,
     ];
     await query(sql, params);
@@ -38,4 +52,3 @@ async function logAudit({ userId, userEmail, action, entityType, entityId, chang
 module.exports = {
   logAudit,
 };
-

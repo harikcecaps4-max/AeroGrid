@@ -38,9 +38,53 @@ app.use(
   })
 );
 
-// 3. Body Parsing
+// 3. Body Parsing (supports application/json and preflight-free text/plain JSON)
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+app.use(express.text({ type: 'text/plain', limit: '1mb' }));
+
+// Strip access_token from URLs before logging or echoing in errors
+function redactPath(rawUrl) {
+  if (!rawUrl || typeof rawUrl !== 'string') return '';
+  return rawUrl.replace(/([?&])access_token=[^&]*/gi, '$1access_token=[REDACTED]');
+}
+
+// Parse text/plain JSON bodies and map _token / ?access_token= to Authorization header
+app.use((req, res, next) => {
+  if (typeof req.body === 'string' && req.is('text/plain')) {
+    const trimmed = req.body.trim();
+    if (!trimmed) {
+      req.body = {};
+    } else {
+      try {
+        req.body = JSON.parse(trimmed);
+      } catch {
+        return res.status(400).json({
+          error: 'Bad Request',
+          message: 'Invalid JSON payload in text/plain request body.',
+        });
+      }
+    }
+  }
+
+  let compatToken = null;
+  if (req.body && typeof req.body === 'object' && !Array.isArray(req.body) && '_token' in req.body) {
+    if (typeof req.body._token === 'string' && req.body._token.trim()) {
+      compatToken = req.body._token.trim();
+    }
+    delete req.body._token;
+  }
+
+  if (!compatToken && req.query && typeof req.query.access_token === 'string' && req.query.access_token.trim()) {
+    compatToken = req.query.access_token.trim();
+  }
+
+  if (compatToken && !req.headers.authorization) {
+    req.headers.authorization = `Bearer ${compatToken}`;
+  }
+
+  return next();
+});
 
 // 4. Rate Limiting
 const limiter = rateLimit({
@@ -68,7 +112,7 @@ app.use((req, res, next) => {
       timestamp: new Date().toISOString(),
       requestId,
       method: req.method,
-      path: req.originalUrl || req.url,
+      path: redactPath(req.originalUrl || req.url),
       status: res.statusCode,
       duration_ms: duration,
       ip: req.ip,
@@ -103,7 +147,7 @@ app.use(assetRoutes);
 app.use((req, res) => {
   res.status(404).json({
     error: 'Endpoint Not Found',
-    path: req.originalUrl || req.url,
+    path: redactPath(req.originalUrl || req.url),
     method: req.method,
     timestamp: new Date().toISOString(),
   });
@@ -115,7 +159,7 @@ app.use((err, req, res, next) => {
   console.error('Unhandled Server Error:', {
     requestId: req.id,
     message: err.message,
-    path: req.originalUrl || req.url,
+    path: redactPath(req.originalUrl || req.url),
     method: req.method,
   });
 

@@ -920,5 +920,71 @@ test('POST /api/auth/google verifies ID token (valid, wrong audience, unverified
   }
 });
 
+test('CORS preflight-free compatibility: text/plain JSON bodies and _token / ?access_token= auth work on register, login, google, and authenticated routes', async () => {
+  async function postTextPlain(urlPath, payload) {
+    const res = await fetch(`${baseUrl}${urlPath}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: typeof payload === 'string' ? payload : JSON.stringify(payload),
+    });
+    const json = await res.json();
+    return { status: res.status, json };
+  }
+
+  // 1. Register via text/plain
+  const regEmail = `plain.${Date.now()}@aerogrid.test`;
+  const regPass = 'PlainTextPass!2026';
+  const reg = await postTextPlain('/api/auth/register', { email: regEmail, password: regPass });
+  assert.equal(reg.status, 201);
+  assert.equal(reg.json.user.email, regEmail);
+  assert.ok(reg.json.token);
+
+  // 2. Login via text/plain
+  const login = await postTextPlain('/api/auth/login', { email: regEmail, password: regPass });
+  assert.equal(login.status, 200);
+  assert.ok(login.json.token);
+  const plainToken = login.json.token;
+
+  // 3. Google login via text/plain
+  const prevGoogleId = process.env.GOOGLE_CLIENT_ID;
+  process.env.GOOGLE_CLIENT_ID = '2222222222-plain.apps.googleusercontent.com';
+  try {
+    authRoutes.setGoogleVerifier(async () => ({
+      sub: 'google-sub-text-plain',
+      email: 'plain.google@aerogrid.test',
+      email_verified: true,
+      name: 'Plain Google User',
+      aud: process.env.GOOGLE_CLIENT_ID,
+    }));
+    const gRes = await postTextPlain('/api/auth/google', { idToken: 'mock-text-plain-google-token' });
+    assert.equal(gRes.status, 200);
+    assert.equal(gRes.json.user.email, 'plain.google@aerogrid.test');
+    assert.ok(gRes.json.token);
+  } finally {
+    authRoutes.resetGoogleVerifier();
+    if (prevGoogleId === undefined) delete process.env.GOOGLE_CLIENT_ID;
+    else process.env.GOOGLE_CLIENT_ID = prevGoogleId;
+  }
+
+  // 4. Authenticated POST /api/evaluate with text/plain + _token (no Authorization header)
+  const evalRes = await postTextPlain('/api/evaluate', {
+    aircraftId: 1,
+    airstripId: 1,
+    _token: plainToken,
+  });
+  assert.equal(evalRes.status, 200);
+  assert.ok(evalRes.json.verdict);
+
+  // 5. Authenticated GET /api/aircraft?access_token=... (no Authorization header)
+  const acRaw = await fetch(`${baseUrl}/api/aircraft?access_token=${encodeURIComponent(plainToken)}`);
+  assert.equal(acRaw.status, 200);
+  const acJson = await acRaw.json();
+  assert.ok(Array.isArray(acJson.aircraft) && acJson.aircraft.length > 0);
+
+  // 6. Malformed text/plain JSON returns 400
+  const badJson = await postTextPlain('/api/auth/login', '{not valid json');
+  assert.equal(badJson.status, 400);
+});
+
 
 
