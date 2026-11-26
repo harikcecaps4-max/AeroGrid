@@ -45,26 +45,30 @@ export async function apiRequest(
   { method = 'GET', params, body, token, signal, skipAuth = false, skipUnauthorizedHandler = false } = {}
 ) {
   const normalizedPath = path.startsWith('/') ? path : `/${path}`
-  const url = `${API_BASE}${normalizedPath}${buildQuery(params)}`
+  const activeToken = !skipAuth ? (token !== undefined ? token : tokenProvider()) : null
+
+  const queryParams = params ? { ...params } : {}
+  let payload = body
   const headers = {}
 
-  if (!skipAuth) {
-    const activeToken = token !== undefined ? token : tokenProvider()
-    if (activeToken) {
-      headers.Authorization = `Bearer ${activeToken}`
+  // Avoid CORS preflight (OPTIONS) by omitting Authorization header and sending text/plain JSON bodies.
+  if (body !== undefined) {
+    headers['Content-Type'] = 'text/plain'
+    if (activeToken && body && typeof body === 'object' && !Array.isArray(body)) {
+      payload = { ...body, _token: activeToken }
     }
+  } else if (activeToken) {
+    queryParams.access_token = activeToken
   }
 
-  if (body !== undefined) {
-    headers['Content-Type'] = 'application/json'
-  }
+  const url = `${API_BASE}${normalizedPath}${buildQuery(queryParams)}`
 
   let res
   try {
     res = await fetch(url, {
       method,
       headers,
-      body: body !== undefined ? JSON.stringify(body) : undefined,
+      body: payload !== undefined ? JSON.stringify(payload) : undefined,
       signal,
     })
   } catch (err) {
