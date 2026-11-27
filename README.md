@@ -9,7 +9,7 @@ A spatial data analytics and business-development platform that answers one ques
 | **Live app** | https://aero-cpfxbilr.onslate.in/ |
 | **Live API** | https://aerogrid-60086051931.development.catalystserverless.in/server/aerogrid_api/ |
 | **Repository** | https://github.com/harikcecaps4-max/AeroGrid |
-| **Author** | Harikrishna C |
+| **Author** | C Harikrishna |
 | **Status** | Working prototype |
 
 <img width="1913" height="984" alt="Screenshot 2026-11-28 at 3 34 33 AM" src="https://github.com/user-attachments/assets/2e1b5a58-c2ad-4763-b613-7b7a6e58f686" />
@@ -85,6 +85,46 @@ AeroGrid digitises airstrip records into a PostGIS-backed GIS. It indexes 300+ r
 
 # Google sign-in button
 <img width="1351" height="589" alt="image" src="https://github.com/user-attachments/assets/373a4c53-de1d-4984-804a-c4dac2738dc0" />
+
+## Repository structure
+```
+AeroGrid/
+├── client/                  # React 19 + Vite frontend
+│   ├── public/
+│   ├── scripts/             # theme contrast and audit scripts
+│   ├── src/
+│   ├── index.html
+│   ├── package.json
+│   └── vite.config.js
+├── server/                  # Express API (local development)
+│   ├── index.js
+│   └── src/
+├── functions/
+│   └── aerogrid_api/        # Catalyst serverless function (production API)
+├── db/                      # Database layer
+│   ├── migrations/          # 001-014 SQL migrations
+│   ├── data/
+│   ├── migrate.js           # migration runner (--dry-run, --status)
+│   ├── seed.js              # sample data loader
+│   ├── data_quality.sql     # missing, duplicate and invalid record checks
+│   └── db.test.js           # database integrity tests
+├── docs/
+│   ├── BACKLOG.md
+│   ├── DESIGN.md
+│   ├── PROGRESS.md
+│   ├── THEMING_AND_CONTRAST.md
+│   ├── VIVA_PREP.md
+│   ├── WORKING_AGREEMENT.md
+│   └── screenshots/         # images used in this README
+├── design/
+│   └── stitch/              # archived Stitch design specifications
+├── scripts/
+│   └── smoke-live.js        # post-deploy smoke test
+├── catalyst.json            # Catalyst project configuration
+├── DEPLOY.md                # deployment guide
+├── package.json
+└── README.md
+```
 
 ## Architecture
 ```
